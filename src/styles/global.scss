@@ -1,0 +1,10 @@
+svg {
+	overflow: visible;
+}
+
+[role='button'],
+button {
+	svg:focus {
+		outline: none;
+	}
+}
