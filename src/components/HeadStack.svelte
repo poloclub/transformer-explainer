@@ -42,12 +42,7 @@
 		>
 			{#if index === 0}
 				<div class="w-full" bind:this={headContent}>
-					<div class="">
-						<slot></slot>
-					</div>
-					<div class="title text-right text-gray-400">
-						Head {index + 1} of {$modelMeta.attention_head_num}
-					</div>
+					<slot></slot>
 				</div>
 			{:else}
 				<div
@@ -60,6 +55,9 @@
 </div>
 
 <style lang="scss">
+	.multi-head {
+		position: relative;
+	}
 	.head-container {
 		background-color: white;
 		border: 1px solid #f9fafb;

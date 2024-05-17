@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tokens } from '~/store';
+	import { tokens, modelMeta } from '~/store';
 	import * as d3 from 'd3';
 	import { onMount, tick } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
@@ -7,12 +7,41 @@
 
 	const { theme } = resolveConfig(tailwindConfig);
 
+	let svgBackEl: HTMLOrSVGElement;
 	let svgEl: HTMLOrSVGElement;
+
 	let resizeObserver: ResizeObserver;
 
 	const curveOffset = 90;
-	const gradientBrightness = 100;
+	const defaultGradientBrightness = 100;
 
+	const backPathMap = {
+		heads: [
+			{
+				from: '.attention .query .head-rest',
+				to: '.head-block .query .vector',
+				fill: theme.colors.blue[defaultGradientBrightness],
+				opacity: 0.4
+			},
+			{
+				from: '.attention .key .head-rest',
+				to: '.head-block .key .vector',
+				fill: theme.colors.red[defaultGradientBrightness],
+				opacity: 0.4
+			},
+			{
+				from: '.attention .value .head-rest',
+				to: '.head-block .value .vector',
+				fill: theme.colors.green[defaultGradientBrightness],
+				opacity: 0.4
+			},
+			{
+				from: '.attention .head-out .vector',
+				to: '.mlp .initial .head-rest',
+				gradientId: 'transparent-purple'
+			}
+		]
+	};
 	const pathMap: Record<
 		string,
 		{ from: string; to: string; gradientId?: string; fill?: string }[]
@@ -28,23 +57,22 @@
 			{
 				from: '.attention .query .head1',
 				to: '.head-block .query .vector',
-				fill: theme.colors.blue[100]
+				fill: theme.colors.blue[200]
 			},
 			{
 				from: '.attention .key .head1',
 				to: '.head-block .key .vector',
-				fill: theme.colors.red[100]
+				fill: theme.colors.red[200]
 			},
 			{
 				from: '.attention .value .head1',
 				to: '.head-block .value .vector',
-				fill: theme.colors.green[100]
+				fill: theme.colors.green[200]
 			},
-
 			{
 				from: '.attention .head-out .vector',
 				to: '.mlp .initial .head1',
-				fill: theme.colors.purple[100]
+				fill: theme.colors.purple[200]
 			}
 		],
 		mlp: [
@@ -77,41 +105,46 @@
 
 	const gradientMap = {
 		'gray-blue': {
-			0: theme.colors.gray[gradientBrightness],
-			100: theme.colors.blue[gradientBrightness]
+			0: theme.colors.gray[defaultGradientBrightness],
+			100: theme.colors.blue[defaultGradientBrightness]
 		},
 		'purple-indigo': {
-			0: theme.colors.purple[gradientBrightness],
-			100: theme.colors.indigo[gradientBrightness]
+			0: theme.colors.purple[defaultGradientBrightness],
+			100: theme.colors.indigo[defaultGradientBrightness]
 		},
 		'indigo-blue': {
-			0: theme.colors.indigo[gradientBrightness],
-			100: theme.colors.blue[gradientBrightness]
+			0: theme.colors.indigo[defaultGradientBrightness],
+			100: theme.colors.blue[defaultGradientBrightness]
 		},
-		'blue-white': { 0: theme.colors.blue[gradientBrightness], 100: theme.colors.white },
-		'red-white': { 0: theme.colors.red[gradientBrightness], 100: theme.colors.white },
-		'green-white': { 0: theme.colors.green[gradientBrightness], 100: theme.colors.white },
+		'blue-white': { 0: theme.colors.blue[defaultGradientBrightness], 100: theme.colors.white },
+		'red-white': { 0: theme.colors.red[defaultGradientBrightness], 100: theme.colors.white },
+		'green-white': { 0: theme.colors.green[defaultGradientBrightness], 100: theme.colors.white },
 		'red-purple': {
-			0: theme.colors.red[gradientBrightness],
-			100: theme.colors.purple[gradientBrightness]
+			0: theme.colors.red[defaultGradientBrightness],
+			100: theme.colors.purple[defaultGradientBrightness]
 		},
 		'blue-purple': {
-			0: theme.colors.blue[gradientBrightness],
-			100: theme.colors.purple[gradientBrightness]
+			0: theme.colors.blue[defaultGradientBrightness],
+			100: theme.colors.purple[defaultGradientBrightness]
 		},
 		'green-purple': {
-			0: theme.colors.green[gradientBrightness],
-			100: theme.colors.purple[gradientBrightness]
+			0: theme.colors.green[defaultGradientBrightness],
+			100: theme.colors.purple[defaultGradientBrightness]
 		},
 		'blue-gray': {
-			0: theme.colors.blue[gradientBrightness],
-			100: theme.colors.gray[gradientBrightness]
+			0: theme.colors.blue[defaultGradientBrightness],
+			100: theme.colors.gray[defaultGradientBrightness]
 		},
 		'blue-white-blue': {
-			0: theme.colors.blue[gradientBrightness],
+			0: theme.colors.blue[defaultGradientBrightness],
 			40: theme.colors.white,
 			60: theme.colors.white,
-			100: theme.colors.blue[gradientBrightness]
+			100: theme.colors.blue[defaultGradientBrightness]
+		},
+		'transparent-purple': {
+			0: { color: theme.colors.purple[100], opacity: 0 },
+			70: { color: theme.colors.purple[100], opacity: 0.5 },
+			100: { color: theme.colors.purple[100], opacity: 1 }
 		}
 	};
 
@@ -124,14 +157,26 @@
 			const grad = defs
 				.append('linearGradient')
 				.attr('id', key)
-				// .attr('gradientUnits', 'userSpaceOnUse')s
 				.attr('x1', '0%')
 				.attr('y1', '0%')
 				.attr('x2', '100%')
 				.attr('y2', '0%');
 
 			Object.keys(stops).forEach((stop) => {
-				grad.append('stop').attr('offset', `${stop}%`).attr('stop-color', stops[stop]);
+				let color, opacity;
+				if (typeof stops[stop] !== 'string') {
+					color = stops[stop].color;
+					opacity = stops[stop].opacity;
+				} else {
+					color = stops[stop];
+					opacity = 1;
+				}
+
+				grad
+					.append('stop')
+					.attr('offset', `${stop}%`)
+					.attr('stop-color', color)
+					.attr('stop-opacity', opacity);
 			});
 		});
 	};
@@ -139,40 +184,51 @@
 	const drawPath = async () => {
 		await tick();
 		const svg = d3.select(svgEl);
+		const svgBack = d3.select(svgBackEl);
 
-		const g = svg
-			.selectAll('g.path-group')
-			.data(Object.keys(pathMap))
-			.join('g')
-			.attr('class', (d) => `path-group ${d}`);
+		[
+			{ dataMap: pathMap, svg },
+			{ dataMap: backPathMap, svg: svgBack }
+		].forEach(({ dataMap, svg }) => {
+			const g = svg
+				.selectAll('g.path-group')
+				.data(Object.keys(dataMap))
+				.join('g')
+				.attr('class', (d) => `path-group ${d}`);
 
-		g.selectAll('path.sankey')
-			.data((d) => {
-				const data = pathMap[d].map((item) => {
-					const sources = d3.selectAll(item.from).nodes();
-					const targets = d3.selectAll(item.to).nodes();
+			g.selectAll('path.sankey')
+				.data((d) => {
+					const data = dataMap[d].map((item) => {
+						const sources = d3.selectAll(item.from).nodes();
+						const targets = d3.selectAll(item.to).nodes();
 
-					return sources.map((src, i) => {
-						const source = src.getBoundingClientRect();
-						const target = targets[i].getBoundingClientRect();
+						return sources.map((src, i) => {
+							const source = src.getBoundingClientRect();
+							const target = targets[i].getBoundingClientRect();
 
-						const path = `
+							const path = `
         M ${source.right},${source.top} 
         C ${source.right + curveOffset},${source.top} ${target.left - curveOffset},${target.top} ${target.left},${target.top}
         L ${target.left},${target.bottom}
         C ${target.left - curveOffset},${target.bottom} ${source.right + curveOffset},${source.bottom} ${source.right},${source.bottom}
         Z
     `;
-						return { path, fill: item.gradientId ? `url(#${item.gradientId})` : item.fill };
+							return {
+								path,
+								fill: item.gradientId ? `url(#${item.gradientId})` : item.fill,
+								opacity: item.opacity
+							};
+						});
 					});
-				});
 
-				return data.flat();
-			})
-			.join('path')
-			.attr('class', 'sankey')
-			.attr('fill', (d) => d.fill)
-			.attr('d', (d) => d.path);
+					return data.flat();
+				})
+				.join('path')
+				.attr('class', 'sankey')
+				.attr('fill', (d) => d.fill)
+				.attr('opacity', (d) => d.opacity || 1)
+				.attr('d', (d) => d.path);
+		});
 	};
 
 	onMount(() => {
@@ -194,4 +250,13 @@
 	}
 </script>
 
-<svg bind:this={svgEl} class="h-full w-full" />
+<svg
+	bind:this={svgBackEl}
+	id="back"
+	class="absolute left-0 top-0 h-full w-full"
+	style={`z-index:${$modelMeta.attention_head_num};`}
+></svg><svg
+	bind:this={svgEl}
+	class="absolute left-0 top-0 h-full w-full"
+	style={`z-index:${$modelMeta.attention_head_num + 1};`}
+/>

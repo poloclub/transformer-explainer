@@ -50,19 +50,28 @@
 					<div>Transformer Block 1</div>
 					<div>Multi-head Self Attention</div>
 				</div>
-				<div class="content">
+				<div class="content relative">
 					<div class="vectors">
 						{#each $tokens as token, index}
 							<div class="vector x3 flex flex-col">
 								<div class={`sub-vector query flex grow flex-col bg-blue-200`}>
+									<!-- {#each Array($modelMeta.attention_head_num).fill(0) as _, index}
+										<div class="sub-vector x1-12 head grow"></div>
+									{/each} -->
 									<div class="sub-vector x1-12 head1"></div>
 									<div class="sub-vector head-rest grow"></div>
 								</div>
 								<div class={`sub-vector key grow bg-red-200`}>
+									<!-- {#each Array($modelMeta.attention_head_num).fill(0) as _, index}
+										<div class="sub-vector x1-12 head grow"></div>
+									{/each} -->
 									<div class="sub-vector x1-12 head1"></div>
 									<div class="sub-vector head-rest grow"></div>
 								</div>
 								<div class={`sub-vector value grow bg-green-200`}>
+									<!-- {#each Array($modelMeta.attention_head_num).fill(0) as _, index}
+										<div class="sub-vector x1-12 head grow"></div>
+									{/each} -->
 									<div class="sub-vector x1-12 head1"></div>
 									<div class="sub-vector head-rest grow"></div>
 								</div>
@@ -71,7 +80,9 @@
 					</div>
 					<div class="heads">
 						<HeadStack>
-							<div class="head-block flex items-center justify-between p-10 pl-[6rem]">
+							<div
+								class="head-block flex w-full items-center justify-between p-10 py-[12rem] pl-[6rem]"
+							>
 								<div class="flex flex-col gap-10">
 									<div class="vectors query">
 										{#each $tokens as token, index}
@@ -98,9 +109,7 @@
 										{/each}
 									</div>
 								</div>
-
 								<div class="attention-matrix"></div>
-
 								<div class="head-out">
 									<div class="vectors">
 										{#each $tokens as token, index}
@@ -123,6 +132,9 @@
 							<div class="token">
 								<span>{token}</span>
 								<div class={`vector bg-purple-200`}>
+									<!-- {#each Array($modelMeta.attention_head_num).fill(0) as _, index}
+										<div class="sub-vector x1-12 head grow"></div>
+									{/each} -->
 									<div class="sub-vector x1-12 head1"></div>
 									<div class="sub-vector head-rest grow"></div>
 								</div>
@@ -183,7 +195,7 @@
 		position: relative;
 	}
 	.sankey {
-		z-index: 100;
+		/* z-index: 100; */
 		position: absolute;
 		left: 0;
 		top: 0;
