@@ -29,7 +29,7 @@
 	<Sankey />
 </div>
 <div class="main-section flex h-full flex-col" style={`--vector-height: ${vectorHeight}px;`}>
-	<InputForm />
+	<div class="input"><InputForm /></div>
 	<div class="viz-section resize-watch" bind:offsetHeight={vizHeight}>
 		<div class="steps">
 			<div class="step embedding">
@@ -37,12 +37,10 @@
 				<div class="content">
 					<div class="vectors">
 						{#each $tokens as token, index}
-							<button>
-								<div class="token">
-									<span>{token}</span>
-									<div class="vector"></div>
-								</div>
-							</button>
+							<div class="token">
+								<span>{token}</span>
+								<div class={`vector bg-gray-200`}></div>
+							</div>
 						{/each}
 					</div>
 				</div>
@@ -55,25 +53,63 @@
 				<div class="content">
 					<div class="vectors">
 						{#each $tokens as token, index}
-							<div class="vector x3"></div>
+							<div class="vector x3 flex flex-col">
+								<div class={`sub-vector query flex grow flex-col bg-blue-200`}>
+									<div class="sub-vector x1-12 head1"></div>
+									<div class="sub-vector head-rest grow"></div>
+								</div>
+								<div class={`sub-vector key grow bg-red-200`}>
+									<div class="sub-vector x1-12 head1"></div>
+									<div class="sub-vector head-rest grow"></div>
+								</div>
+								<div class={`sub-vector value grow bg-green-200`}>
+									<div class="sub-vector x1-12 head1"></div>
+									<div class="sub-vector head-rest grow"></div>
+								</div>
+							</div>
 						{/each}
 					</div>
 					<div class="heads">
 						<HeadStack>
-							<div class="vectors">
-								{#each $tokens as token, index}
-									<div class="vector x1-12"></div>
-								{/each}
-							</div>
-							<div class="vectors">
-								{#each $tokens as token, index}
-									<div class="vector x1-12"></div>
-								{/each}
-							</div>
-							<div class="vectors">
-								{#each $tokens as token, index}
-									<div class="vector x1-12"></div>
-								{/each}
+							<div class="head-block flex items-center justify-between p-10 pl-[6rem]">
+								<div class="flex flex-col gap-10">
+									<div class="vectors query">
+										{#each $tokens as token, index}
+											<div class="token text-xs">
+												<span>{token}</span>
+												<div class={`vector x1-12 bg-blue-200`}></div>
+											</div>
+										{/each}
+									</div>
+									<div class="vectors key">
+										{#each $tokens as token, index}
+											<div class="token text-xs">
+												<span>{token}</span>
+												<div class={`vector x1-12 bg-red-200`}></div>
+											</div>
+										{/each}
+									</div>
+									<div class="vectors value">
+										{#each $tokens as token, index}
+											<div class="token text-xs">
+												<span>{token}</span>
+												<div class={`vector x1-12 bg-green-200`}></div>
+											</div>
+										{/each}
+									</div>
+								</div>
+
+								<div class="attention-matrix"></div>
+
+								<div class="head-out">
+									<div class="vectors">
+										{#each $tokens as token, index}
+											<div class="token">
+												<div class={`vector x1-12 bg-purple-200`}></div>
+											</div>
+										{/each}
+									</div>
+								</div>
 							</div>
 						</HeadStack>
 					</div>
@@ -84,21 +120,18 @@
 				<div class="content">
 					<div class="vectors initial">
 						{#each $tokens as token, index}
-							<button>
-								<div class="token">
-									<span>{token}</span>
-									<div class="vector"></div>
+							<div class="token">
+								<span>{token}</span>
+								<div class={`vector bg-purple-200`}>
+									<div class="sub-vector x1-12 head1"></div>
+									<div class="sub-vector head-rest grow"></div>
 								</div>
-							</button>
+							</div>
 						{/each}
 					</div>
 					<div class="vectors projections">
 						{#each $tokens as token, index}
-							<button>
-								<div class="token">
-									<div class="vector x4"></div>
-								</div>
-							</button>
+							<div class={`vector x4 bg-indigo-200`}></div>
 						{/each}
 					</div>
 				</div>
@@ -108,21 +141,19 @@
 				<div class="content">
 					<div class="vectors initial">
 						{#each $tokens as token, index}
-							<button>
-								<div class="token">
-									<span>{token}</span>
-									<div class="vector"></div>
-								</div>
-							</button>
+							<div class="token">
+								<span>{token}</span>
+								<div class={`vector bg-blue-200`}></div>
+							</div>
 						{/each}
 					</div>
 					<div class="vectors final">
 						{#each $tokens as token, index}
-							<button>
-								<div class="token">
-									<div class={classNames('vector', { last: index === $tokens.length - 1 })}></div>
-								</div>
-							</button>
+							<div
+								class={classNames(`vector bg-blue-200`, {
+									last: index === $tokens.length - 1
+								})}
+							></div>
 						{/each}
 					</div>
 				</div>
@@ -131,7 +162,7 @@
 				<div class="title">Linear · Softmax</div>
 				<div class="content">
 					<div class="vectors">
-						<div class="vector vocab"></div>
+						<div class={`vector vocab bg-gray-200`}></div>
 					</div>
 				</div>
 			</div>
@@ -140,6 +171,9 @@
 </div>
 
 <style lang="scss">
+	.input {
+		z-index: 101;
+	}
 	.viz-section {
 		flex: 1 0 0;
 		width: 100%;
@@ -149,6 +183,7 @@
 		position: relative;
 	}
 	.sankey {
+		z-index: 100;
 		position: absolute;
 		left: 0;
 		top: 0;
@@ -157,7 +192,6 @@
 	}
 	.steps {
 		position: relative;
-		z-index: 1;
 		display: grid;
 		grid-template-columns: 4fr 8fr 6fr 4fr 2fr; //24 cols
 		grid-template-rows: auto 1fr;
@@ -217,6 +251,7 @@
 		justify-content: end;
 		grid-row: 1;
 		padding-bottom: 1rem;
+		color: theme('colors.gray.300');
 	}
 
 	.step .content {
@@ -229,10 +264,11 @@
 		flex-direction: column;
 		gap: 0.5rem;
 	}
-	.vector {
-		width: 10px;
+
+	.vector,
+	.sub-vector {
+		width: 14px;
 		height: var(--vector-height);
-		background-color: black;
 
 		&.x1-12 {
 			height: calc(var(--vector-height) / 12);
@@ -248,6 +284,7 @@
 			height: 100%;
 		}
 	}
+
 	.token {
 		display: flex;
 		gap: 1rem;
@@ -255,6 +292,7 @@
 		position: relative;
 
 		> span {
+			z-index: 101;
 			display: inline;
 			width: 4rem;
 			overflow: hidden;
@@ -263,7 +301,6 @@
 			position: absolute;
 			left: -1rem;
 			transform: translateX(-100%);
-			z-index: 100;
 		}
 	}
 </style>

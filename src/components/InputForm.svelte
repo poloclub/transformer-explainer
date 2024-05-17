@@ -16,7 +16,7 @@
 	}
 </script>
 
-<div class="input-area z-10 flex flex-shrink-0 gap-4 p-1.5 px-5">
+<div class="input-area flex flex-shrink-0 gap-4 p-1.5 px-5">
 	<div class="flex items-center gap-1 whitespace-nowrap">
 		<!-- <Label>Model</Label> -->
 		<Select
