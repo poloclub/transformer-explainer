@@ -4,6 +4,7 @@
 	import { tokens, modelMeta } from '~/store';
 	import classNames from 'classnames';
 	import Sankey from '~/components/Sankey.svelte';
+	import Softmax from '~/components/Softmax.svelte';
 
 	let vizHeight = 0;
 	let titleHeight = 0;
@@ -173,8 +174,11 @@
 			<div class="step linear-softmax">
 				<div class="title">Linear · Softmax</div>
 				<div class="content">
-					<div class="vectors">
-						<div class={`vector vocab bg-gray-200`}></div>
+					<div class="flex">
+						<div class={`vector vocab bg-gray-200 shrink-0`}></div>
+						<div class="bars">
+							<Softmax />
+						</div>
 					</div>
 				</div>
 			</div>
@@ -271,7 +275,7 @@
 	}
 
 	.vectors {
-		height: 100%;
+		// height: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
