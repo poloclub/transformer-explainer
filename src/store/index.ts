@@ -32,6 +32,10 @@ const initialSelectedModel = 'gpt2-md';
 export const selectedModel = writable(initialSelectedModel);
 export const modelMeta = derived(selectedModel, ($selectedModel) => modelMetaMap[$selectedModel]);
 
+// Temperature setting
+export const initialtTemperature = 110.0;
+export const temperature = writable(initialtTemperature);
+
 // Matrix cell width, height
 export const cellWidth = derived(modelMeta, ($meta) => {
 	// return 8;

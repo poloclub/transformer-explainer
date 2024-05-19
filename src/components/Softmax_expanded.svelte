@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Tooltip, Range } from 'flowbite-svelte';
 	import { expandedBlock, cellHeight, cellWidth, highlightedToken, tokens, rowGap } from '~/store';
 	import { setContext, getContext } from 'svelte';
 	import classNames from 'classnames';
@@ -30,11 +31,11 @@
   console.log(rootFontSize);
 
 	const dataSize = 20;
-	const barHeight = 20;
+	const barHeight = rootFontSize;
 	const barMaxWidth = 80;
   const token_left_padding = 0;
   const token_top_padding = 0;
-  const gap_between_bars = 0.25 * rootFontSize;
+  const gap_between_bars = 0.5 * rootFontSize;
 	const gap_between_text_and_bars = 5;
 	const percentPrecision = 2;
 
@@ -81,9 +82,18 @@
 	// console.log(barData,predicted_tokens);
   // // ===========================================================================
 
+  // TEMPERATURE
+  let temperatureIndex = 9; // Default to the value corresponding to 1.0 in the array
+  const temperatureArray = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+
+  $: temperature = temperatureArray[temperatureIndex];
+
+  // let temperature = 1.0;
+  // $: temperature = 1.0;
+
 	console.log('hi')
 	// // ACTUAL DATA
-  const barData = [
+  let OriginalBarData = [
     {token: 'great', token_id: 1049, logit: 8.420611381530762, probability: 0.05054401233792305},
     {token: 'big', token_id: 1263, logit: 7.39492654800415, probability: 0.018122598528862},
     {token: 'member', token_id: 2888, logit: 7.361647129058838, probability: 0.017529413104057312},
@@ -116,67 +126,120 @@
     {token: 'one', token_id: 530, logit: 6.1205549240112305, probability: 0.005067198537290096},
     {token: 'non', token_id: 1729, logit: 6.114068508148193, probability: 0.005034436471760273}
   ]
-	let predicted_tokens = barData.map(d => d.token);
-  let logits = barData.map(d => d.logit);
-  let exponents = logits.map(d => Math.exp(d));
-  let probabilities = barData.map(d => d.probability);
-	// // ===========================================================================
+  function applyTemperatureToData(data, temperature) {
+    const adjustedLogits = data.map(d => d.logit / temperature);
 
+    const expValues = adjustedLogits.map(d => Math.exp(d));
+    const sumExpValues = expValues.reduce((sum, value) => sum + value, 0);
+
+    const finalData = data.map((d, i) => ({
+        ...d,
+        logit: adjustedLogits[i],
+        probability: expValues[i] / sumExpValues
+    }));
+
+    return finalData;
+  }
+  let barData = applyTemperatureToData(OriginalBarData, temperature);
+  $: barData = applyTemperatureToData(OriginalBarData, temperature);
+
+	let predicted_tokens = barData.map(d => d.token);
+  let token_ids = barData.map(d => d.token_id);
+  $: logits = barData?.map(d => d.logit)||[];
+  $: exponents = logits?.map(d => Math.exp(d))||[];
+  $: probabilities = barData?.map(d => d.probability)||[];
+	// ===========================================================================
 
   let svgEl: HTMLOrSVGElement;
-  // const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-  // const width: number = 400 - margin.left - margin.right;
-  // const height: number = 800 - margin.top - margin.bottom;
+  $: xScale = d3.scaleLinear().domain(d3.extent(barData, d => d.probability)).range([1, barMaxWidth]);
 
-  const xScale = d3.scaleLinear().domain(d3.extent(barData, d => d.probability)).range([1, barMaxWidth]);
+  // Initial draw without transition
+  onMount(() => {
+    console.log(`mount`)
+    const svg = d3.select(svgEl);
 
+    svg.select('g.bars')
+        .selectAll('rect')
+        .data(barData)
+        .join('rect')
+        .attr('height', barHeight)
+        .attr('width', (d) => xScale(d.probability))
+        .attr('x', token_left_padding + gap_between_text_and_bars)
+        .attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
+        .attr('fill', theme.colors.gray[300])
+        .attr('rx', 1)
+        .attr('ry', 1);
 
-	const drawBarChart = () => {
+    svg.select('g.bar-labels')
+        .selectAll('text')
+        .data(barData)
+        .join('text')
+        .text((d) => (d.probability * 100).toFixed(percentPrecision) + '%')
+        .attr('x', (d) => token_left_padding + gap_between_text_and_bars + xScale(d.probability) + gap_between_text_and_bars)
+        .attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
+        .attr('dy', barHeight / 2 + 3)
+        .attr('text-anchor', 'start')
+        .style('font-size', '0.5rem')
+        .style('fill', theme.colors.gray[400]);
+  });
 
-    const svg = d3
-      .select(svgEl)
+  $: if (barData) {
+      // const updatedBarData = applyTemperatureToData(barData, temperature);
 
-		svg
-			.select('g.bars')
-			.selectAll('rect')
-			.data(barData)
-			.join('rect')
-			.attr('height', barHeight)
-			.attr('width', (d) => xScale(d.probability))
-			.attr('x', token_left_padding + gap_between_text_and_bars)
-			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
-			.attr('fill', theme.colors.gray[300])
-			.attr('rx', 1)  // Rounded corners
-			.attr('ry', 1)  // Rounded corners
+      const svg = d3.select(svgEl);
 
-		svg
-			.select('g.bar-labels')
-			.selectAll('text')
-			.data(barData)
-			.join('text')
-      .text((d) => (d.probability * 100).toFixed(percentPrecision) + '%')
-      .attr('x', (d) => token_left_padding + gap_between_text_and_bars + xScale(d.probability) + gap_between_text_and_bars)
-      .attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
-			.attr('dy', barHeight / 2 + 3)
+      svg.select('g.bars')
+          .selectAll('rect')
+          .data(barData)
+          .join('rect')
+          .transition()
+          .ease(d3.easeCubic)
+          .duration(500)
+          .attr('height', barHeight)
+          .attr('width', (d) => xScale(d.probability))
+          .attr('x', token_left_padding + gap_between_text_and_bars)
+          .attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
+          .attr('fill', theme.colors.gray[300])
+          .attr('rx', 1)
+          .attr('ry', 1);
 
-			.attr('text-anchor', 'start')
-			.style('font-size', '0.5rem')
-			.style('fill', theme.colors.gray[400])
-	};
+      svg.select('g.bar-labels')
+          .selectAll('text')
+          .data(barData)
+          .join('text')
+          .transition()
+          .duration(500)
+          .tween("text", function(d) {
+              const that = d3.select(this),
+                    i = d3.interpolateNumber(that.text().replace('%', ''), d.probability * 100);
+              return function(t) { that.text(i(t).toFixed(percentPrecision) + '%'); };
+          })
+          .attr('x', (d) => token_left_padding + gap_between_text_and_bars + xScale(d.probability) + gap_between_text_and_bars)
+          .attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
+          .attr('dy', barHeight / 2 + 3)
+          .attr('text-anchor', 'start')
+          .style('font-size', '0.5rem')
+          .style('fill', theme.colors.gray[400]);
+  }
 
-	// TEMPERATURE
-	$: if (barData && svgEl) {
-		// updateProbabilities();
-		drawBarChart();
-	}
 </script>
 
 
 
 
 <div class="softmax-container flex flex-col gap-4">
-<!-- <div class="softmax-container bg-red-500"> -->
-  <!-- <div class="title-row flex h-40 bg-red-500 justify-around"> -->
+
+  <div class="temperature-slider m-4 mb-4 w-96 relative">
+      <p>Temperature: {temperature}</p>
+      <Range class='slider' bind:value={temperatureIndex} min="0" max={temperatureArray.length - 1} step="1" />
+      <div class="slider-labels absolute w-full flex justify-around mt-2">
+          {#each temperatureArray as temp, i}
+            <div class="flex w-1">
+              <span class="text-xs">{temp}</span>
+            </div>
+          {/each}
+      </div>
+  </div>
 
   <div class="title-row flex justify-around">
     <div class="title-box">
@@ -188,45 +251,60 @@
     <div class="title-box">
       <div class="title-text">Exponents</div>
     </div>
-    <div class="title-box">
+    <!-- <div class="title-box">
       <div class="title-text">Proba (html)</div>
-    </div>
+    </div> -->
     <div class="title-box">
-      <div class="title-text">Proba (svg)</div>
+      <div class="title-text">Probability</div>
     </div>
   </div>
 
   <div class="content-row w-full flex justify-around">
     <div class="content-col">
       <div class="content-box w-20">
-        {#each predicted_tokens as token}
-          <div class="text-right">{token}</div>
+        {#each predicted_tokens as token, idx}
+          <div class="text-box text-box-right hover:bg-gray-200">
+            <span class="">{token}</span>
+          </div>
+          <Tooltip class="text-xs" placement="right" type="light">
+            Token ID: {token_ids[idx]}
+          </Tooltip>
         {/each}
       </div>
     </div>
     <div class="content-col">
       <div class="content-box vector-box">
         {#each logits as logit}
-          <div class="text-center">{logit.toFixed(2)}</div>
+          <div class="text-box text-center">
+            {logit.toFixed(2)}
+          </div>
         {/each}
       </div>
     </div>
     <div class="content-col">
       <div class="content-box vector-box">
         {#each exponents as exponent}
-          <div class="text-center">{exponent.toFixed(2)}</div>
+          <div class="text-box text-center">
+            {#if exponent > 100000}
+              {exponent.toExponential(2)}
+            {:else}
+              {exponent.toFixed(2)}
+            {/if}
+          </div>
         {/each}
       </div>
     </div>
-    <div class="content-col">
+    <!-- <div class="content-col">
       <div class="content-box">
         {#each probabilities as proba}
-          <div  class="text-center">{(proba * 100).toFixed(2)}%</div>
+          <div  class="text-box text-center">
+            {(proba * 100).toFixed(2)}%
+          </div>
         {/each}
       </div>
-    </div>
+    </div> -->
     <div class="content-col">
-      <div class="content-box">
+      <div class="content-box flex flex-col">
         <svg bind:this={svgEl} class="w-full h-full">
           <g class="bars"></g>
           <g class="bar-labels"></g>
@@ -243,6 +321,12 @@
 	.softmax-container {
 		margin: 0px;
 
+    .slider-labels {
+        left: 0;
+        right: 0;
+        // bottom: -20px;
+    }
+
     .title-row {
       .title-box {
         display: flex;
@@ -257,18 +341,6 @@
       }
     }
 
-		button{
-			&:hover {
-				background-color: #f8fafc;
-		}
-
-			span{
-				font-size: 0.75rem;
-				line-height: 20px;
-
-			}
-	  }
-
     .content-row {
       .content-col{
         width: 100%;
@@ -281,8 +353,25 @@
         justify-content: center;
         color: theme('colors.gray.400');
         font-size: 0.75rem;
-        gap: 0.5rem;
+        line-height: 1rem;
+        gap: 0.25rem;
       }
+
+      .text-box{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 1.25rem;
+
+        &:hover{
+          background-color: theme('colors.gray.200');
+          cursor: pointer;
+        }
+      }
+      .text-box-right{
+        justify-content: end;
+      }
+
       .vector-box {
         background-color: theme('colors.gray.50');
         width: 80px;
