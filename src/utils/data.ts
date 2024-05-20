@@ -1,3 +1,17 @@
+import { AutoTokenizer } from '@xenova/transformers';
+
+export const getTokenization = async(input: string) => {
+    const tokenizer = await AutoTokenizer.from_pretrained('gpt2'); // load pre-trained toakenizer
+
+    const token_ids = tokenizer.encode(input);
+    const input_tokens = tokenizer.decode(token_ids);
+
+    return {
+        token_ids,
+        input_tokens
+    }
+};
+
 export const attentionOutput = [
 	[1.0, -Infinity, -Infinity, -Infinity, -Infinity, -Infinity, -Infinity, -Infinity],
 	[0.0416, 0.9584, -Infinity, -Infinity, -Infinity, -Infinity, -Infinity, -Infinity],
@@ -30,3 +44,4 @@ export const masked = [
 	[-0.1425, 0.0208, -0.4853, -0.2446, 0.1081, -0.1118, -0.7712, -Infinity],
 	[0.4445, 0.5833, 1.7208, 0.7366, 1.0418, 0.891, 1.4559, 2.7889]
 ];
+
