@@ -12,6 +12,10 @@ export default {
 
 	theme: {
 		extend: {
+			screens: {
+				sm: '',
+				xs: ''
+			},
 			fontSize: {},
 			colors: {
 				//indigo-blue

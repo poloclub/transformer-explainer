@@ -4,6 +4,7 @@
 	import { onMount, tick } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
+	import { gsap, Flip } from '~/utils/gsap';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -12,10 +13,23 @@
 
 	let resizeObserver: ResizeObserver;
 
-	const curveOffset = 90;
+	const defaultCurveOffset = 90;
 	const defaultGradientBrightness = 100;
 
-	const backPathMap = {
+	type PathMap = Record<
+		string,
+		{
+			from: string;
+			to: string;
+			gradientId?: string;
+			fill?: string;
+			opacity?: number;
+			curve?: number;
+			pathGenerator?: (source: DOMRect, target: DOMRect, curveOffset: number) => string;
+		}[]
+	>;
+
+	const backPathMap: PathMap = {
 		heads: [
 			{
 				from: '.attention .query .head-rest',
@@ -42,13 +56,10 @@
 			}
 		]
 	};
-	const pathMap: Record<
-		string,
-		{ from: string; to: string; gradientId?: string; fill?: string }[]
-	> = {
+	const pathMap: PathMap = {
 		embedding: [
 			{
-				from: '.embedding .vector',
+				from: '.embedding .out .vector',
 				to: '.attention .vector',
 				gradientId: 'gray-blue'
 			}
@@ -73,7 +84,54 @@
 				from: '.attention .head-out .vector',
 				to: '.mlp .initial .head1',
 				fill: theme.colors.purple[200]
+			},
+			{
+				from: '.head-block .key .vector',
+				to: '.attention-matrix.active  circle.col-0',
+				gradientId: 'red-purple',
+				curve: 50,
+				pathGenerator: (source: DOMRect, target: DOMRect, curveOffset: number) => {
+					return `
+        M ${source.right},${source.top} 
+        C ${source.right + curveOffset},${source.top} ${target.left - curveOffset},${target.top} ${target.left},${target.top}
+        L ${target.left},${target.bottom}
+        C ${target.left - curveOffset},${target.bottom} ${source.right + curveOffset},${source.bottom} ${source.right},${source.bottom}
+        Z
+    `;
+				}
+			},
+			{
+				from: '.head-block .query .vector',
+				to: '.attention-matrix.active  g.g-row-0 circle',
+				gradientId: 'blue-purple',
+				curve: 10,
+				pathGenerator: (source, target, curveRadius) => {
+					return `
+      M ${source.right},${source.top}
+       L ${target.right - curveRadius},${source.top}
+        Q ${target.right},${source.top} ${target.right},${source.top + curveRadius}
+        L ${target.right},${target.top - curveRadius}
+        Q ${target.right},${target.top} ${target.right},${target.top}
+        L ${target.left},${target.top}
+        Q ${target.left},${target.top} ${target.left},${target.top - curveRadius}
+        L ${target.left},${source.top + curveRadius}
+				Q ${target.left},${source.top} ${target.left},${source.top + curveRadius}
+        L ${source.right},${source.bottom}
+        Z
+    `;
+				}
 			}
+			// {
+			// 	from: '.attention-matrix.active svg',
+			// 	to: '.attention .head-out',
+			// 	fill: theme.colors.purple[200],
+			// 	curve: 1
+			// },
+			// {
+			// 	from: '.head-block .value',
+			// 	to: '.attention .head-out',
+			// 	gradientId: 'green-purple'
+			// }
 		],
 		mlp: [
 			{
@@ -120,11 +178,11 @@
 		'red-white': { 0: theme.colors.red[defaultGradientBrightness], 100: theme.colors.white },
 		'green-white': { 0: theme.colors.green[defaultGradientBrightness], 100: theme.colors.white },
 		'red-purple': {
-			0: theme.colors.red[defaultGradientBrightness],
+			50: theme.colors.red[defaultGradientBrightness],
 			100: theme.colors.purple[defaultGradientBrightness]
 		},
 		'blue-purple': {
-			0: theme.colors.blue[defaultGradientBrightness],
+			50: theme.colors.blue[defaultGradientBrightness],
 			100: theme.colors.purple[defaultGradientBrightness]
 		},
 		'green-purple': {
@@ -199,20 +257,16 @@
 			g.selectAll('path.sankey')
 				.data((d) => {
 					const data = dataMap[d].map((item) => {
-						const sources = d3.selectAll(item.from).nodes();
-						const targets = d3.selectAll(item.to).nodes();
+						const sources = d3.selectAll(item.from).nodes() as Element[];
+						const targets = d3.selectAll(item.to).nodes() as Element[];
 
 						return sources.map((src, i) => {
 							const source = src.getBoundingClientRect();
 							const target = targets[i].getBoundingClientRect();
+							const curveOffset = item.curve || defaultCurveOffset;
 
-							const path = `
-        M ${source.right},${source.top} 
-        C ${source.right + curveOffset},${source.top} ${target.left - curveOffset},${target.top} ${target.left},${target.top}
-        L ${target.left},${target.bottom}
-        C ${target.left - curveOffset},${target.bottom} ${source.right + curveOffset},${source.bottom} ${source.right},${source.bottom}
-        Z
-    `;
+							const generator = item.pathGenerator || pathGenerator;
+							const path = generator(source, target, curveOffset);
 							return {
 								path,
 								fill: item.gradientId ? `url(#${item.gradientId})` : item.fill,
@@ -231,6 +285,19 @@
 		});
 	};
 
+	const pathGenerator = (source: DOMRect, target: DOMRect, curveOffset: number) => {
+		const scrollTop = window.scrollY;
+		const scrollLeft = window.scrollX;
+
+		return `
+        M ${source.right + scrollLeft},${source.top + scrollTop} 
+        C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+        L ${target.left + scrollLeft},${target.bottom + scrollTop}
+        C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
+        Z
+    `;
+	};
+
 	onMount(() => {
 		createGradients();
 
@@ -239,6 +306,7 @@
 		});
 		const elements = document?.querySelectorAll('.resize-watch');
 		elements.forEach((el) => resizeObserver.observe(el));
+		// animationTest();
 
 		return () => {
 			resizeObserver.disconnect();
@@ -248,6 +316,20 @@
 	$: if (typeof window !== 'undefined') {
 		$tokens, drawPath();
 	}
+
+	const animationTest = () => {
+		const grad = document.querySelector('#gray-blue');
+		const stop = grad?.querySelectorAll('stop')[1];
+		gsap.fromTo(
+			stop,
+			{ attr: { offset: '0%', ['stop-color']: theme.colors.gray[100] } },
+			{
+				attr: { offset: '100%', ['stop-color']: theme.colors.blue[200] },
+				duration: 1,
+				repeat: 100
+			}
+		);
+	};
 </script>
 
 <svg

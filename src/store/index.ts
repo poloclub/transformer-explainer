@@ -23,7 +23,7 @@ export const highlightedHead = writable<HighlightedToken>({
 export const expandedBlock = writable<ExpandedBlock>({ id: 'tramsformer-block' });
 
 // user input text
-const initialText = 'Georgia tech is a';
+const initialText = 'Georgia tech is a big school of science';
 export const inputText = writable(initialText);
 export const tokens = derived(inputText, ($inputText) => $inputText.trim().split(' '));
 
