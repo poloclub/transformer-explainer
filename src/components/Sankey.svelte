@@ -13,7 +13,7 @@
 
 	let resizeObserver: ResizeObserver;
 
-	const defaultCurveOffset = 90;
+	const defaultCurveOffset = 80;
 	const defaultGradientBrightness = 100;
 
 	type PathMap = Record<
@@ -25,6 +25,8 @@
 			fill?: string;
 			opacity?: number;
 			curve?: number;
+			type?: 'stroke' | 'shape';
+			id?: string;
 			pathGenerator?: (source: DOMRect, target: DOMRect, curveOffset: number) => string;
 		}[]
 	>;
@@ -56,10 +58,15 @@
 			}
 		]
 	};
-	const pathMap: PathMap = {
+	$: pathMap = {
 		embedding: [
 			{
 				from: '.embedding .out .vector',
+				to: '.embedding .out .ln .main',
+				fill: theme.colors.gray[defaultGradientBrightness]
+			},
+			{
+				from: '.embedding .out .ln .main',
 				to: '.attention .vector',
 				gradientId: 'gray-blue'
 			}
@@ -87,65 +94,87 @@
 			},
 			{
 				from: '.head-block .key .vector',
-				to: '.attention-matrix.active  circle.col-0',
+				to: `.attention-matrix.attention-initial  g.g-row`,
+				id: 'key-to-attention',
+				type: 'stroke',
 				gradientId: 'red-purple',
-				curve: 50,
-				pathGenerator: (source: DOMRect, target: DOMRect, curveOffset: number) => {
+				curve: 30,
+				pathGenerator: (source, target, curveOffset) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					const sourceMiddleY = source.top + scrollTop + source.height / 2;
+					const targetMiddleY = target.top + scrollTop + target.height / 2;
+					const controlPoint1X = source.right + scrollLeft + curveOffset;
+					const controlPoint2X = target.left + scrollLeft - curveOffset;
+
 					return `
-        M ${source.right},${source.top} 
-        C ${source.right + curveOffset},${source.top} ${target.left - curveOffset},${target.top} ${target.left},${target.top}
-        L ${target.left},${target.bottom}
-        C ${target.left - curveOffset},${target.bottom} ${source.right + curveOffset},${source.bottom} ${source.right},${source.bottom}
-        Z
+        M ${source.right + scrollLeft},${sourceMiddleY} 
+        C ${controlPoint1X},${sourceMiddleY} ${controlPoint2X},${targetMiddleY} ${target.left + scrollLeft},${targetMiddleY}
+				L ${target.right + scrollLeft},${targetMiddleY}
     `;
 				}
 			},
 			{
 				from: '.head-block .query .vector',
-				to: '.attention-matrix.active  g.g-row-0 circle',
+				to: `.attention-matrix.attention-initial  g.g-row-${$tokens.length - 1} circle`,
 				gradientId: 'blue-purple',
-				curve: 10,
-				pathGenerator: (source, target, curveRadius) => {
+				id: 'query-to-attention',
+				type: 'stroke',
+				curve: 20,
+				pathGenerator: (source, target, curveOffset) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					const sourceMiddleY = source.top + scrollTop + source.height / 2;
+					const targetMiddleX = target.left + scrollLeft + target.width / 2;
+
 					return `
-      M ${source.right},${source.top}
-       L ${target.right - curveRadius},${source.top}
-        Q ${target.right},${source.top} ${target.right},${source.top + curveRadius}
-        L ${target.right},${target.top - curveRadius}
-        Q ${target.right},${target.top} ${target.right},${target.top}
-        L ${target.left},${target.top}
-        Q ${target.left},${target.top} ${target.left},${target.top - curveRadius}
-        L ${target.left},${source.top + curveRadius}
-				Q ${target.left},${source.top} ${target.left},${source.top + curveRadius}
-        L ${source.right},${source.bottom}
-        Z
+        M ${source.right + scrollLeft},${sourceMiddleY} 
+        L ${targetMiddleX - curveOffset},${sourceMiddleY}
+        A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
+        L ${targetMiddleX},${target.bottom + scrollTop}
     `;
 				}
+			},
+			{
+				from: '.attention-matrix.attention-out svg',
+				to: '.attention .head-out',
+				gradientId: 'transparent-purple2',
+				id: 'to-attention-out',
+				curve: 20
+			},
+			{
+				from: '.head-block .value',
+				to: '.attention .head-out',
+				gradientId: 'green-purple',
+				id: 'to-attention-out',
+				opacity: 0.4
 			}
-			// {
-			// 	from: '.attention-matrix.active svg',
-			// 	to: '.attention .head-out',
-			// 	fill: theme.colors.purple[200],
-			// 	curve: 1
-			// },
-			// {
-			// 	from: '.head-block .value',
-			// 	to: '.attention .head-out',
-			// 	gradientId: 'green-purple'
-			// }
 		],
 		mlp: [
 			{
 				from: '.mlp .initial .vector',
+				to: '.mlp .initial .residual-start',
+				fill: theme.colors.purple[defaultGradientBrightness]
+			},
+			{
+				from: '.mlp .initial .residual-start',
 				to: '.mlp .projections .vector',
 				gradientId: 'purple-indigo'
 			},
 			{
 				from: '.mlp .projections .vector',
-				to: '.transformer-blocks .initial .vector',
+				to: '.transformer-blocks .initial .residual',
 				gradientId: 'indigo-blue'
 			}
 		],
 		'transformer-blocks': [
+			{
+				from: '.transformer-blocks .initial .residual',
+				to: '.transformer-blocks .initial .vector',
+				fill: theme.colors.blue[defaultGradientBrightness]
+			},
 			{
 				from: '.transformer-blocks .initial .vector',
 				to: '.transformer-blocks .final .vector',
@@ -178,16 +207,16 @@
 		'red-white': { 0: theme.colors.red[defaultGradientBrightness], 100: theme.colors.white },
 		'green-white': { 0: theme.colors.green[defaultGradientBrightness], 100: theme.colors.white },
 		'red-purple': {
-			50: theme.colors.red[defaultGradientBrightness],
-			100: theme.colors.purple[defaultGradientBrightness]
+			0: theme.colors.red[defaultGradientBrightness],
+			100: theme.colors.purple[200]
 		},
 		'blue-purple': {
-			50: theme.colors.blue[defaultGradientBrightness],
-			100: theme.colors.purple[defaultGradientBrightness]
+			90: theme.colors.blue[defaultGradientBrightness],
+			100: theme.colors.purple[200]
 		},
 		'green-purple': {
-			0: theme.colors.green[defaultGradientBrightness],
-			100: theme.colors.purple[defaultGradientBrightness]
+			50: theme.colors.green[defaultGradientBrightness],
+			100: theme.colors.purple[200]
 		},
 		'blue-gray': {
 			0: theme.colors.blue[defaultGradientBrightness],
@@ -203,6 +232,10 @@
 			0: { color: theme.colors.purple[100], opacity: 0 },
 			70: { color: theme.colors.purple[100], opacity: 0.5 },
 			100: { color: theme.colors.purple[100], opacity: 1 }
+		},
+		'transparent-purple2': {
+			0: { color: theme.colors.purple[200], opacity: 0 },
+			100: { color: theme.colors.purple[200], opacity: 1 }
 		}
 	};
 
@@ -263,14 +296,27 @@
 						return sources.map((src, i) => {
 							const source = src.getBoundingClientRect();
 							const target = targets[i].getBoundingClientRect();
+
 							const curveOffset = item.curve || defaultCurveOffset;
 
 							const generator = item.pathGenerator || pathGenerator;
 							const path = generator(source, target, curveOffset);
 							return {
+								id: item.id,
 								path,
-								fill: item.gradientId ? `url(#${item.gradientId})` : item.fill,
-								opacity: item.opacity
+								fill:
+									item.type === 'stroke'
+										? 'none'
+										: item.gradientId
+											? `url(#${item.gradientId})`
+											: item.fill,
+								opacity: item.opacity,
+								stroke:
+									item.type === 'stroke'
+										? item.gradientId
+											? `url(#${item.gradientId})`
+											: item.fill
+										: 'none'
 							};
 						});
 					});
@@ -278,8 +324,10 @@
 					return data.flat();
 				})
 				.join('path')
-				.attr('class', 'sankey')
+				.attr('class', (d) => `sankey ${d.id || ''}`)
 				.attr('fill', (d) => d.fill)
+				.attr('stroke', (d) => d.stroke)
+				.attr('stroke-width', 2)
 				.attr('opacity', (d) => d.opacity || 1)
 				.attr('d', (d) => d.path);
 		});
@@ -325,7 +373,7 @@
 			{ attr: { offset: '0%', ['stop-color']: theme.colors.gray[100] } },
 			{
 				attr: { offset: '100%', ['stop-color']: theme.colors.blue[200] },
-				duration: 1,
+				duration: 2,
 				repeat: 100
 			}
 		);
@@ -336,9 +384,9 @@
 	bind:this={svgBackEl}
 	id="back"
 	class="absolute left-0 top-0 h-full w-full"
-	style={`z-index:${$modelMeta.attention_head_num};`}
+	style={`z-index:${$modelMeta.attention_head_num - 1};`}
 ></svg><svg
 	bind:this={svgEl}
 	class="absolute left-0 top-0 h-full w-full"
-	style={`z-index:${$modelMeta.attention_head_num + 1};`}
+	style={`z-index:${$modelMeta.attention_head_num};`}
 />

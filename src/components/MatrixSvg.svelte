@@ -27,8 +27,8 @@
 
 	$: svgWidth =
 		groupBy === 'col'
-			? rowLen * cellWidth + rowLen * colGap
-			: dimension * cellWidth + dimension * colGap;
+			? rowLen * cellWidth + (rowLen - 1) * colGap
+			: dimension * cellWidth + (dimension - 1) * colGap;
 	$: svgHeight =
 		groupBy === 'col'
 			? dimension * cellHeight + (dimension - 1) * rowGap
@@ -94,25 +94,20 @@
 			let rows;
 
 			rows = svg
-				.selectAll('g.row')
+				.selectAll('g.g-row')
 				.data(data)
 				.join('g')
 				.attr('class', (d, i) => `g-row g-row-${i}`);
 
+			// .on('click', function (d) {
+			// 	if ($highlightedToken.index !== null && !!$highlightedToken.fix) {
+			// 		highlightedToken.set({ index: null, fix: false });
+			// 	} else {
+			// 		const tokenIdx = this.classList[1].split('-')[1];
+			// 		highlightedToken.set({ index: Number(tokenIdx), fix: true });
+			// 	}
+			// })
 			rows
-				.attr('transform', (d, i) =>
-					transpose
-						? `translate(${i * cellHeight + i * rowGap},0)`
-						: `translate(0,${i * cellHeight + i * rowGap})`
-				)
-				// .on('click', function (d) {
-				// 	if ($highlightedToken.index !== null && !!$highlightedToken.fix) {
-				// 		highlightedToken.set({ index: null, fix: false });
-				// 	} else {
-				// 		const tokenIdx = this.classList[1].split('-')[1];
-				// 		highlightedToken.set({ index: Number(tokenIdx), fix: true });
-				// 	}
-				// })
 				.on('mouseenter', function (d) {
 					if ($highlightedToken.fix) return;
 					const tokenIdx = this.classList[1].split('-')[1];
@@ -124,6 +119,12 @@
 				});
 
 			if (shape === 'rect') {
+				rows.attr('transform', (d, i) =>
+					transpose
+						? `translate(${i * cellHeight + i * rowGap},0)`
+						: `translate(0,${i * cellHeight + i * rowGap})`
+				);
+
 				rows
 					.selectAll('rect.cell')
 					.data((d) => d)
@@ -134,7 +135,7 @@
 					.attr('width', transpose ? cellHeight : cellWidth)
 					.attr('height', transpose ? cellWidth : cellHeight)
 					.attr('fill', function (d) {
-						if (!Number.isFinite(d)) return theme.colors.gray[100];
+						if (!Number.isFinite(d)) return theme.colors.gray[200];
 						const tokenIdx = this.parentNode.classList[1].split('-')[1];
 						return Number(tokenIdx) === highlightedIndex
 							? highlightColorScale(d)
@@ -142,18 +143,23 @@
 					});
 			}
 			if (shape === 'circle') {
+				rows.attr('transform', (d, i) =>
+					transpose
+						? `translate(${cellHeight / 2 + i * cellHeight + i * rowGap},0)`
+						: `translate(0,${cellHeight / 2 + i * cellHeight + i * rowGap})`
+				);
 				rows
 					.selectAll('circle.cell')
 					.data((d, i) => d)
 					.join('circle')
 					.attr('class', (d, i) => `cell col-${i}`)
-					.attr(transpose ? 'cy' : 'cx', (d, i) => i * cellWidth + i * colGap)
+					.attr(transpose ? 'cy' : 'cx', (d, i) => cellWidth / 2 + i * cellWidth + i * colGap)
 					.attr(transpose ? 'cx' : 'cy', 0)
 					.attr('r', cellWidth / 2)
 					// .attr('stroke-width', 4)
 					.attr('stroke', (d) => (!Number.isFinite(d) ? 'none' : theme.colors.gray[200]))
 					.attr('fill', function (d) {
-						if (!Number.isFinite(d)) return theme.colors.gray[50];
+						if (!Number.isFinite(d)) return theme.colors.gray[200];
 						const tokenIdx = this.parentNode.classList[1].split('-')[1];
 						return Number(tokenIdx) === highlightedIndex
 							? highlightColorScale(d)
@@ -161,18 +167,31 @@
 					});
 			}
 
-			if (showValue) {
+			if (showValue && cellWidth > 18) {
+				rows
+					.selectAll('text.cell-val-back')
+					.data((d) => d.filter((d) => Number.isFinite(d)))
+					.join('text')
+					.attr('class', 'cell-text cell-val-back')
+					.attr(transpose ? 'y' : 'x', (d, i) => i * cellWidth + i * colGap)
+					.attr(transpose ? 'x' : 'y', 0)
+					.attr('dy', 4)
+					.attr('dx', cellWidth / 2)
+					.text((d) => '.' + d.toFixed(2).split('.')[1])
+					.style('stroke', 'white')
+					.style('stroke-width', 1.5);
+
 				rows
 					.selectAll('text.cell-val')
 					.data((d) => d.filter((d) => Number.isFinite(d)))
 					.join('text')
-					.attr('class', 'cell-val')
+					.attr('class', 'cell-text cell-val')
 					.attr(transpose ? 'y' : 'x', (d, i) => i * cellWidth + i * colGap)
 					.attr(transpose ? 'x' : 'y', 0)
 					.attr('dy', 4)
-					.attr('dx', -8)
+					.attr('dx', cellWidth / 2)
 					.text((d) => '.' + d.toFixed(2).split('.')[1])
-					.style('color', theme.colors.gray[400]);
+					.style('fill', theme.colors.gray[800]);
 			}
 		}
 	};
@@ -206,7 +225,9 @@
 </svg>
 
 <style>
-	:global(.cell-val) {
+	:global(.cell-text) {
 		font-size: 0.6rem;
+		font-family: monospace;
+		text-anchor: middle;
 	}
 </style>

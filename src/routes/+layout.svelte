@@ -32,7 +32,8 @@
 		min-width: 900px;
 		width: 100%;
 		position: fixed;
-		z-index: 200;
+		z-index: 300;
+		background-color: white;
 	}
 	main {
 		position: relative;

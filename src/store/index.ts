@@ -20,10 +20,10 @@ export const highlightedHead = writable<HighlightedToken>({
 });
 
 // expanded block
-export const expandedBlock = writable<ExpandedBlock>({ id: 'tramsformer-block' });
+export const expandedBlock = writable<ExpandedBlock>({ id: null });
 
 // user input text
-const initialText = 'Georgia tech is a big school of science';
+const initialText = 'Georgia tech is a big school of';
 export const inputText = writable(initialText);
 export const tokens = derived(inputText, ($inputText) => $inputText.trim().split(' '));
 
@@ -46,3 +46,7 @@ export const cellWidth = derived(modelMeta, ($meta) => {
 export const cellHeight = writable(8);
 
 export const rowGap = 2;
+
+export const vectorHeight = writable(0);
+
+export const isBoundingBoxActive = writable(false);
