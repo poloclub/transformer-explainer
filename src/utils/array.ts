@@ -14,7 +14,7 @@ export const splitArray = (doubleArray: number[][], x: number) => {
 
 export const mask = (data) => {
 	return data.map((array, index) => {
-		let newArray = new Array(array.length).fill(null);
+		let newArray = new Array(array.length).fill(-Infinity);
 		for (let i = 0; i <= index && i < array.length; i++) {
 			newArray[i] = array[i];
 		}

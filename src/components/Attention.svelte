@@ -1,11 +1,14 @@
 <script lang="ts">
 	import HeadStack from '~/components/HeadStack.svelte';
-	import { tokens, modelMeta } from '~/store';
+	import { tokens, modelMeta, isBoundingBoxActive } from '~/store';
 	import classNames from 'classnames';
 	import AttentionMatrix from '~/components/AttentionMatrix.svelte';
+	import { setContext } from 'svelte';
 
 	export let className: string | undefined = undefined;
 	export let headContentHeight: number = 0;
+
+	setContext('block-id', 'attention');
 
 	$: attentionData = Array($tokens.length)
 		.fill(0)
@@ -18,10 +21,12 @@
 
 <div class={classNames('attention', className)}>
 	<div class="title">
-		<div>Transformer Block 1</div>
 		<div>Multi-head Self Attention</div>
 	</div>
 	<div class="content relative">
+		<div class="bounding" class:active={$isBoundingBoxActive}>
+			<div class="title absolute top-0">Transformer Block</div>
+		</div>
 		<div class="tokens">
 			{#each $tokens as token, index}
 				<div class="vector x3 flex flex-col">
@@ -75,11 +80,11 @@
 					<div class="attention-matrix flex">
 						<AttentionMatrix data={attentionData} />
 					</div>
-					<div class="head-out pr-4">
+					<div class="head-out mx-4">
 						<div class="tokens">
 							{#each $tokens as token, index}
 								<div class="token">
-									<div class={`vector x1-12 bg-purple-300`}></div>
+									<div class={`vector x1-12 bg-purple-400`}></div>
 								</div>
 							{/each}
 						</div>
@@ -95,9 +100,24 @@
 
 <style lang="scss">
 	.attention {
+		.bounding {
+			border-radius: 10px 0 0 10px;
+			padding-left: 1rem;
+			left: -1rem;
+			border-right: none;
+
+			.title {
+				position: absolute;
+				top: -2rem;
+			}
+		}
 		.content {
 			display: grid;
 			grid-template-columns: 0 auto;
+
+			.tokens {
+				gap: 0.6rem;
+			}
 		}
 		.heads {
 			padding: 0 5rem;

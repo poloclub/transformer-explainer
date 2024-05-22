@@ -8,12 +8,14 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"deploy": "gh-pages -d build --nojekyll"
 	},
 	"devDependencies": {
 		"@fontsource/fira-mono": "^4.5.10",
 		"@neoconfetti/svelte": "^1.0.0",
 		"@sveltejs/adapter-auto": "^3.2.0",
+		"@sveltejs/adapter-static": "^3.0.1",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/d3": "^7.4.3",
@@ -32,6 +34,7 @@
 		"flowbite": "^2.3.0",
 		"flowbite-svelte": "^0.46.1",
 		"flowbite-svelte-icons": "^1.6.1",
+		"gh-pages": "^6.1.1",
 		"postcss": "^8.4.33",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
@@ -46,8 +49,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"gsap": "^3.12.5",
-		"mathjax": "^3.2.2",
-		"svelte-katex": "^0.1.2"
+		"@xenova/transformers": "^2.17.1",
+		"gsap": "^3.12.5"
 	}
 }

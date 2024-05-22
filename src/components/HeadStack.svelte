@@ -24,33 +24,26 @@
 			resizeObserver.unobserve(headContent);
 		};
 	});
-
-	let blocks: HTMLDivElement[] = [];
 </script>
 
 <div class="multi-head flex w-full">
-	{#each Array($modelMeta.attention_head_num).fill(0) as _, index}
-		<div
-			bind:this={blocks[index]}
-			class={classNames('head-container', {
-				rest: index !== 0,
-				absolute: index !== 0,
-				'w-full': index === 0
-			})}
-			style={`transform:translate(${index * headGap.x}px,${index * headGap.y}px) scale(${1 - headGap.scale * index}); 
+	{#each Array($modelMeta.attention_head_num + 1).fill(0) as _, index}
+		{#if index === 0}
+			<div class={'w-full'} style={`z-index: 200;`} bind:this={headContent}>
+				<slot></slot>
+			</div>
+		{:else}
+			<div
+				class={'rest absolute'}
+				style={`transform:translate(${index * headGap.x}px,${index * headGap.y}px) scale(${1 - headGap.scale * index}); 
       z-index: ${$modelMeta.attention_head_num - index};opacity:${Math.max(0.1, 1 - index * opacityOffset)};`}
-		>
-			{#if index === 0}
-				<div class="w-full" bind:this={headContent}>
-					<slot></slot>
-				</div>
-			{:else}
+			>
 				<div
-					class=""
+					class="card"
 					style={`width: ${headBlockSize.width}px; height: ${headBlockSize.height}px;`}
 				></div>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	{/each}
 </div>
 
@@ -58,7 +51,7 @@
 	.multi-head {
 		position: relative;
 	}
-	.head-container {
+	.card {
 		background-color: white;
 		border: 1px solid #f9fafb;
 		box-shadow:
