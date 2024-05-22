@@ -12,9 +12,7 @@
 <div class={classNames('mlp', className)}>
 	<div class="title">MLP</div>
 	<div class="content relative">
-		<div class="bounding" class:active={$isBoundingBoxActive}>
-			<div class="title">&times; {$modelMeta.layer_num}</div>
-		</div>
+		<div class="bounding" class:active={$isBoundingBoxActive}></div>
 		<div class="tokens initial">
 			{#each $tokens as token, index}
 				<div class="token">
@@ -44,15 +42,9 @@
 	.mlp {
 		.bounding {
 			border-radius: 0 10px 10px 0;
-			padding-right: 3rem;
-			left: 0;
+			padding-right: 2.5rem;
+			right: -2.5rem;
 			border-left: none;
-
-			.title {
-				position: absolute;
-				right: -3rem;
-				top: 0.5rem;
-			}
 		}
 		.content {
 			display: grid;
