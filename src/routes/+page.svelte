@@ -3,6 +3,7 @@
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
 	import SubsequentBlocks from '~/components/SubsequentBlocks.svelte';
+	// import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import Embedding from '~/components/Embedding.svelte';
 	import Mlp from '~/components/Mlp.svelte';

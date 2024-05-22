@@ -92,7 +92,7 @@
 				curve: 50,
 				pathGenerator: (source: DOMRect, target: DOMRect, curveOffset: number) => {
 					return `
-        M ${source.right},${source.top} 
+        M ${source.right},${source.top}
         C ${source.right + curveOffset},${source.top} ${target.left - curveOffset},${target.top} ${target.left},${target.top}
         L ${target.left},${target.bottom}
         C ${target.left - curveOffset},${target.bottom} ${source.right + curveOffset},${source.bottom} ${source.right},${source.bottom}
@@ -155,6 +155,7 @@
 		'linear-softmax': [
 			{
 				from: '.transformer-blocks .final .vector.last ',
+				// to: '.linear-softmax .content .tokens .vector',
 				to: '.linear-softmax .vector',
 				gradientId: 'blue-gray'
 			}
@@ -290,7 +291,7 @@
 		const scrollLeft = window.scrollX;
 
 		return `
-        M ${source.right + scrollLeft},${source.top + scrollTop} 
+        M ${source.right + scrollLeft},${source.top + scrollTop}
         C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
         L ${target.left + scrollLeft},${target.bottom + scrollTop}
         C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}

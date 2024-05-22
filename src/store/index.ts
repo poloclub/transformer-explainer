@@ -23,7 +23,8 @@ export const highlightedHead = writable<HighlightedToken>({
 export const expandedBlock = writable<ExpandedBlock>({ id: 'tramsformer-block' });
 
 // user input text
-const initialText = 'Georgia tech is a big school of science';
+const initialText = 'Georgia tech is a big school of science and a';
+// const initialText = 'Georgia';
 export const inputText = writable(initialText);
 export const tokens = derived(inputText, ($inputText) => $inputText.trim().split(' '));
 
@@ -33,8 +34,14 @@ export const selectedModel = writable(initialSelectedModel);
 export const modelMeta = derived(selectedModel, ($selectedModel) => modelMetaMap[$selectedModel]);
 
 // Temperature setting
-export const initialtTemperature = 110.0;
+export const initialtTemperature = 1.0;
 export const temperature = writable(initialtTemperature);
+
+// Prediction result
+export const initialPredictedToken = '';
+export const predictedToken = writable(initialPredictedToken);
+export const highlightedIndex = writable(null);
+export const finalTokenIndex = writable(null);
 
 // Matrix cell width, height
 export const cellWidth = derived(modelMeta, ($meta) => {

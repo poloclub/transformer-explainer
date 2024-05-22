@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Tooltip, Range } from 'flowbite-svelte';
+	import { Tooltip, Range, Button } from 'flowbite-svelte';
 	import { expandedBlock, cellHeight, cellWidth, highlightedToken, tokens, rowGap } from '~/store';
 	import { setContext, getContext } from 'svelte';
 	import classNames from 'classnames';
@@ -9,26 +9,13 @@
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import { writable } from 'svelte/store';
+	import { temperature } from '~/store';
 
 	const { theme } = resolveConfig(tailwindConfig);
-
-	// export let data: any;
-
-	setContext('block-id', 'linear');
-	const blockId = getContext('block-id');
-
-	let linearContainer: HTMLDivElement;
-	let linearContainerWidth = 0;
-	let cellLgHeight = $cellHeight * 2;
-	let cellLgWidth = $cellWidth * 2;
-
-	let isLinearExpanded = false;
-	let containerState: any;
 
 	// ===========================================================================
 	// Adjustable PARAMS
 	let rootFontSize = 16; // Default value in case getComputedStyle fails
-	console.log(rootFontSize);
 
 	const dataSize = 20;
 	const barHeight = rootFontSize;
@@ -39,59 +26,9 @@
 	const gap_between_text_and_bars = 5;
 	const percentPrecision = 2;
 
-	// // ===========================================================================
-	// // SIMULATING DATA
-	// const randomWords = [
-	//   'svelte', 'react', 'tailwind', 'huggingface', 'transformers', 'pytorch',
-	// 	'attention', 'embedding', 'layernorm', 'residual', 'token',
-	// 	'gpt2', 'bert', 'bart', 'gemini', 'chatgpt', 't5',
-	//   'seongmin', 'polo', 'aeree', 'alex', 'grace', 'alec', 'jay',
-	// 	'tomato', 'lemon', 'apple', 'banana', 'orange', 'grape',
-	// 	'carrot', 'potato', 'onion', 'garlic', 'ginger', 'pepper',
-	// ];
-	// const getRandomWord = () => randomWords[Math.floor(Math.random() * randomWords.length)];
-	// function getRandomBetween(min: number, max: number) {
-	//   return Math.random() * (max - min) + min;
-	// }
-	// // Function to compute the softmax of an array
-	// function softmax(arr) {
-	//   const maxVal = Math.max(...arr);  // For numerical stability
-	//   const expValues = arr.map(x => Math.exp(x - maxVal));
-	//   const sumExpValues = expValues.reduce((sum, val) => sum + val, 0);
-	//   return expValues.map(val => val / sumExpValues);
-	// }
+  // HOVER BEHAVIOR
+  const hoveredIndex = writable(null);
 
-	// const barData = Array.from({ length: dataSize }, (v, i) => ({
-	//   token_id: Math.floor(getRandomBetween(100, 10000)),
-	//   token: getRandomWord(),
-	//   logits: getRandomBetween(-5, 5),
-	//   // probability: Math.random(),
-	// }));
-	//   // Extract logits and compute their softmax
-	// const logits = barData.map(d => d.logits);
-	// const probabilities = softmax(logits);
-	// // Assign probabilities back to barData
-	// barData.forEach((d, i) => {
-	//   d.probability = probabilities[i];
-	// });
-
-	// barData.sort((a ,b) => b.probability - a.probability);
-	// // let predicted_tokens;
-	// let predicted_tokens = barData.map(d => d.token);
-	// // debugger;
-	// console.log(barData,predicted_tokens);
-	// // ===========================================================================
-
-	// TEMPERATURE
-	let temperatureIndex = 9; // Default to the value corresponding to 1.0 in the array
-	const temperatureArray = [
-		0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0
-	];
-
-	$: temperature = temperatureArray[temperatureIndex];
-
-	// let temperature = 1.0;
-	// $: temperature = 1.0;
 
 	// // ACTUAL DATA
 	let OriginalBarData = [
@@ -206,8 +143,8 @@
 
 		return finalData;
 	}
-	let barData = applyTemperatureToData(OriginalBarData, temperature);
-	$: barData = applyTemperatureToData(OriginalBarData, temperature);
+	let barData = applyTemperatureToData(OriginalBarData, $temperature);
+	$: barData = applyTemperatureToData(OriginalBarData, $temperature);
 
 	let predicted_tokens = barData.map((d) => d.token);
 	let token_ids = barData.map((d) => d.token_id);
@@ -219,12 +156,12 @@
 	let svgEl: HTMLOrSVGElement;
 	$: xScale = d3
 		.scaleLinear()
-		.domain(d3.extent(barData, (d) => d.probability))
+		// .domain(d3.extent(barData, (d) => d.probability))
+		.domain([0, d3.max(barData, (d) => d.probability)])
 		.range([1, barMaxWidth]);
 
 	// Initial draw without transition
 	onMount(() => {
-		console.log(`mount`);
 		const svg = d3.select(svgEl);
 
 		svg
@@ -233,7 +170,8 @@
 			.data(barData)
 			.join('rect')
 			.attr('height', barHeight)
-			.attr('width', (d) => xScale(d.probability))
+			// .attr('width', (d) => xScale(d.probability))
+      .attr('width', 1)
 			.attr('x', token_left_padding + gap_between_text_and_bars)
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
 			.attr('fill', theme.colors.gray[300])
@@ -245,24 +183,21 @@
 			.selectAll('text')
 			.data(barData)
 			.join('text')
-			.text((d) => (d.probability * 100).toFixed(percentPrecision) + '%')
+      .text((d) => 0.00 + '%')
 			.attr(
 				'x',
 				(d) =>
 					token_left_padding +
 					gap_between_text_and_bars +
-					xScale(d.probability) +
 					gap_between_text_and_bars
 			)
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
 			.attr('dy', barHeight / 2 + 3)
 			.attr('text-anchor', 'start')
-			.style('font-size', '0.5rem')
-			.style('fill', theme.colors.gray[400]);
+			.style('font-size', '0.5rem');
 	});
 
 	$: if (barData) {
-		// const updatedBarData = applyTemperatureToData(barData, temperature);
 
 		const svg = d3.select(svgEl);
 
@@ -271,6 +206,23 @@
 			.selectAll('rect')
 			.data(barData)
 			.join('rect')
+      .attr('fill', (d, i) => {
+					if (i === $hoveredIndex) {
+							return theme.colors.blue[500];
+					} else if (i === $highlightedIndex) {
+							return theme.colors.red[300];
+					} else if (i === $finalTokenIndex) {
+							return theme.colors.red[700];
+					} else {
+							return theme.colors.gray[300];
+					}
+				}
+			)
+      .on('mouseenter', function(event, d) {
+        hoveredIndex.set(barData.indexOf(d));
+        d3.select(this).style('cursor', 'pointer');
+      })
+      .on('mouseleave', () => hoveredIndex.set(null))
 			.transition()
 			.ease(d3.easeCubic)
 			.duration(500)
@@ -278,15 +230,31 @@
 			.attr('width', (d) => xScale(d.probability))
 			.attr('x', token_left_padding + gap_between_text_and_bars)
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
-			.attr('fill', theme.colors.gray[300])
 			.attr('rx', 1)
-			.attr('ry', 1);
+			.attr('ry', 1)
 
 		svg
 			.select('g.bar-labels')
 			.selectAll('text')
 			.data(barData)
 			.join('text')
+      .attr('fill', (d, i) => {
+					if (i === $hoveredIndex) {
+							return theme.colors.blue[600];
+					} else if (i === $highlightedIndex) {
+							return theme.colors.red[300];
+					} else if (i === $finalTokenIndex) {
+							return theme.colors.red[700];
+					} else {
+							return theme.colors.gray[400];
+					}
+				}
+			)
+      .on('mouseenter', function(event, d) {
+        hoveredIndex.set(barData.indexOf(d));
+        d3.select(this).style('cursor', 'pointer');
+      })
+      .on('mouseleave', () => hoveredIndex.set(null))
 			.transition()
 			.duration(500)
 			.tween('text', function (d) {
@@ -307,27 +275,95 @@
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
 			.attr('dy', barHeight / 2 + 3)
 			.attr('text-anchor', 'start')
-			.style('font-size', '0.5rem')
-			.style('fill', theme.colors.gray[400]);
+			.style('font-size', '0.5rem');
+
 	}
+
+	// SAMPLER
+  let finalToken = '';
+  let highlightedIndex = writable(null);
+	let finalTokenIndex = writable(null);
+  let previousIndex = null;
+
+	let predictedToken = '';
+
+  function sampleTokenIndex() {
+    let cumulativeProbabilities = [];
+    let cumulativeSum = 0;
+
+    for (let token of barData) {
+      cumulativeSum += token.probability;
+      cumulativeProbabilities.push(cumulativeSum);
+    }
+
+    const randomValue = Math.random();
+    for (let i = 0; i < cumulativeProbabilities.length; i++) {
+      if (randomValue < cumulativeProbabilities[i]) {
+        return i;
+      }
+    }
+  }
+
+  function sampleToken() {
+    const index = sampleTokenIndex();
+    return barData[index].token;
+  }
+
+	async function animateSampling() {
+		let iterations = 20;
+		let i = 0;
+		finalTokenIndex.set(null);
+
+		const startDelay = 140;
+		const endDelay = 10;
+
+		let randomIndex = null;
+
+		function getDelay(iteration) {
+			return startDelay + ((endDelay - startDelay) * ((iterations - iteration) / iterations));
+		}
+
+		function runIteration() {
+			if (i >= iterations) {
+				finalToken = barData[randomIndex].token;
+				finalTokenIndex.set(barData.findIndex(t => t.token === finalToken));
+				highlightedIndex.set(null);
+				previousIndex = null;
+				return;
+			}
+
+			randomIndex = sampleTokenIndex();
+			highlightedIndex.set(randomIndex);
+			predictedToken = barData[randomIndex].token;
+			previousIndex = randomIndex;
+
+			i++;
+			let delay = getDelay(i);
+			console.log(`Iteration: ${i}, Delay: ${delay}`);  // Log the iteration and delay
+
+			setTimeout(runIteration, delay);
+		}
+
+		runIteration();  // Start the first iteration
+	}
+
+
 </script>
 
 <div class="softmax-container flex flex-col gap-4">
-	<div class="temperature-slider relative m-4 mb-4 w-96">
-		<p>Temperature: {temperature}</p>
-		<Range
-			class="slider"
-			bind:value={temperatureIndex}
-			min="0"
-			max={temperatureArray.length - 1}
-			step="1"
-		/>
-		<div class="slider-labels absolute mt-2 flex w-full justify-around">
-			{#each temperatureArray as temp, i}
-				<div class="flex w-1">
-					<span class="text-xs">{temp}</span>
+<!-- <div class="softmax-container flex h-full w-full"> -->
+	<div class="hyperparams">
+
+		<div class="sample-button flex justify-center">
+			<div class="pr-4">
+			  <Button outline color="red" on:click={animateSampling}>Sample</Button>
+			</div>
+
+			<div class="sliding-text-container w-32 outline outline-1 outline-red-700 rounded-md flex items-center justify-center">
+				<div class="prediction-text">
+					{predictedToken}
 				</div>
-			{/each}
+			</div>
 		</div>
 	</div>
 
@@ -335,28 +371,44 @@
 		<div class="title-box">
 			<div class="title-text">Tokens</div>
 		</div>
+		<Tooltip class="text-xs" placement="top" type="light">
+			vocab(token_id)
+		</Tooltip>
 		<div class="title-box">
 			<div class="title-text">Logits</div>
 		</div>
+		<Tooltip class="text-xs" placement="top" type="light">
+			logit(token) / $temperature
+		</Tooltip>
 		<div class="title-box">
 			<div class="title-text">Exponents</div>
 		</div>
-		<!-- <div class="title-box">
-      <div class="title-text">Proba (html)</div>
-    </div> -->
+		<Tooltip class="text-xs" placement="top" type="light">
+			exp(logit)
+		</Tooltip>
 		<div class="title-box">
 			<div class="title-text">Probability</div>
 		</div>
+		<Tooltip class="text-xs" placement="top" type="light">
+			exp(logit) / sum(all_exponents)
+		</Tooltip>
 	</div>
 
 	<div class="content-row flex w-full justify-around">
 		<div class="content-col">
 			<div class="content-box w-20">
 				{#each predicted_tokens as token, idx}
-					<div class="text-box text-box-right hover:bg-gray-200">
-						<span class="">{token}</span>
-					</div>
-					<Tooltip class="text-xs" placement="right" type="light">
+          <div
+              class="text-box text-box-right"
+              on:mouseenter={() => hoveredIndex.set(idx)}
+              on:mouseleave={() => hoveredIndex.set(null)}
+              class:highlight={idx === $hoveredIndex}
+							class:sample_highlight={$highlightedIndex === idx}
+							class:final_token_highlight={$finalTokenIndex === idx}
+          >
+              <span class="">{token}</span>
+          </div>
+					<Tooltip class="text-xs" placement="left" type="light">
 						Token ID: {token_ids[idx]}
 					</Tooltip>
 				{/each}
@@ -364,35 +416,48 @@
 		</div>
 		<div class="content-col">
 			<div class="content-box vector-box">
-				{#each logits as logit}
-					<div class="text-box text-center">
-						{logit.toFixed(2)}
-					</div>
+				{#each logits as logit, idx}
+					<div
+              class="text-box text-center"
+              on:mouseenter={() => hoveredIndex.set(idx)}
+              on:mouseleave={() => hoveredIndex.set(null)}
+              class:highlight={idx === $hoveredIndex}
+							class:sample_highlight={$highlightedIndex === idx}
+							class:final_token_highlight={$finalTokenIndex === idx}
+          >
+              {logit.toFixed(2)}
+          </div>
+					<Tooltip class="text-xs" placement="left" type="light">
+            {(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)}
+					</Tooltip>
 				{/each}
 			</div>
 		</div>
 		<div class="content-col">
 			<div class="content-box vector-box">
-				{#each exponents as exponent}
-					<div class="text-box text-center">
-						{#if exponent > 100000}
-							{exponent.toExponential(2)}
-						{:else}
-							{exponent.toFixed(2)}
-						{/if}
-					</div>
+				{#each exponents as exponent, idx}
+          <div
+              class="text-box text-center"
+              on:mouseenter={() => hoveredIndex.set(idx)}
+              on:mouseleave={() => hoveredIndex.set(null)}
+              class:highlight={idx === $hoveredIndex}
+							class:sample_highlight={$highlightedIndex === idx}
+							class:final_token_highlight={$finalTokenIndex === idx}
+          >
+              {#if exponent > 100000}
+								{exponent.toExponential(2)}
+							{:else if exponent < 10}
+							  {exponent.toFixed(2)}
+              {:else}
+								{exponent.toFixed(0)}
+              {/if}
+          </div>
+					<Tooltip class="text-xs" placement="left" type="light">
+						exp({logits[idx].toFixed(2)}) = {exponent.toFixed(2)}
+					</Tooltip>
 				{/each}
 			</div>
 		</div>
-		<!-- <div class="content-col">
-      <div class="content-box">
-        {#each probabilities as proba}
-          <div  class="text-box text-center">
-            {(proba * 100).toFixed(2)}%
-          </div>
-        {/each}
-      </div>
-    </div> -->
 		<div class="content-col">
 			<div class="content-box flex flex-col">
 				<svg bind:this={svgEl} class="h-full w-full">
@@ -405,13 +470,98 @@
 </div>
 
 <style lang="scss">
-	.softmax-container {
-		margin: 0px;
+
+  .softmax-container {
+    margin: 0px;
+
+		button {
+			&:hover {
+				background-color: #f8fafc;
+			}
+
+			span {
+				// font-size: 12px;
+				font-size: 0.75rem;
+				line-height: 20px;
+			}
+		}
+
+  .slider-container {
+    display: flex;
+		// flex-direction: column;
+    align-items: center;
+		justify-content: center;
+    width: 100%;
+		height: 20px;
+  }
+
+  .slider {
+  	-webkit-appearance: none;  /* Override default CSS styles */
+  	appearance: none;
+		border-radius: 0.25rem;
+    width: 100%;
+    height: 4px;
+    background: theme('colors.gray.300');
+    outline: none;
+		opacity: 0.7;
+
+		&::-webkit-slider-thumb {
+			-webkit-appearance: none;  /* Override default look */
+			appearance: none;
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			border: 1px solid theme('colors.gray.500');
+			background: white;
+			cursor: pointer;
+		  }
+    }
+
+	.prediction-text {
+			position: absolute;
+			width: 100%;
+			text-align: center;
+			font-size: 1rem; /* Adjust font size */
+			// transition: transform 0.6s ease-in-out;
+			// transition: linear 2s;
+		}
+
+  .current {
+    transform: translateY(0);
+  }
+
+    .highlight {
+      color: white;
+      background-color: theme('colors.blue.500');
+      cursor: pointer;
+			transition: background-color 0.2s;
+
+    }
+
+		.sample_highlight {
+			color: white;
+			background-color: theme('colors.red.300');
+			// transition: background-color 0.5s;
+		}
+
+		.final_token_highlight {
+			color: white;
+			background-color: theme('colors.red.700');
+			transition: background-color 1s;
+		}
+
+		.hyperparams {
+			height: 100px;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			gap: 1rem;
+		}
 
 		.slider-labels {
 			left: 0;
 			right: 0;
-			// bottom: -20px;
 		}
 
 		.title-row {
@@ -419,10 +569,17 @@
 				display: flex;
 				width: 100%;
 				justify-content: center;
+				border-radius: 0.5rem;
+
+				&:hover{
+				background-color: theme('colors.gray.50');
+				}
+
 				.title-text {
 					display: flex;
 					align-items: end;
 					color: theme('colors.gray.500');
+					padding: 4px;
 					font-size: 1.25rem;
 				}
 			}
@@ -449,11 +606,13 @@
 				justify-content: center;
 				align-items: center;
 				height: 1.25rem;
+				border-radius: 0.25rem;
+				padding-right: 0.5rem;
 
-				&:hover {
-					background-color: theme('colors.gray.200');
-					cursor: pointer;
-				}
+				// &:hover {
+				// 	background-color: theme('colors.gray.200');
+				// 	cursor: pointer;
+				// }
 			}
 			.text-box-right {
 				justify-content: end;

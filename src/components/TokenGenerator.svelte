@@ -1,0 +1,72 @@
+<script lang="ts">
+	import { Tooltip, Range, Button } from 'flowbite-svelte';
+  import { writable } from 'svelte/store';
+  import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
+  import { OriginalBarData } from '../utils/data.ts';
+  import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
+  import { temperature } from '~/store';
+
+
+	let barData = applyTemperatureToData(OriginalBarData, $temperature);
+	$: barData = applyTemperatureToData(OriginalBarData, $temperature);
+
+	// SAMPLER
+  let finalToken = '';
+  let previousIndex = null;
+
+	async function animateSampling() {
+		let iterations = 10;
+		let i = 0;
+		finalTokenIndex.set(null);
+
+		const startDelay = 200;
+		const endDelay = 50;
+
+		let randomIndex = null;
+
+		function getDelay(iteration) {
+			return startDelay + ((endDelay - startDelay) * ((iterations - iteration) / iterations));
+		}
+
+		function runIteration() {
+			if (i >= iterations) {
+				finalToken = barData[randomIndex].token;
+        highlightedIndex.set(null);
+        finalTokenIndex.set(barData.findIndex(t => t.token === finalToken));
+        console.log(`Final Token Index: ${finalTokenIndex}`)
+				previousIndex = null;
+				return;
+			}
+
+			randomIndex = sampleTokenIndex(barData);
+      highlightedIndex.set(randomIndex);
+      console.log(`Highlighted Index: ${$highlightedIndex}`)
+
+      let prediciton = barData[randomIndex].token;
+			predictedToken.set(prediciton);
+
+			previousIndex = randomIndex;
+
+			i++;
+			let delay = getDelay(i);
+			console.log(`Iteration: ${i}, Delay: ${delay}`);  // Log the iteration and delay
+
+			setTimeout(runIteration, delay);
+		}
+
+		runIteration();  // Start the first iteration
+	}
+
+</script>
+
+
+<div class="sample-button flex justify-center gap-2">
+  <div class="sliding-text-container w-32 outline outline-1 outline-red-700 rounded-md flex items-center justify-center">
+    <div class="prediction-text">
+      {$predictedToken}
+    </div>
+  </div>
+  <div class="h-full">
+    <Button outline color="red" on:click={animateSampling}>Sample</Button>
+  </div>
+</div>

@@ -5,6 +5,8 @@
 	import ButtonGroup from 'flowbite-svelte/ButtonGroup.svelte';
 	import Dropdown from 'flowbite-svelte/Dropdown.svelte';
 	import DropdownItem from 'flowbite-svelte/DropdownItem.svelte';
+	import Temperature from './Temperature.svelte';
+  import TokenGenerator from './TokenGenerator.svelte';
 
 	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
 	import { inputText, selectedModel } from '~/store';
@@ -63,4 +65,6 @@
 			</ButtonGroup>
 		</form>
 	</div>
+	<TokenGenerator />
+	<Temperature />
 </div>
