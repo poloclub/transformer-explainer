@@ -184,8 +184,7 @@
 		'linear-softmax': [
 			{
 				from: '.transformer-blocks .final .vector.last ',
-				// to: '.linear-softmax .content .tokens .vector',
-				to: '.linear-softmax .vector',
+				to: '.softmax .content .vector',
 				gradientId: 'blue-gray'
 			}
 		]

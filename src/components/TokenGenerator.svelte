@@ -4,7 +4,7 @@
   import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
   import { OriginalBarData } from '../utils/data.ts';
   import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
-  import { temperature } from '~/store';
+  import { temperature, inputText } from '~/store';
 
 
 	let barData = applyTemperatureToData(OriginalBarData, $temperature);
@@ -33,8 +33,13 @@
 				finalToken = barData[randomIndex].token;
         highlightedIndex.set(null);
         finalTokenIndex.set(barData.findIndex(t => t.token === finalToken));
-        console.log(`Final Token Index: ${finalTokenIndex}`)
+        console.log(`Final Token Index: ${$finalTokenIndex}`)
+				console.log(`Final Token: ${finalToken}`)
 				previousIndex = null;
+
+				let newInput = $inputText + ' ' + finalToken;
+				console.log(`Net Input: ${newInput}`);
+				inputText.set(newInput);
 				return;
 			}
 
@@ -49,7 +54,7 @@
 
 			i++;
 			let delay = getDelay(i);
-			console.log(`Iteration: ${i}, Delay: ${delay}`);  // Log the iteration and delay
+			// console.log(`Iteration: ${i}, Delay: ${delay}`);  // Log the iteration and delay
 
 			setTimeout(runIteration, delay);
 		}
@@ -67,6 +72,6 @@
     </div>
   </div>
   <div class="h-full">
-    <Button outline color="red" on:click={animateSampling}>Sample</Button>
+    <Button outline color="red" on:click={animateSampling}>Generate</Button>
   </div>
 </div>

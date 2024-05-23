@@ -3,7 +3,7 @@
 	import { expandedBlock, cellHeight, cellWidth, highlightedToken, tokens, rowGap } from '~/store';
 	import { setContext, getContext } from 'svelte';
 	import classNames from 'classnames';
-	import gsap from 'gsap';
+	import { gsap, Flip } from '~/utils/gsap';
 	import { onMount, tick } from 'svelte';
 	import * as d3 from 'd3';
 	import tailwindConfig from '../../tailwind.config';
@@ -14,10 +14,63 @@
 	import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
 	import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
 
+	export let className: string | undefined = undefined;
 
 	const { theme } = resolveConfig(tailwindConfig);
 
+	setContext('block-id', 'softmax');
+
+	const blockId = getContext('block-id');
+
+	let isSoftmaxExpanded = false;
+	$: console.log($expandedBlock.id, blockId, isSoftmaxExpanded);
+
+	$: if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
+		isSoftmaxExpanded = false;
+		collapseSoftmax();
+	}
+
+	const onClickSoftmax = () => {
+		if (!isSoftmaxExpanded) {
+			expandedBlock.set({ id: blockId });
+			expandSoftmax();
+		} else {
+			expandedBlock.set({ id: null });
+			collapseSoftmax();
+		}
+	};
+
+	let containerState: any;
+
+	const expandSoftmax = async () => {
+		containerState = Flip.getState('.softmax .initial');
+		isSoftmaxExpanded = true;
+		await tick();
+
+		Flip.from(containerState, {
+			duration: 1,
+			ease: 'power2.inOut'
+		});
+		gsap.to('.softmax-detail', {
+			opacity: 1,
+			duration: 0.5,
+			delay: 0.5
+		});
+	};
+
+	const collapseSoftmax = async () => {
+		containerState = Flip.getState('.softmax .initial');
+		isSoftmaxExpanded = false;
+		await tick();
+
+		Flip.from(containerState, {
+			duration: 0.5,
+			ease: 'power2.inOut'
+		});
+	};
+
 	// ===========================================================================
+	// ===========================      SVG      =================================
 	// Adjustable PARAMS
 	let rootFontSize = 16; // Default value in case getComputedStyle fails
 
@@ -27,7 +80,7 @@
 	const token_left_padding = 0;
 	const token_top_padding = 0;
 	const gap_between_bars = 0.5 * rootFontSize;
-	const gap_between_text_and_bars = 5;
+	const gap_between_text_and_bars = 10;
 	const percentPrecision = 2;
 
   // HOVER BEHAVIOR
@@ -59,7 +112,6 @@
 			.data(barData)
 			.join('rect')
 			.attr('height', barHeight)
-			// .attr('width', (d) => xScale(d.probability))
       .attr('width', 1)
 			.attr('x', token_left_padding + gap_between_text_and_bars)
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
@@ -83,7 +135,7 @@
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
 			.attr('dy', barHeight / 2 + 3)
 			.attr('text-anchor', 'start')
-			.style('font-size', '0.5rem');
+			.style('font-size', '1rem');
 	});
 
 	$: if (barData) {
@@ -164,110 +216,122 @@
 			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
 			.attr('dy', barHeight / 2 + 3)
 			.attr('text-anchor', 'start')
-			.style('font-size', '0.5rem');
+			.style('font-size', '0.75rem');
 
 	}
 </script>
 
-<div class="linear-softmax flex flex-col gap-4">
-	<div class="title-row flex justify-around">
-		<div class="title-box">
-			<div class="title-text">Tokens</div>
-		</div>
-		<Tooltip class="text-xs" placement="top" type="light">
-			vocab(token_id)
-		</Tooltip>
-		<div class="title-box">
-			<div class="title-text">Logits</div>
-		</div>
-		<Tooltip class="text-xs" placement="top" type="light">
-			logit(token) / $temperature
-		</Tooltip>
-		<div class="title-box">
-			<div class="title-text">Exponents</div>
-		</div>
-		<Tooltip class="text-xs" placement="top" type="light">
-			exp(logit)
-		</Tooltip>
-		<div class="title-box">
-			<div class="title-text">Probability</div>
-		</div>
-		<Tooltip class="text-xs" placement="top" type="light">
-			exp(logit) / sum(all_exponents)
-		</Tooltip>
+<div
+	class={classNames('softmax', className)}
+	role="button"
+	on:click={onClickSoftmax}
+	on:keydown={onClickSoftmax}
+	tabindex="0"
+>
+
+	<div class="title">
+		<div>Softmax</div>
 	</div>
 
-	<div class="content-row flex w-full justify-around">
-		<div class="content-col z-[101]">
-			<div class="content-box w-20">
-				{#each predicted_tokens as token, idx}
-          <div
-              class="text-box text-box-right"
-              on:mouseenter={() => hoveredIndex.set(idx)}
-              on:mouseleave={() => hoveredIndex.set(null)}
-              class:highlight={idx === $hoveredIndex}
-							class:sample_highlight={$highlightedIndex === idx}
-							class:final_token_highlight={$finalTokenIndex === idx}
-          >
-              <span class="">{token}</span>
-          </div>
-					<Tooltip class="text-xs" placement="left" type="light">
-						Token ID: {token_ids[idx]}
-					</Tooltip>
-				{/each}
+	<div class="content">
+
+		<div class="first-column relative flex justify-end">
+
+				<div class="content-box w-20 z-[101]">
+					{#each predicted_tokens as token, idx}
+						<div
+								class="text-box text-box-right justify-end text-right pr-2"
+								on:mouseenter={() => hoveredIndex.set(idx)}
+								on:mouseleave={() => hoveredIndex.set(null)}
+								class:highlight={idx === $hoveredIndex}
+								class:sample_highlight={$highlightedIndex === idx}
+								class:final_token_highlight={$finalTokenIndex === idx}
+						>
+								<span class="">{token}</span>
+						</div>
+						<Tooltip class="text-xs" placement="left" type="light">
+							Token ID: {token_ids[idx]}
+						</Tooltip>
+					{/each}
+				</div>
+
+			<div class="vector vocab opacity-1 w-0"></div>
+			<div class="softmax-subtitle initial softmax-detail flex justify-around text-xs text-center opacity-0">
+				{#if isSoftmaxExpanded}
+					<div class="first-column-subtitle">
+						<div class="title-text text-end">Tokens</div>
+					</div>
+					<div class="title-box">
+						<div class="title-text">Logits</div>
+					</div>
+					<div class="title-box">
+						<div class="title-text">Exponents</div>
+					</div>
+					<div class="title-box">
+						<div class="title-text">Probability</div>
+					</div>
+				{/if}
 			</div>
+
 		</div>
-		<div class={`vector vocab opacity-0`}></div>
-		<div class="content-col z-[101]">
-			<div class="content-box vector-box">
-				{#each logits as logit, idx}
-					<div
-              class="text-box text-center"
-              on:mouseenter={() => hoveredIndex.set(idx)}
-              on:mouseleave={() => hoveredIndex.set(null)}
-              class:highlight={idx === $hoveredIndex}
-							class:sample_highlight={$highlightedIndex === idx}
-							class:final_token_highlight={$finalTokenIndex === idx}
-          >
-              {logit.toFixed(2)}
-          </div>
-					<Tooltip class="text-xs" placement="left" type="light">
-            {(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)}
-					</Tooltip>
-				{/each}
-			</div>
-		</div>
-		<div class="content-col z-[101]">
-			<div class="content-box vector-box">
-				{#each exponents as exponent, idx}
-          <div
-              class="text-box text-center"
-              on:mouseenter={() => hoveredIndex.set(idx)}
-              on:mouseleave={() => hoveredIndex.set(null)}
-              class:highlight={idx === $hoveredIndex}
-							class:sample_highlight={$highlightedIndex === idx}
-							class:final_token_highlight={$finalTokenIndex === idx}
-          >
-              {#if exponent > 100000}
-								{exponent.toExponential(2)}
-							{:else if exponent < 10}
-							  {exponent.toFixed(2)}
-              {:else}
-								{exponent.toFixed(0)}
-              {/if}
-          </div>
-					<Tooltip class="text-xs" placement="left" type="light">
-						exp({logits[idx].toFixed(2)}) = {exponent.toFixed(2)}
-					</Tooltip>
-				{/each}
-			</div>
-		</div>
-		<div class="content-col z-[101]">
-			<div class="content-box flex flex-col pt-2">
-				<svg bind:this={svgEl} class="h-full w-full">
-					<g class="bars"></g>
-					<g class="bar-labels"></g>
-				</svg>
+
+		<div class="resize-watch second-column initial flex flex-col gap-4">
+
+			<div class="content-row flex w-full justify-around">
+				{#if isSoftmaxExpanded}
+					<div class="content-col embedding-detail z-[101]">
+						<div class="content-box vector-box">
+							{#each logits as logit, idx}
+								<div
+										class="text-box text-center"
+										on:mouseenter={() => hoveredIndex.set(idx)}
+										on:mouseleave={() => hoveredIndex.set(null)}
+										class:highlight={idx === $hoveredIndex}
+										class:sample_highlight={$highlightedIndex === idx}
+										class:final_token_highlight={$finalTokenIndex === idx}
+								>
+										{logit.toFixed(2)}
+								</div>
+								<Tooltip class="text-xs" placement="left" type="light">
+									{(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)}
+								</Tooltip>
+							{/each}
+						</div>
+					</div>
+					<div class="content-col embedding-detail z-[101]">
+						<div class="content-box vector-box">
+							{#each exponents as exponent, idx}
+								<div
+										class="text-box text-center"
+										on:mouseenter={() => hoveredIndex.set(idx)}
+										on:mouseleave={() => hoveredIndex.set(null)}
+										class:highlight={idx === $hoveredIndex}
+										class:sample_highlight={$highlightedIndex === idx}
+										class:final_token_highlight={$finalTokenIndex === idx}
+								>
+										{#if exponent > 100000}
+											{exponent.toExponential(2)}
+										{:else if exponent < 10}
+											{exponent.toFixed(2)}
+										{:else}
+											{exponent.toFixed(0)}
+										{/if}
+								</div>
+								<Tooltip class="text-xs" placement="left" type="light">
+									exp({logits[idx].toFixed(2)}) = {exponent.toFixed(2)}
+								</Tooltip>
+							{/each}
+						</div>
+					</div>
+					{/if}
+					<div class="content-col z-[101]">
+						<div class="content-box flex flex-col pt-2">
+							<svg bind:this={svgEl} class="h-full w-full">
+								<g class="bars"></g>
+								<g class="bar-labels"></g>
+							</svg>
+						</div>
+					</div>
 			</div>
 		</div>
 	</div>
@@ -275,8 +339,10 @@
 
 <style lang="scss">
 
-  .linear-softmax {
+  .content {
     margin: 0px;
+		display: grid;
+		grid-template-columns:  minmax(10rem, 1fr) auto;
 
 		button {
 			&:hover {
@@ -289,47 +355,6 @@
 				line-height: 20px;
 			}
 		}
-
-  .slider-container {
-    display: flex;
-		// flex-direction: column;
-    align-items: center;
-		justify-content: center;
-    width: 100%;
-		height: 20px;
-  }
-
-  .slider {
-  	-webkit-appearance: none;  /* Override default CSS styles */
-  	appearance: none;
-		border-radius: 0.25rem;
-    width: 100%;
-    height: 4px;
-    background: theme('colors.gray.300');
-    outline: none;
-		opacity: 0.7;
-
-		&::-webkit-slider-thumb {
-			-webkit-appearance: none;  /* Override default look */
-			appearance: none;
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			border: 1px solid theme('colors.gray.500');
-			background: white;
-			cursor: pointer;
-		  }
-    }
-
-	.prediction-text {
-			position: absolute;
-			width: 100%;
-			text-align: center;
-			font-size: 1rem; /* Adjust font size */
-			// transition: transform 0.6s ease-in-out;
-			// transition: linear 2s;
-		}
-
   .current {
     transform: translateY(0);
   }
@@ -345,7 +370,6 @@
 		.sample_highlight {
 			color: white;
 			background-color: theme('colors.red.300');
-			// transition: background-color 0.5s;
 		}
 
 		.final_token_highlight {
@@ -363,74 +387,68 @@
 			gap: 1rem;
 		}
 
-		.slider-labels {
-			left: 0;
-			right: 0;
+		.first-column-subtitle {
+			width: 100%;
+			display: flex;
+			justify-content: end;
+			border-radius: 0.5rem;
+			top: 0;
+			color: theme('colors.gray.400');
 		}
 
-		.title-row {
+		.softmax-subtitle {
 			gap: 0.5rem;
+      position: absolute;
+			left:0;
+			top: 0;
+			transform: translateY(calc(-100% - 1rem));
 
 			.title-box {
 				display: flex;
-				width: 100%;
 				justify-content: center;
 				border-radius: 0.5rem;
+				top: 0;
+				width: 6rem;
 
 				&:hover{
-				background-color: theme('colors.gray.50');
+					background-color: theme('colors.gray.50');
 				}
 
 				.title-text {
 					display: flex;
 					align-items: end;
-					color: theme('colors.gray.500');
-					padding: 4px;
-					font-size: 1.25rem;
+					color: theme('colors.gray.400');
 				}
+
 			}
+		}
+
+		.content-box {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			// align-items: center;
+			color: theme('colors.gray.400');
+			font-size: 0.75rem;
+			line-height: 1.25rem;
+			gap: 0.5rem;
+			padding-top: 0.5rem;
+			padding-bottom: 0.5rem;
 		}
 
 		.content-row {
 			.content-col {
-				width: 100%;
+				// width: 100%;
+				width: 6rem;
 				display: flex;
 				justify-content: center;
-			}
-			.content-box {
-				display: flex;
-				flex-direction: column;
-				justify-content: center;
-				color: theme('colors.gray.400');
-				font-size: 0.75rem;
-				line-height: 1.25rem;
-				gap: 0.5rem;
-				padding-top: 0.5rem;
-				padding-bottom: 0.5rem;
-			}
-
-			.text-box {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				height: 1.25rem;
-				border-radius: 0.25rem;
-				padding-right: 0.5rem;
-
-				// &:hover {
-				// 	background-color: theme('colors.gray.200');
-				// 	cursor: pointer;
-				// }
-			}
-			.text-box-right {
-				justify-content: end;
 			}
 
 			.vector-box {
 				background-color: theme('colors.gray.50');
-				width: 70px;
-				border-right: 1px solid theme('colors.gray.400');
-				border-left: 1px solid theme('colors.gray.400');
+				width: 4rem;
+				border-right: 1px solid theme('colors.gray.200');
+				border-left: 1px solid theme('colors.gray.200');
 
 				// &::before,
 				// &::after {
@@ -443,4 +461,5 @@
 			}
 		}
 	}
+
 </style>

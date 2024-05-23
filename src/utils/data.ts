@@ -106,40 +106,40 @@ export const OriginalBarData = [
 			logit: 6.490026473999023,
 			probability: 0.007332082372158766
 		},
-		// {
-		// 	token: 'national',
-		// 	token_id: 2260,
-		// 	logit: 6.4784722328186035,
-		// 	probability: 0.007247853092849255
-		// },
-		// { token: 'long', token_id: 890, logit: 6.410051345825195, probability: 0.006768533028662205 },
-		// { token: 'two', token_id: 734, logit: 6.34706449508667, probability: 0.006355354096740484 },
-		// {
-		// 	token: 'unique',
-		// 	token_id: 3748,
-		// 	logit: 6.244614124298096,
-		// 	probability: 0.005736487917602062
-		// },
-		// { token: 'well', token_id: 880, logit: 6.24260950088501, probability: 0.005725000519305468 },
-		// {
-		// 	token: 'Division',
-		// 	token_id: 7458,
-		// 	logit: 6.199276924133301,
-		// 	probability: 0.005482219625264406
-		// },
-		// { token: 'state', token_id: 1181, logit: 6.191622257232666, probability: 0.005440414883196354 },
-		// {
-		// 	token: 'college',
-		// 	token_id: 4152,
-		// 	logit: 6.159815311431885,
-		// 	probability: 0.0052700950764119625
-		// },
-		// {
-		// 	token: 'football',
-		// 	token_id: 4346,
-		// 	logit: 6.128932476043701,
-		// 	probability: 0.005109827034175396
-		// },
-		// { token: 'one', token_id: 530, logit: 6.1205549240112305, probability: 0.005067198537290096 },
-		// { token: 'non', token_id: 1729, logit: 6.114068508148193, probability: 0.005034436471760273 }
+		{
+			token: 'national',
+			token_id: 2260,
+			logit: 6.4784722328186035,
+			probability: 0.007247853092849255
+		},
+		{ token: 'long', token_id: 890, logit: 6.410051345825195, probability: 0.006768533028662205 },
+		{ token: 'two', token_id: 734, logit: 6.34706449508667, probability: 0.006355354096740484 },
+		{
+			token: 'unique',
+			token_id: 3748,
+			logit: 6.244614124298096,
+			probability: 0.005736487917602062
+		},
+		{ token: 'well', token_id: 880, logit: 6.24260950088501, probability: 0.005725000519305468 },
+		{
+			token: 'Division',
+			token_id: 7458,
+			logit: 6.199276924133301,
+			probability: 0.005482219625264406
+		},
+		{ token: 'state', token_id: 1181, logit: 6.191622257232666, probability: 0.005440414883196354 },
+		{
+			token: 'college',
+			token_id: 4152,
+			logit: 6.159815311431885,
+			probability: 0.0052700950764119625
+		},
+		{
+			token: 'football',
+			token_id: 4346,
+			logit: 6.128932476043701,
+			probability: 0.005109827034175396
+		},
+		{ token: 'one', token_id: 530, logit: 6.1205549240112305, probability: 0.005067198537290096 },
+		{ token: 'non', token_id: 1729, logit: 6.114068508148193, probability: 0.005034436471760273 }
 	];

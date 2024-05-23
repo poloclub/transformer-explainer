@@ -59,7 +59,7 @@
 			<LinearSoftmax className="step" />
 		</div>
 	</div>
-	<div class="dim pointer-events-none" class:active={!!$expandedBlock.id}></div>
+	<!-- <div class="dim pointer-events-none" class:active={!!$expandedBlock.id}></div> -->
 </div>
 
 <style lang="scss">
@@ -156,6 +156,7 @@
 	:global(.vector.vocab),
 	:global(.sub-vector.vocab) {
 		height: 100%;
+		width: 0;
 	}
 
 	:global(.token) {

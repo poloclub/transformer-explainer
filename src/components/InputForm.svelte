@@ -11,7 +11,7 @@
 	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
 	import { inputText, selectedModel } from '~/store';
 
-	let inputTextTemp = $inputText;
+	$: inputTextTemp = $inputText;
 
 	function handleSubmit() {
 		inputText.set(inputTextTemp);
