@@ -109,7 +109,7 @@
 					const controlPoint2X = target.left + scrollLeft - curveOffset;
 
 					return `
-        M ${source.right + scrollLeft},${sourceMiddleY} 
+        M ${source.right + scrollLeft},${sourceMiddleY}
         C ${controlPoint1X},${sourceMiddleY} ${controlPoint2X},${targetMiddleY} ${target.left + scrollLeft},${targetMiddleY}
 				L ${target.right + scrollLeft},${targetMiddleY}
     `;
@@ -130,7 +130,7 @@
 					const targetMiddleX = target.left + scrollLeft + target.width / 2;
 
 					return `
-        M ${source.right + scrollLeft},${sourceMiddleY} 
+        M ${source.right + scrollLeft},${sourceMiddleY}
         L ${targetMiddleX - curveOffset},${sourceMiddleY}
         A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
         L ${targetMiddleX},${target.bottom + scrollTop}
@@ -184,7 +184,7 @@
 		'linear-softmax': [
 			{
 				from: '.transformer-blocks .final .vector.last ',
-				to: '.linear-softmax .vector',
+				to: '.softmax .content .vector',
 				gradientId: 'blue-gray'
 			}
 		]
@@ -338,7 +338,7 @@
 		const scrollLeft = window.scrollX;
 
 		return `
-        M ${source.right + scrollLeft},${source.top + scrollTop} 
+        M ${source.right + scrollLeft},${source.top + scrollTop}
         C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
         L ${target.left + scrollLeft},${target.bottom + scrollTop}
         C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}

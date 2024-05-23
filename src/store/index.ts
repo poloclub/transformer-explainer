@@ -33,8 +33,14 @@ export const selectedModel = writable(initialSelectedModel);
 export const modelMeta = derived(selectedModel, ($selectedModel) => modelMetaMap[$selectedModel]);
 
 // Temperature setting
-export const initialtTemperature = 110.0;
+export const initialtTemperature = 1.0;
 export const temperature = writable(initialtTemperature);
+
+// Prediction result
+export const initialPredictedToken = '';
+export const predictedToken = writable(initialPredictedToken);
+export const highlightedIndex = writable(null);
+export const finalTokenIndex = writable(null);
 
 // Matrix cell width, height
 export const cellWidth = derived(modelMeta, ($meta) => {

@@ -3,6 +3,7 @@
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
 	import SubsequentBlocks from '~/components/SubsequentBlocks.svelte';
+	// import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import Embedding from '~/components/Embedding.svelte';
 	import Mlp from '~/components/Mlp.svelte';
@@ -58,7 +59,7 @@
 			<LinearSoftmax className="step" />
 		</div>
 	</div>
-	<div class="dim pointer-events-none" class:active={!!$expandedBlock.id}></div>
+	<!-- <div class="dim pointer-events-none" class:active={!!$expandedBlock.id}></div> -->
 </div>
 
 <style lang="scss">
@@ -155,6 +156,7 @@
 	:global(.vector.vocab),
 	:global(.sub-vector.vocab) {
 		height: 100%;
+		width: 0;
 	}
 
 	:global(.token) {

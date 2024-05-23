@@ -1,30 +1,14 @@
 <script lang="ts">
-	import { expandedBlock, cellHeight, cellWidth, highlightedToken, tokens, rowGap } from '~/store';
-	import { setContext, getContext } from 'svelte';
+	import { tokens } from '~/store';
 	import classNames from 'classnames';
-	import gsap from 'gsap';
-	import { onMount, tick } from 'svelte';
 	import * as d3 from 'd3';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { writable } from 'svelte/store';
+
+	export let className: string | undefined = undefined;
 
 	const { theme } = resolveConfig(tailwindConfig);
 
-	// export let data: any;
-
-	setContext('block-id', 'linear');
-	const blockId = getContext('block-id');
-
-	let linearContainer: HTMLDivElement;
-	let linearContainerWidth = 0;
-	let cellLgHeight = $cellHeight * 2;
-	let cellLgWidth = $cellWidth * 2;
-
-	let isLinearExpanded = false;
-	let containerState: any;
-
-	// ===========================================================================
 	// Adjustable PARAMS
 	const dataSize = 20;
 	const barHeight = 20;
@@ -35,51 +19,7 @@
 	const gap_between_text_and_bars = 5;
 	const percentPrecision = 2;
 
-	// // ===========================================================================
-	// // SIMULATING DATA
-	// const randomWords = [
-	//   'svelte', 'react', 'tailwind', 'huggingface', 'transformers', 'pytorch',
-	// 	'attention', 'embedding', 'layernorm', 'residual', 'token',
-	// 	'gpt2', 'bert', 'bart', 'gemini', 'chatgpt', 't5',
-	//   'seongmin', 'polo', 'aeree', 'alex', 'grace', 'alec', 'jay',
-	// 	'tomato', 'lemon', 'apple', 'banana', 'orange', 'grape',
-	// 	'carrot', 'potato', 'onion', 'garlic', 'ginger', 'pepper',
-	// ];
-	// const getRandomWord = () => randomWords[Math.floor(Math.random() * randomWords.length)];
-	// function getRandomBetween(min: number, max: number) {
-	//   return Math.random() * (max - min) + min;
-	// }
-	// // Function to compute the softmax of an array
-	// function softmax(arr) {
-	//   const maxVal = Math.max(...arr);  // For numerical stability
-	//   const expValues = arr.map(x => Math.exp(x - maxVal));
-	//   const sumExpValues = expValues.reduce((sum, val) => sum + val, 0);
-	//   return expValues.map(val => val / sumExpValues);
-	// }
-
-	// const barData = Array.from({ length: dataSize }, (v, i) => ({
-	//   token_id: Math.floor(getRandomBetween(100, 10000)),
-	//   token: getRandomWord(),
-	//   logits: getRandomBetween(-5, 5),
-	//   // probability: Math.random(),
-	// }));
-	//   // Extract logits and compute their softmax
-	// const logits = barData.map(d => d.logits);
-	// const probabilities = softmax(logits);
-	// // Assign probabilities back to barData
-	// barData.forEach((d, i) => {
-	//   d.probability = probabilities[i];
-	// });
-
-	// barData.sort((a ,b) => b.probability - a.probability);
-	// // let predicted_tokens;
-	// let predicted_tokens = barData.map(d => d.token);
-	// // debugger;
-	// console.log(barData,predicted_tokens);
-	// // ===========================================================================
-
-	// // ACTUAL DATA
-	const barData = [
+const barData = [
 		{ token: 'great', token_id: 1049, logit: 8.420611381530762, probability: 0.05054401233792305 },
 		{ token: 'big', token_id: 1263, logit: 7.39492654800415, probability: 0.018122598528862 },
 		{
@@ -178,12 +118,8 @@
 		{ token: 'non', token_id: 1729, logit: 6.114068508148193, probability: 0.005034436471760273 }
 	];
 	let predicted_tokens = barData.map((d) => d.token);
-	// // ===========================================================================
 
 	let svgEl: HTMLOrSVGElement;
-	// const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-	// const width: number = 400 - margin.left - margin.right;
-	// const height: number = 800 - margin.top - margin.bottom;
 
 	const xScale = d3
 		.scaleLinear()
@@ -228,42 +164,59 @@
 			.style('fill', theme.colors.gray[400]);
 	};
 
-	// TEMPERATURE
 	$: if (barData && svgEl) {
-		// updateProbabilities();
 		drawBarChart();
 	}
+
 </script>
 
-<div class="softmax-container flex h-full w-full">
-	<div class="token-labels flex flex-col gap-1 text-gray-500">
-		{#each predicted_tokens as token}
-			<button class="flex justify-end">
-				<span class="">{token}</span>
-			</button>
-		{/each}
-	</div>
-	<div class="bars-container w-full shrink-0">
-		<svg bind:this={svgEl} class="h-full w-full">
-			<g class="bars"></g>
-			<g class="bar-labels"></g>
-		</svg>
+<div class={classNames('linear-softmax', className)}>
+	<div class="title">Linear · Softmax</div>
+	<div class="content">
+		<div class="tokens">
+			<div class="token-labels z-[101] flex flex-col gap-1 text-gray-500">
+				{#each predicted_tokens as token}
+				<button class="flex justify-end">
+					<span class="">{token}</span>
+				</button>
+				{/each}
+			</div>
+			<div class={`vector vocab opacity-0`}></div>
+			<div class="bars-container w-full shrink-0">
+				<svg bind:this={svgEl} class="h-full w-full">
+					<g class="bars"></g>
+					<g class="bar-labels"></g>
+				</svg>
+			</div>
+		</div>
 	</div>
 </div>
 
 <style lang="scss">
-	.softmax-container {
-		// margin: 20px;
+	.linear-softmax {
+		.content {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(3.5vw, 1fr));
 
-		button {
-			&:hover {
-				background-color: #f8fafc;
-			}
+			.tokens{
+				display: flex;
+				flex-direction: row;
+				column-gap: 0.1rem;
 
-			span {
-				// font-size: 12px;
-				font-size: 0.75rem;
-				line-height: 20px;
+				.vector{
+					width: 0px;
+				}
+
+				.token-labels
+						button {
+					&:hover {
+							background-color: #f8fafc;
+						}
+					}
+					span{
+						font-size: 0.75rem;
+						line-height: 20px;
+					}
 			}
 		}
 	}
