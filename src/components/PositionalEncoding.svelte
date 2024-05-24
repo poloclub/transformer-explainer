@@ -38,15 +38,15 @@
   //   return `rgb(${grayValue}, ${grayValue}, ${grayValue}, 0.7)`;
   // }
 
-  function getGradientColor_v2(value) {
-		// rgb(48, 111, 171)
-		// rgb(223, 115, 94)
-    if (value > 0) {
-      return `rgba(48, 111, 171, ${value})`; // Blue gradient
-    } else {
-      return `rgba(223, 115, 94, ${-value})`; // Red gradient
-    }
-  }
+  // function getGradientColor(value) {
+	// 	// rgb(48, 111, 171)
+	// 	// rgb(223, 115, 94)
+  //   if (value > 0) {
+  //     return `rgba(48, 111, 171, ${value})`; // Blue gradient
+  //   } else {
+  //     return `rgba(223, 115, 94, ${-value})`; // Red gradient
+  //   }
+  // }
 
   function getGradientColor(value) {
 		// rgba(248, 113, 113)
@@ -135,6 +135,7 @@
 								class="matrix-row"
 								on:mouseenter={() => hoveredRow.set(rowIndex)}
 								on:mouseleave={() => hoveredRow.set(null)}
+								class:matrix-row-highlight={rowIndex === $hoveredRow}
 							>
 								{#each row as value, colIndex}
 									<div
@@ -178,13 +179,12 @@
 						  style="background-color: {getGradientColor(posEncodings[$hoveredRow][$hoveredCol])};
 							border: 3px solid {getGradientColor(posEncodings[$hoveredRow][$hoveredCol])};
 							color: {Math.abs(posEncodings[$hoveredRow][$hoveredCol]) > 0.3 ? 'white' : 'black'};"
-
 						>
 							{posEncodings[$hoveredRow][$hoveredCol].toFixed(2)}
 						</div>
 						{:else}
 						<div class="formula-solution-box rounded-sm p-2 border-gray-300 border-2 items-center">
-							<span class="opacity-0">0.12</span>
+							<span class="opacity-0"></span>
 						</div>
 						{/if}
 					</div>
@@ -211,8 +211,8 @@
 		cursor: pointer !important;
 		// border: 2px solid theme('colors.gray.500') !important;
 		font-weight: bold;
-		box-shadow: 0 0 0 1px theme('colors.gray.500');
-		transition: 0.2s;
+		box-shadow: 0 0 0 1.5px theme('colors.gray.500');
+		transition: 0.1s;
 		// box-shadow: 0 0 0 1px black, 0 0 0 3px blue;
 	}
 
@@ -356,10 +356,18 @@
     // transition: transform 0.1s;
   }
 
+	// .matrix-row-highlight {
+	// 	transform: scale(5);
+	// }
+
   .matrix-cell.highlighted-row {
-    // transform: scaleX(1.6);
-		border-top: 1px solid theme('colors.gray.400');
-		border-bottom: 1px solid theme('colors.gray.400');
+    transform: scale(5);
+		// border-top: 1px solid theme('colors.gray.400');
+		// border-bottom: 1px solid theme('colors.gray.400');
+		border-top: 0.5px solid white;
+		border-bottom: 0.5px solid white;
+		// border-radius: 4px;
+		// border: 1px solid theme('colors.gray.400');
 		transition: 0.1s;
   }
 
