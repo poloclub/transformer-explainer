@@ -1,8 +1,7 @@
 <script>
 	import '~/styles/app.css';
 	import '~/styles/global.scss';
-	import Header from '~/components/Header.svelte';
-	import InputForm from '~/components/InputForm.svelte';
+	import Topbar from '~/components/Topbar.svelte';
 
 	let topBarHeight = 0;
 </script>
@@ -13,10 +12,9 @@
 
 <div class="app">
 	<div class="landing h-screen">
-		<div class="top-bar w-full" bind:offsetHeight={topBarHeight}>
-			<Header></Header>
-			<InputForm />
-		</div>
+		<header bind:offsetHeight={topBarHeight}>
+			<Topbar />
+		</header>
 		<main style={`padding-top:${topBarHeight}px`}>
 			<slot />
 		</main>
@@ -28,12 +26,12 @@
 	.app {
 		min-width: 900px;
 	}
-	.top-bar {
+
+	header {
 		min-width: 900px;
 		width: 100%;
 		position: fixed;
 		z-index: 300;
-		background-color: white;
 	}
 	main {
 		position: relative;

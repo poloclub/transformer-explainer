@@ -25,7 +25,7 @@
 	</div>
 	<div class="content relative">
 		<div class="bounding" class:active={$isBoundingBoxActive}>
-			<div class="title absolute top-0">Transformer Block</div>
+			<div class="title absolute top-0">First Transformer Block</div>
 		</div>
 		<div class="tokens">
 			{#each $tokens as token, index}
@@ -102,18 +102,13 @@
 	.attention {
 		.bounding {
 			border-radius: 10px 0 0 10px;
-			padding-left: 1rem;
-			left: -1rem;
+			padding-left: 0.5rem;
+			left: -0.5rem;
 			border-right: none;
-
-			.title {
-				position: absolute;
-				top: -2rem;
-			}
 		}
 		.content {
 			display: grid;
-			grid-template-columns: 0 auto;
+			grid-template-columns: 0 auto 0;
 
 			.tokens {
 				gap: 0.6rem;

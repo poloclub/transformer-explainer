@@ -19,9 +19,9 @@
 </script>
 
 <div class="input-area flex flex-shrink-0 gap-4 p-1.5 px-5">
-	<div class="flex items-center gap-1 whitespace-nowrap">
-		<!-- <Label>Model</Label> -->
-		<Select
+	<!-- <div class="flex items-center gap-1 whitespace-nowrap"> -->
+	<!-- <Label>Model</Label> -->
+	<!-- <Select
 			items={[
 				{ value: 'gpt2-sm', name: 'gpt2-sm' },
 				{ value: 'gpt2-md', name: 'gpt2-md' },
@@ -29,11 +29,11 @@
 			]}
 			bind:value={$selectedModel}
 			size="sm"
-		/>
-	</div>
+		/> -->
+	<!-- </div> -->
 	<div class="flex flex-1 items-center gap-1 whitespace-nowrap">
-		<form class="w-full">
-			<ButtonGroup class="w-full" size="sm">
+		<form class=" flex w-full items-center gap-2">
+			<ButtonGroup class="w-full grow" size="sm">
 				<Button
 					size="xs"
 					color="none"
@@ -48,21 +48,22 @@
 					<DropdownItem>test4</DropdownItem>
 				</Dropdown>
 				<Input
+					id="input"
 					class="focus:border-none focus:ring-2 focus:ring-inset focus:ring-gray-300"
 					size="sm"
 					placeholder="Test your own input text"
 					bind:value={inputTextTemp}
 				/>
-				<Button
-					color="primary"
-					class="!p-1.5 focus:ring-inset"
-					type="submit"
-					size="xs"
-					on:click={handleSubmit}
-				>
-					<ArrowRightOutline class="pointer-events-none h-5 w-5" />
-				</Button>
 			</ButtonGroup>
+			<Button
+				color="blue"
+				class="!p-1.5 focus:ring-inset"
+				type="submit"
+				size="sm"
+				on:click={handleSubmit}
+			>
+				Generate
+			</Button>
 		</form>
 	</div>
 	<TokenGenerator />
