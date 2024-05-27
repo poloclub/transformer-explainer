@@ -6,7 +6,7 @@
 	import { mask } from '~/utils/array';
 	import { getContext } from 'svelte';
 	import WeightPopover from '~/components/WeightPopover.svelte';
-	import { attentionOutput, masked, qk } from '~/utils/data';
+	import { attentionOutput, masked, qk } from '~/utils/mock_data';
 
 	export let data: any;
 

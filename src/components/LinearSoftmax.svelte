@@ -10,7 +10,7 @@
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import { writable } from 'svelte/store';
 	import { temperature } from '~/store';
-	import { OriginalBarData } from '../utils/data';
+	import { OriginalBarData } from '../utils/mock_data';
 	import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
 	import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
 
