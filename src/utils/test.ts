@@ -1,4 +1,4 @@
-import {getTokenization} from './data'
+import {getTokenization} from './mock_data'
 
 const testTokenization = async() => {
     const input = "Georgia Tech is a";
