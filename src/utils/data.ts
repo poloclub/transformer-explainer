@@ -29,7 +29,7 @@ export const getData = async (inputText) => {
         const inputTensor = new ort.Tensor('int64', new BigInt64Array(token_ids.map(x => BigInt(x))), [1, token_ids.length]);
 
         // Load the model
-        const session = await ort.InferenceSession.create('../utils/model/model.onnx');
+        const session = await ort.InferenceSession.create('src/utils/model/params_output/model.onnx');
 
         // Prepare the feeds (inputs)
         const feeds = { input: inputTensor };
@@ -123,7 +123,7 @@ export const getData = async (inputText) => {
 };
 
 // test
-/*
+
 const input = "To be or not to be is the";
 
 const testGetTokenization = (input) => {
@@ -150,4 +150,3 @@ const testGetData = (input) => {
 
 testGetTokenization(input);
 testGetData(input);
-*/

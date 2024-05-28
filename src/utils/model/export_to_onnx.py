@@ -1,5 +1,17 @@
 import torch
 from model import GPT  # import model
+import os
+
+def create_folder_if_not_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_path}' created.")
+    else:
+        print(f"Folder '{folder_path}' already exists.")
+
+# Example usage
+folder_path = 'src/utils/model/params_output'
+create_folder_if_not_exists(folder_path)
 
 # create wrapper function to extract outputs from dictionary
 class wrapper(torch.nn.Module):
@@ -82,7 +94,7 @@ dummy_input = torch.tensor([[41072, 9634, 318, 257]])
 torch.onnx.export(
     wrapped_model,
     dummy_input,
-    "model.onnx",
+    "src/utils/model/params_output/model.onnx",
     export_params=True,
     opset_version=11,
     do_constant_folding=True,
