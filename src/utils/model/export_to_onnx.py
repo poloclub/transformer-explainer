@@ -94,7 +94,8 @@ dummy_input = torch.tensor([[41072, 9634, 318, 257]])
 torch.onnx.export(
     wrapped_model,
     dummy_input,
-    "src/utils/model/params_output/model.onnx",
+    # "src/utils/model/params_output/model.onnx",
+    "static/model.onnx",
     export_params=True,
     opset_version=11,
     do_constant_folding=True,
