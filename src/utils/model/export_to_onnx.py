@@ -83,7 +83,7 @@ class wrapper(torch.nn.Module):
         )
 
 # initialize model
-model = GPT.from_pretrained("gpt2-large")
+model = GPT.from_pretrained("gpt2")
 model.eval()
 wrapped_model = wrapper(model)
 

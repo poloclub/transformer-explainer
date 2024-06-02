@@ -7,18 +7,30 @@
 	import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import Embedding from '~/components/Embedding.svelte';
 	import Mlp from '~/components/Mlp.svelte';
+	import { onMount } from 'svelte';
 
 	import { Spinner } from 'flowbite-svelte';
 
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 
+	import { getData } from '~/utils/data.ts';
+
 	const { theme } = resolveConfig(tailwindConfig);
 
-	// onMount(() => {
-	// 	const tl = gsap.timeline();
-	// 	tl.from('.main-section', { opacity: 0, duration: 1 });
-	// });
+
+	const run = async()=>{
+		console.log('run')
+		const res = await getData('Georgia tech is a');
+		console.log(res)
+	}
+	onMount(() => {
+		run()
+		// const tl = gsap.timeline();
+		// tl.from('.main-section', { opacity: 0, duration: 1 });
+	});
+
+
 	let offset;
 	console.log(offset);
 
