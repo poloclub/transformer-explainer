@@ -4,6 +4,9 @@
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick, setContext, getContext } from 'svelte';
 	import Operation from './Operation.svelte';
+	import VectorCanvas from './VectorCanvas.svelte';
+	import { fade } from 'svelte/transition';
+	import { Popover } from 'flowbite-svelte';
 
 	import { getData } from '~/utils/data';
 
@@ -58,19 +61,32 @@
 			ease: 'power2.inOut'
 		});
 	};
+
+	let isHovered = false;
+	let isDOHovered = false;
+	let isRDHovered = false;
+	let isLNHovered = false;
+
+	function handleMouseEnter() {
+		isHovered = true;
+	}
+
+	function handleMouseLeave() {
+		isHovered = false;
+	}
 </script>
 
-<div
-	class={classNames('embedding', className)}
-	on:click={onClickEmbedding}
-	on:keydown={onClickEmbedding}
-	role="button"
-	tabindex="0"
->
-	<div class="title">
+<div class={classNames('embedding', className)}>
+	<div
+		class="title"
+		on:click={onClickEmbedding}
+		on:keydown={onClickEmbedding}
+		role="button"
+		tabindex="0"
+	>
 		<div>Embedding</div>
 	</div>
-	<div class="content">
+	<div class="content relative">
 		<div class="tokens initial">
 			{#if isEmbeddingExpanded}
 				<div
@@ -98,11 +114,13 @@
 								>
 							</div>
 							<div class="token-embedding">
-								<div class={`vector bg-gray-200`}></div>
+								<div class={`vector bg-gray-200`}>
+									<VectorCanvas />
+								</div>
 							</div>
 							<div class="w-2 text-xs text-gray-400">+</div>
 							<div class="position-embedding">
-								<div class={`vector bg-gray-200`}></div>
+								<div class={`vector bg-gray-200`}><VectorCanvas /></div>
 							</div>
 							<div class="w-6 text-xs text-gray-400">=</div>
 						</div>
@@ -110,27 +128,125 @@
 				</div>
 			{/each}
 		</div>
-		<div class="tokens out bg-white">
-			{#each $tokens as token, index}
-				<div class="token">
-					<div class={`vector bg-gray-200`}></div>
-					<Operation type="dropout" tail={index === $tokens.length - 1} />
-					<Operation type="residual-start" head={index === 0} />
-					<Operation type="ln" tail={index === $tokens.length - 1} />
-				</div>
-			{/each}
+		<div class="flex">
+			<div
+				class="tokens vector"
+				role="group"
+				on:mouseenter={handleMouseEnter}
+				on:mouseleave={handleMouseLeave}
+			>
+				{#each $tokens as token, index}
+					<div class="token">
+						<div class={`vector bg-gray-200`}>
+							<div
+								class="canvas-container h-full w-full"
+								class:active={isHovered || isEmbeddingExpanded}
+							>
+								<VectorCanvas />
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div
+				class="tokens dropout"
+				role="group"
+				on:mouseenter={() => {
+					isDOHovered = true;
+				}}
+				on:mouseleave={() => {
+					isDOHovered = false;
+				}}
+			>
+				{#each $tokens as token, index}
+					<div class="token">
+						<Operation type="dropout" tail={index === $tokens.length - 1} active={isDOHovered} />
+					</div>
+				{/each}
+				<Popover
+					offset={1}
+					class="dropout-popover text-sm"
+					title="Drop out"
+					triggeredBy=".tokens.dropout"
+					trigger="hover"
+					arrow={false}
+					placement="right">...</Popover
+				>
+			</div>
+			<div
+				class="tokens residual"
+				role="group"
+				on:mouseenter={() => {
+					isRDHovered = true;
+				}}
+				on:mouseleave={() => {
+					isRDHovered = false;
+				}}
+			>
+				{#each $tokens as token, index}
+					<div class="token">
+						<Operation type="residual-start" head={index === 0} active={isRDHovered} />
+					</div>
+				{/each}
+			</div>
+			<div
+				class="tokens ln"
+				role="group"
+				on:mouseenter={() => {
+					isLNHovered = true;
+				}}
+				on:mouseleave={() => {
+					isLNHovered = false;
+				}}
+			>
+				{#each $tokens as token, index}
+					<div class="token">
+						<Operation type="ln" tail={index === $tokens.length - 1} active={isLNHovered} />
+					</div>
+				{/each}
+				<Popover
+					offset={1}
+					class="ln-popover text-sm"
+					title="Layer Normalization"
+					triggeredBy=".tokens.ln"
+					trigger="hover"
+					arrow={false}
+					placement="right">...</Popover
+				>
+			</div>
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
+	:global(.dropout-popover),
+	:global(.ln-popover) {
+		z-index: 999;
+		width: 20rem;
+		top: 100% !important;
+		/* transform: translateY(-100%); */
+	}
+	.canvas-container {
+		transition: opacity 0.5s;
+		opacity: 0;
+		overflow: hidden;
+		&.active {
+			opacity: 1;
+		}
+	}
 	.embedding {
+		.title {
+			justify-content: end;
+			padding-left: 3rem;
+		}
 		.content {
+			padding-left: 2rem;
 			display: grid;
-			grid-template-columns: auto repeat(4, minmax(2vw, 1fr));
+			grid-template-columns: auto repeat(3, minmax(3vw, 1fr));
 
 			.tokens {
 				position: relative;
+				height: fit-content;
 				.vector {
 					flex-shrink: 0;
 				}
@@ -179,7 +295,7 @@
 			}
 
 			.tokens.initial {
-				padding-right: 1rem;
+				padding-right: 0.8rem;
 			}
 			.tokens.out .token {
 				gap: 0.6rem;

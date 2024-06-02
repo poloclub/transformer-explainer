@@ -6,6 +6,9 @@
 	import { mask } from '~/utils/array';
 	import { getContext } from 'svelte';
 	import WeightPopover from '~/components/WeightPopover.svelte';
+	import resolveConfig from 'tailwindcss/resolveConfig';
+	import tailwindConfig from '../../tailwind.config';
+	const { theme } = resolveConfig(tailwindConfig);
 	import { attentionOutput, masked, qk } from '~/utils/mock_data';
 
 	export let data: any;
@@ -61,7 +64,15 @@
 		const QKDuration = 1.2;
 		const stagger = Number((QKDuration / $tokens.length).toFixed(2));
 
+		expandTl
+			.set([attentionMask.querySelector('.prev'), attentionSoftmax.querySelector('.prev')], {
+				opacity: 1
+			})
+			.set([attentionMask.querySelector('.main'), attentionSoftmax.querySelector('.main')], {
+				opacity: 0
+			});
 		expandTl.set(outPaths, { opacity: 0 });
+
 		expandTl.to(attentionResult, {
 			opacity: 0,
 			display: 'none',
@@ -121,7 +132,19 @@
 				width: attentionMatrixWidth,
 				x: 0,
 				duration: 0.5
-			});
+			})
+			.to(attentionMask.querySelector('.prev'), {
+				opacity: 0,
+				duration: 1
+			})
+			.to(
+				attentionMask.querySelector('.main'),
+				{
+					opacity: 1,
+					duration: 1
+				},
+				'<'
+			);
 
 		// show Softmaxed
 		expandTl
@@ -131,10 +154,24 @@
 				display: 'flex',
 				width: attentionMatrixWidth,
 				x: 0,
-				duration: 0.5
-			});
+				duration: 0.4
+			})
+			.to(attentionSoftmax.querySelector('.prev'), {
+				opacity: 0,
+				duration: 1
+			})
+			.to(
+				attentionSoftmax.querySelector('.main'),
+				{
+					opacity: 1,
+					duration: 1
+				},
+				'<'
+			);
 
-		expandTl.to(outPaths, { opacity: 0.4 });
+		// const grad = document.querySelector('#green-purple');
+		// const stop = grad?.querySelectorAll('stop')[1];
+		expandTl.to(outPaths, { opacity: 0.5 });
 	};
 
 	const collapseAttention = () => {
@@ -176,6 +213,7 @@
 			bind:this={attentionQK}
 		>
 			<Matrix
+				className="main"
 				{data}
 				showSize={false}
 				cellHeight={cellSize}
@@ -191,16 +229,31 @@
 			class="attention-matrix attention-mask flex flex-col items-center"
 			bind:this={attentionMask}
 		>
-			<Matrix
-				data={mask(data)}
-				showSize={false}
-				cellHeight={cellSize}
-				cellWidth={cellSize}
-				rowGap={3}
-				colGap={3}
-				shape={'circle'}
-				colorScale={'purple'}
-			/>
+			<div>
+				<Matrix
+					className="prev absolute top-0 left-0 pointer-events-none"
+					{data}
+					showSize={false}
+					cellHeight={cellSize}
+					cellWidth={cellSize}
+					rowGap={3}
+					colGap={3}
+					shape={'circle'}
+					colorScale={'purple'}
+				/>
+				<Matrix
+					className="main opacity-0"
+					data={mask(data)}
+					showSize={false}
+					cellHeight={cellSize}
+					cellWidth={cellSize}
+					rowGap={3}
+					colGap={3}
+					shape={'circle'}
+					colorScale={'purple'}
+				/>
+			</div>
+
 			<div class="text-gray-400">Mask</div>
 		</div>
 
@@ -210,17 +263,32 @@
 			})}
 			bind:this={attentionSoftmax}
 		>
-			<Matrix
-				data={mask(data)}
-				showSize={false}
-				cellHeight={cellSize}
-				cellWidth={cellSize}
-				rowGap={3}
-				colGap={3}
-				showValue={true}
-				shape={'circle'}
-				colorScale={'purple'}
-			/>
+			<div>
+				<Matrix
+					className="prev absolute top-0 left-0  pointer-events-none"
+					data={mask(data)}
+					showSize={false}
+					cellHeight={cellSize}
+					cellWidth={cellSize}
+					rowGap={3}
+					colGap={3}
+					shape={'circle'}
+					colorScale={'purple'}
+				/>
+				<Matrix
+					className="main opacity-0"
+					data={mask(data)}
+					showSize={false}
+					cellHeight={cellSize}
+					cellWidth={cellSize}
+					rowGap={3}
+					colGap={3}
+					showValue={true}
+					shape={'circle'}
+					colorScale={'purple'}
+				/>
+			</div>
+
 			<div class="text-gray-400">Softmax</div>
 		</div>
 		<div
@@ -232,6 +300,7 @@
 			bind:offsetWidth={attentionMatrixWidth}
 		>
 			<Matrix
+				className="main"
 				data={mask(data)}
 				showSize={false}
 				cellHeight={cellSize}

@@ -25,7 +25,7 @@
 	</div>
 	<div class="content relative">
 		<div class="bounding" class:active={$isBoundingBoxActive}>
-			<div class="title absolute top-0">First Transformer Block</div>
+			<!-- <div class="title absolute top-0">First Transformer Block</div> -->
 		</div>
 		<div class="tokens">
 			{#each $tokens as token, index}
@@ -48,7 +48,7 @@
 		<div class="heads">
 			<HeadStack>
 				<div
-					class="head-block resize-watch flex w-full items-center justify-between px-2"
+					class="head-block flex w-full items-center justify-between px-2"
 					style={`height:${headContentHeight}px;`}
 				>
 					<div class="flex h-full flex-col justify-center gap-[5rem] pl-[5rem]">
@@ -77,7 +77,7 @@
 							{/each}
 						</div>
 					</div>
-					<div class="attention-matrix flex">
+					<div class="resize-watch attention-matrix flex">
 						<AttentionMatrix data={attentionData} />
 					</div>
 					<div class="head-out mx-4">

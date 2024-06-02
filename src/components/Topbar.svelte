@@ -7,7 +7,6 @@
 	<div class="inputs flex grow items-center">
 		<div class="flex w-full">
 			<div class="grow"><InputForm /></div>
-			<div class="slider w-[200px]">slider</div>
 		</div>
 	</div>
 	<div class="icons flex items-center gap-4">
@@ -48,10 +47,10 @@
 <style lang="scss">
 	.top-bar {
 		background-color: white;
-
+		/* 
 		box-shadow:
 			0px 4px 6px -1px rgba(0, 0, 0, 0.05),
-			0px 2px 4px -2px rgba(0, 0, 0, 0.05);
+			0px 2px 4px -2px rgba(0, 0, 0, 0.05); */
 
 		.logo {
 			font-weight: bold;

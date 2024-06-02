@@ -6,7 +6,7 @@
 	import Dropdown from 'flowbite-svelte/Dropdown.svelte';
 	import DropdownItem from 'flowbite-svelte/DropdownItem.svelte';
 	import Temperature from './Temperature.svelte';
-  import TokenGenerator from './TokenGenerator.svelte';
+	import TokenGenerator from './TokenGenerator.svelte';
 
 	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
 	import { inputText, selectedModel } from '~/store';
@@ -55,7 +55,8 @@
 					bind:value={inputTextTemp}
 				/>
 			</ButtonGroup>
-			<Button
+			<TokenGenerator {handleSubmit} />
+			<!-- <Button
 				color="blue"
 				class="!p-1.5 focus:ring-inset"
 				type="submit"
@@ -63,9 +64,8 @@
 				on:click={handleSubmit}
 			>
 				Generate
-			</Button>
+			</Button> -->
 		</form>
 	</div>
-	<TokenGenerator />
 	<Temperature />
 </div>

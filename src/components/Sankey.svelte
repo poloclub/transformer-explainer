@@ -53,7 +53,7 @@
 			},
 			{
 				from: '.attention .head-out .vector',
-				to: '.mlp .initial .head-rest',
+				to: '.mlp .initial .vector .head-rest',
 				gradientId: 'transparent-purple'
 			}
 		]
@@ -61,12 +61,12 @@
 	$: pathMap = {
 		embedding: [
 			{
-				from: '.embedding .out .vector',
-				to: '.embedding .out .ln .main',
+				from: '.embedding .tokens.vector .vector',
+				to: '.embedding .tokens.ln .cursor',
 				fill: theme.colors.gray[defaultGradientBrightness]
 			},
 			{
-				from: '.embedding .out .ln .main',
+				from: '.embedding .tokens.ln .cursor',
 				to: '.attention .vector',
 				gradientId: 'gray-blue'
 			}
@@ -94,7 +94,7 @@
 			},
 			{
 				from: '.head-block .key .vector',
-				to: `.attention-matrix.attention-initial  g.g-row`,
+				to: `.attention-initial .main g.g-row`,
 				id: 'key-to-attention',
 				type: 'stroke',
 				gradientId: 'red-purple',
@@ -109,15 +109,15 @@
 					const controlPoint2X = target.left + scrollLeft - curveOffset;
 
 					return `
-        M ${source.right + scrollLeft},${sourceMiddleY}
-        C ${controlPoint1X},${sourceMiddleY} ${controlPoint2X},${targetMiddleY} ${target.left + scrollLeft},${targetMiddleY}
-				L ${target.right + scrollLeft},${targetMiddleY}
-    `;
+			    M ${source.right + scrollLeft},${sourceMiddleY}
+			    C ${controlPoint1X},${sourceMiddleY} ${controlPoint2X},${targetMiddleY} ${target.left + scrollLeft},${targetMiddleY}
+					L ${target.right + scrollLeft},${targetMiddleY}
+			`;
 				}
 			},
 			{
 				from: '.head-block .query .vector',
-				to: `.attention-matrix.attention-initial  g.g-row-${$tokens.length - 1} circle`,
+				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} circle`,
 				gradientId: 'blue-purple',
 				id: 'query-to-attention',
 				type: 'stroke',
@@ -130,55 +130,93 @@
 					const targetMiddleX = target.left + scrollLeft + target.width / 2;
 
 					return `
-        M ${source.right + scrollLeft},${sourceMiddleY}
-        L ${targetMiddleX - curveOffset},${sourceMiddleY}
-        A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
-        L ${targetMiddleX},${target.bottom + scrollTop}
-    `;
+			    M ${source.right + scrollLeft},${sourceMiddleY}
+			    L ${targetMiddleX - curveOffset},${sourceMiddleY}
+			    A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
+			    L ${targetMiddleX},${target.bottom + scrollTop}
+			`;
 				}
 			},
 			{
-				from: '.attention-matrix.attention-out svg',
+				from: '.attention-matrix.attention-out .main svg',
 				to: '.attention .head-out',
 				gradientId: 'transparent-purple2',
 				id: 'to-attention-out',
-				curve: 20
+				opacity: 0.4,
+				curve: 20,
+				pathGenerator: (source, target, curveOffset) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					return `
+			    M ${source.right + scrollLeft},${source.top + scrollTop}
+			    C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+			    L ${target.left + scrollLeft},${target.bottom + scrollTop}
+			    C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
+			    Z
+			`;
+				}
 			},
 			{
 				from: '.head-block .value',
 				to: '.attention .head-out',
 				gradientId: 'green-purple',
 				id: 'to-attention-out',
-				opacity: 0.4
+				opacity: 0.4,
+				curve: 60,
+				pathGenerator: (source, target, curveOffset) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					return `
+        M ${source.right + scrollLeft},${source.top + scrollTop} 
+        C ${target.left - curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${source.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+        L ${target.left + scrollLeft},${target.bottom + scrollTop}
+        C ${target.left + scrollLeft - curveOffset},${source.bottom + scrollTop} ${target.left - curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
+        Z
+    `;
+				}
 			}
 		],
 		mlp: [
 			{
-				from: '.mlp .initial .vector',
-				to: '.mlp .initial .residual-start',
+				from: '.mlp .tokens.initial .vector',
+				to: '.mlp .tokens.residual-start .cursor',
 				fill: theme.colors.purple[defaultGradientBrightness]
 			},
 			{
-				from: '.mlp .initial .residual-start',
+				from: '.mlp .tokens.residual-start .cursor',
 				to: '.mlp .projections .vector',
 				gradientId: 'purple-indigo'
 			},
 			{
 				from: '.mlp .projections .vector',
-				to: '.transformer-blocks .initial .residual',
+				to: '.mlp .second-layer .tokens.residual-end .cursor',
 				gradientId: 'indigo-blue'
+			},
+			{
+				from: '.mlp .second-layer .tokens.residual-end .cursor',
+				to: '.mlp .tokens.out .vector',
+				fill: theme.colors.blue[defaultGradientBrightness]
 			}
 		],
 		'transformer-blocks': [
 			{
-				from: '.transformer-blocks .initial .residual',
-				to: '.transformer-blocks .initial .vector',
-				fill: theme.colors.blue[defaultGradientBrightness]
-			},
-			{
-				from: '.transformer-blocks .initial .vector',
-				to: '.transformer-blocks .final .vector',
-				gradientId: 'blue-white-blue'
+				from: '.mlp .out .vector',
+				to: '.transformer-blocks .tokens.final .vector',
+				gradientId: 'blue-white-blue',
+				pathGenerator: (source, target, curveOffset) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					return `
+        M ${source.right + scrollLeft},${source.top + scrollTop}
+        C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+        L ${target.left + scrollLeft},${target.bottom + scrollTop}
+        C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
+        Z
+    `;
+				}
 			}
 		],
 		'linear-softmax': [
@@ -234,8 +272,8 @@
 			100: { color: theme.colors.purple[100], opacity: 1 }
 		},
 		'transparent-purple2': {
-			0: { color: theme.colors.purple[200], opacity: 0 },
-			100: { color: theme.colors.purple[200], opacity: 1 }
+			0: { color: theme.colors.purple[300], opacity: 0 },
+			100: { color: theme.colors.purple[300], opacity: 1 }
 		}
 	};
 
@@ -333,13 +371,15 @@
 		});
 	};
 
-	const pathGenerator = (source: DOMRect, target: DOMRect, curveOffset: number) => {
+	const pathGenerator = (source, target, curveOffset: number) => {
 		const scrollTop = window.scrollY;
 		const scrollLeft = window.scrollX;
 
 		return `
         M ${source.right + scrollLeft},${source.top + scrollTop}
         C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+        L ${target.right + scrollLeft},${target.top + scrollTop}
+        L ${target.right + scrollLeft},${target.bottom + scrollTop}
         L ${target.left + scrollLeft},${target.bottom + scrollTop}
         C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
         Z
