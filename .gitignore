@@ -11,3 +11,6 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 yarn.lock
+params_output
+__pycache__
+model.onnx

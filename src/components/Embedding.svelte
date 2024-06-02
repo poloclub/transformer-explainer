@@ -5,6 +5,8 @@
 	import { tick, setContext, getContext } from 'svelte';
 	import Operation from './Operation.svelte';
 
+	import { getData } from '~/utils/data';
+
 	export let className: string | undefined = undefined;
 
 	setContext('block-id', 'embedding');

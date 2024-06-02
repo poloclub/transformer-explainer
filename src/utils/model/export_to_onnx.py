@@ -1,5 +1,17 @@
 import torch
 from model import GPT  # import model
+import os
+
+def create_folder_if_not_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_path}' created.")
+    else:
+        print(f"Folder '{folder_path}' already exists.")
+
+# Example usage
+folder_path = 'src/utils/model/params_output'
+create_folder_if_not_exists(folder_path)
 
 # create wrapper function to extract outputs from dictionary
 class wrapper(torch.nn.Module):
@@ -71,7 +83,7 @@ class wrapper(torch.nn.Module):
         )
 
 # initialize model
-model = GPT.from_pretrained("gpt2-large")
+model = GPT.from_pretrained("gpt2")
 model.eval()
 wrapped_model = wrapper(model)
 
@@ -82,7 +94,8 @@ dummy_input = torch.tensor([[41072, 9634, 318, 257]])
 torch.onnx.export(
     wrapped_model,
     dummy_input,
-    "model.onnx",
+    # "src/utils/model/params_output/model.onnx",
+    "static/model.onnx",
     export_params=True,
     opset_version=11,
     do_constant_folding=True,
@@ -102,64 +115,64 @@ torch.onnx.export(
         "linear_weight", "linear_output"
     ],
     dynamic_axes={
-        'input': {0: 'batch_size', 1: 'sequence_length'},
-        'tok_emb': {0: 'batch_size', 1: 'sequence_length'},
-        'transformer_wpe_weight': {0: 'block_size'},
-        'pos_emb': {0: 'sequence_length'},
-        'input_emb': {0: 'batch_size', 1: 'sequence_length'},
-        'input_emb_dropout': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_ln_1_input_mean': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_ln_1_input_var': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_ln_1_input_normalized': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_ln_1_weight': {0: 'embedding_size'},
-        'block_0_ln_1_bias': {0: 'embedding_size'},
-        'block_0_ln_1_output': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_attn_head_0_q_weights': {1: 'head_size', 2: 'embedding_size'},
-        'block_0_attn_head_0_k_weights': {1: 'head_size', 2: 'embedding_size'},
-        'block_0_attn_head_0_v_weights': {1: 'head_size', 2: 'embedding_size'},
-        'block_0_attn_head_0_q_bias': {0: 'head_size'},
-        'block_0_attn_head_0_k_bias': {0: 'head_size'},
-        'block_0_attn_head_0_v_bias': {0: 'head_size'},
-        'block_0_attn_head_0_q': {0: 'batch_size', 1: 'sequence_length', 2: 'head_size'},
-        'block_0_attn_head_0_k': {0: 'batch_size', 1: 'sequence_length', 2: 'head_size'},
-        'block_0_attn_head_0_v': {0: 'batch_size', 1: 'sequence_length', 2: 'head_size'},
-        'block_0_attn_head_0_q_transposed': {0: 'batch_size', 1: 'head_size', 2: 'sequence_length'},
-        'block_0_attn_head_0_k_transposed': {0: 'batch_size', 1: 'head_size', 2: 'sequence_length'},
-        'block_0_attn_head_0_v_transposed': {0: 'batch_size', 1: 'head_size', 2: 'sequence_length'},
-        'block_0_attn_head_0_attn': {0: 'batch_size', 1: 'sequence_length', 2: 'sequence_length'},
-        'block_0_attn_head_0_attn_scaled': {0: 'batch_size', 1: 'sequence_length', 2: 'sequence_length'},
-        'block_0_attn_head_0_attn_masked': {0: 'batch_size', 1: 'sequence_length', 2: 'sequence_length'},
-        'block_0_attn_head_0_attn_softmax': {0: 'batch_size', 1: 'sequence_length', 2: 'sequence_length'},
-        'block_0_attn_head_0_attn_dropout': {0: 'batch_size', 1: 'sequence_length', 2: 'sequence_length'},
-        'block_0_attn_head_0_v_output': {0: 'batch_size', 1: 'sequence_length', 2: 'head_size'},
-        'block_0_attn_v_output_combined': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_attn_proj_weights': {0: 'embedding_size', 1: 'embedding_size'},
-        'block_0_attn_proj_bias': {0: 'embedding_size'},
-        'block_0_attn_attn_output': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_res_1': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_ln_2_input_mean': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_ln_2_input_var': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_ln_2_input_normalized': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_ln_2_weight': {0: 'embedding_size'},
-        'block_0_ln_2_bias': {0: 'embedding_size'},
-        'block_0_ln_2_output': {0: 'batch_size', 1: 'sequence_length'},
-        'block_0_mlp_linear_1_weight': {0: 'linear_1_out', 1: 'embedding_size'},
-        'block_0_mlp_linear_1_bias': {0: 'linear_1_out'},
-        'block_0_mlp_linear_1_output': {0: 'batch_size', 1: 'sequence_length', 2: 'linear_1_out'},
-        'block_0_mlp_gelu_output': {0: 'batch_size', 1: 'sequence_length', 2: 'linear_1_out'},
-        'block_0_mlp_linear_2_weight': {0: 'embedding_size', 1: 'linear_1_out'},
-        'block_0_mlp_linear_2_bias': {0: 'embedding_size'},
-        'block_0_mlp_linear_2_output': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_mlp_output_after_dropout': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'block_0_res_2': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'ln_f_input_mean': {0: 'batch_size', 1: 'sequence_length'},
-        'ln_f_input_var': {0: 'batch_size', 1: 'sequence_length'},
-        'ln_f_input_normalized': {0: 'batch_size', 1: 'sequence_length', 2: 'embedding_size'},
-        'ln_f_weight': {0: 'embedding_size'},
-        'ln_f_bias': {0: 'embedding_size'},
-        'ln_f_output': {0: 'batch_size', 1: 'sequence_length'},
-        'linear_weight': {0: 'vocab_size', 1: 'embedding_size'},
-        'linear_output': {0: 'batch_size', 1: 'sequence_length', 2: 'vocab_size'}
+        'input': {0: '0', 1: '1'},
+        'tok_emb': {0: '0', 1: '1'},
+        'transformer_wpe_weight': {0: '0'},
+        'pos_emb': {0: '0'},
+        'input_emb': {0: '0', 1: '1'},
+        'input_emb_dropout': {0: '0', 1: '1'},
+        'block_0_ln_1_input_mean': {0: '0', 1: '1'},
+        'block_0_ln_1_input_var': {0: '0', 1: '1'},
+        'block_0_ln_1_input_normalized': {0: '0', 1: '1', 2: '2'},
+        'block_0_ln_1_weight': {0: '0'},
+        'block_0_ln_1_bias': {0: '0'},
+        'block_0_ln_1_output': {0: '0', 1: '1'},
+        'block_0_attn_head_0_q_weights': {0: '0', 1: '1'},
+        'block_0_attn_head_0_k_weights': {0: '0', 1: '1'},
+        'block_0_attn_head_0_v_weights': {0: '0', 1: '1'},
+        'block_0_attn_head_0_q_bias': {0: '0'},
+        'block_0_attn_head_0_k_bias': {0: '0'},
+        'block_0_attn_head_0_v_bias': {0: '0'},
+        'block_0_attn_head_0_q': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_k': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_v': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_q_transposed': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_k_transposed': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_v_transposed': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_attn': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_attn_scaled': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_attn_masked': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_attn_softmax': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_attn_dropout': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_head_0_v_output': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_v_output_combined': {0: '0', 1: '1', 2: '2'},
+        'block_0_attn_proj_weights': {0: '0', 1: '1'},
+        'block_0_attn_proj_bias': {0: '0'},
+        'block_0_attn_attn_output': {0: '0', 1: '1', 2: '2'},
+        'block_0_res_1': {0: '0', 1: '1', 2: '2'},
+        'block_0_ln_2_input_mean': {0: '0', 1: '1'},
+        'block_0_ln_2_input_var': {0: '0', 1: '1'},
+        'block_0_ln_2_input_normalized': {0: '0', 1: '1', 2: '2'},
+        'block_0_ln_2_weight': {0: '0'},
+        'block_0_ln_2_bias': {0: '0'},
+        'block_0_ln_2_output': {0: '0', 1: '1'},
+        'block_0_mlp_linear_1_weight': {0: '0', 1: '1'},
+        'block_0_mlp_linear_1_bias': {0: '0'},
+        'block_0_mlp_linear_1_output': {0: '0', 1: '1', 2: '2'},
+        'block_0_mlp_gelu_output': {0: '0', 1: '1', 2: '2'},
+        'block_0_mlp_linear_2_weight': {0: '0', 1: '2'},
+        'block_0_mlp_linear_2_bias': {0: '0'},
+        'block_0_mlp_linear_2_output': {0: '0', 1: '1', 2: '2'},
+        'block_0_mlp_output_after_dropout': {0: '0', 1: '1', 2: '2'},
+        'block_0_res_2': {0: '0', 1: '1', 2: '2'},
+        'ln_f_input_mean': {0: '0', 1: '1'},
+        'ln_f_input_var': {0: '0', 1: '1'},
+        'ln_f_input_normalized': {0: '0', 1: '1', 2: '2'},
+        'ln_f_weight': {0: '0'},
+        'ln_f_bias': {0: '0'},
+        'ln_f_output': {0: '0', 1: '1'},
+        'linear_weight': {0: '0', 1: '2'},
+        'linear_output': {0: '0', 1: '1', 2: '2'}
     }
 )
 

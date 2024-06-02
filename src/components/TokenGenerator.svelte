@@ -2,7 +2,7 @@
 	import { Tooltip, Range, Button } from 'flowbite-svelte';
   import { writable } from 'svelte/store';
   import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
-  import { OriginalBarData } from '../utils/data.ts';
+  import { OriginalBarData } from '../utils/mock_data.ts';
   import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
   import { temperature, inputText } from '~/store';
 

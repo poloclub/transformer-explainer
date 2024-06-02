@@ -12,7 +12,6 @@
 		"deploy": "gh-pages -d build --nojekyll"
 	},
 	"devDependencies": {
-		"@fontsource/fira-mono": "^4.5.10",
 		"@neoconfetti/svelte": "^1.0.0",
 		"@sveltejs/adapter-auto": "^3.2.0",
 		"@sveltejs/adapter-static": "^3.0.1",
@@ -51,7 +50,6 @@
 	"dependencies": {
 		"@xenova/transformers": "^2.17.1",
 		"gsap": "^3.12.5",
-		"onnxjs": "^0.1.8",
 		"onnxruntime-web": "^1.18.0"
 	}
 }
