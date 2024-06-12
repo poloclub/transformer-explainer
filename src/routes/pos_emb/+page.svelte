@@ -3,8 +3,7 @@
 	import gsap from 'gsap';
 	import { expandedBlock, modelMeta, tokens } from '~/store';
 	import classNames from 'classnames';
-	import PositionalEncoding from '~/components/PositionalEncoding.svelte';
-
+	import PositionalEncoding from '~/components/Popovers/PositionalEncodingPopover.svelte';
 </script>
 
-<PositionalEncoding></PositionalEncoding>
+<PositionalEncoding open={true} triggeredBy={'body'}></PositionalEncoding>

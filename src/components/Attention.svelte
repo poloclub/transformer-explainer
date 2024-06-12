@@ -1,12 +1,11 @@
 <script lang="ts">
 	import HeadStack from '~/components/HeadStack.svelte';
-	import { tokens, modelMeta, isBoundingBoxActive } from '~/store';
+	import { tokens, modelMeta, isBoundingBoxActive, headContentHeight, modelData } from '~/store';
 	import classNames from 'classnames';
 	import AttentionMatrix from '~/components/AttentionMatrix.svelte';
 	import { setContext } from 'svelte';
 
 	export let className: string | undefined = undefined;
-	export let headContentHeight: number = 0;
 
 	setContext('block-id', 'attention');
 
@@ -17,6 +16,16 @@
 				.fill(0)
 				.map((d) => Math.random())
 		);
+
+	const queryVectorColor = 'bg-blue-200';
+	const keyVectorColor = 'bg-red-200';
+	const valVectorColor = 'bg-green-200';
+
+	const queryHeadVectorColor = 'bg-blue-300';
+	const keyHeadVectorColor = 'bg-red-300';
+	const valHeadVectorColor = 'bg-green-300';
+
+	const outputVectorColor = 'bg-purple-300';
 </script>
 
 <div class={classNames('attention', className)}>
@@ -27,19 +36,19 @@
 		<div class="bounding" class:active={$isBoundingBoxActive}>
 			<!-- <div class="title absolute top-0">First Transformer Block</div> -->
 		</div>
-		<div class="tokens">
+		<div class="column">
 			{#each $tokens as token, index}
-				<div class="vector x3 flex flex-col">
-					<div class={`sub-vector query flex grow flex-col bg-blue-200`}>
-						<div class="sub-vector x1-12 head1"></div>
+				<div class="vector x3 flex flex-col" class:last={index === $tokens.length - 1}>
+					<div class={`sub-vector query flex grow flex-col ${queryVectorColor}`}>
+						<div class={`sub-vector x1-12 head1 ${queryHeadVectorColor}`}></div>
 						<div class="sub-vector head-rest grow"></div>
 					</div>
-					<div class={`sub-vector key flex grow flex-col bg-red-200`}>
-						<div class="sub-vector x1-12 head1"></div>
+					<div class={`sub-vector key flex grow flex-col ${keyVectorColor}`}>
+						<div class={`sub-vector x1-12 head1 ${keyHeadVectorColor}`}></div>
 						<div class="sub-vector head-rest grow"></div>
 					</div>
-					<div class={`sub-vector value flex grow flex-col bg-green-200`}>
-						<div class="sub-vector x1-12 head1"></div>
+					<div class={`sub-vector value flex grow flex-col ${valVectorColor}`}>
+						<div class={`sub-vector x1-12 head1 ${valHeadVectorColor}`}></div>
 						<div class="sub-vector head-rest grow"></div>
 					</div>
 				</div>
@@ -49,30 +58,30 @@
 			<HeadStack>
 				<div
 					class="head-block flex w-full items-center justify-between px-2"
-					style={`height:${headContentHeight}px;`}
+					style={`height:${$headContentHeight}px;`}
 				>
-					<div class="flex h-full flex-col justify-center gap-[5rem] pl-[5rem]">
-						<div class="tokens query">
+					<div class="qkv flex h-full flex-col justify-center gap-[5rem] pl-[6rem]">
+						<div class="column query">
 							{#each $tokens as token, index}
-								<div class="token text-xs">
+								<div class="cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
-									<div class={`vector x1-12  bg-blue-300`}></div>
+									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
-						<div class="tokens key">
+						<div class="column key">
 							{#each $tokens as token, index}
-								<div class="token text-xs">
+								<div class="cell x1-12 text-xs class:last={index === $tokens.length - 1}">
 									<span class="label float">{token}</span>
-									<div class={`vector x1-12 bg-red-300`}></div>
+									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
-						<div class="tokens value">
+						<div class="column value">
 							{#each $tokens as token, index}
-								<div class="token text-xs">
+								<div class="cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
-									<div class={`vector x1-12 bg-green-300`}></div>
+									<div class={`vector x1-12 ${valHeadVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
@@ -80,11 +89,11 @@
 					<div class="resize-watch attention-matrix flex">
 						<AttentionMatrix data={attentionData} />
 					</div>
-					<div class="head-out mx-4">
-						<div class="tokens">
+					<div class="head-out mx-[2rem]">
+						<div class="column">
 							{#each $tokens as token, index}
-								<div class="token">
-									<div class={`vector x1-12 bg-purple-400`}></div>
+								<div class="cell x1-12" class:last={index === $tokens.length - 1}>
+									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
@@ -115,7 +124,7 @@
 			}
 		}
 		.heads {
-			padding: 0 5rem;
+			padding: 0 6rem 0 7rem;
 		}
 	}
 </style>

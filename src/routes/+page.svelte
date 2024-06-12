@@ -1,29 +1,29 @@
 <script lang="ts">
-	import { tokens, expandedBlock, vectorHeight } from '~/store';
+	import {
+		tokens,
+		expandedBlock,
+		vectorHeight,
+		inputText,
+		rootRem,
+		maxVectorHeight,
+		minVectorHeight,
+		maxVectorScale,
+		headContentHeight,
+		temperature,
+		modelData
+	} from '~/store';
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
 	import SubsequentBlocks from '~/components/SubsequentBlocks.svelte';
-	// import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import Embedding from '~/components/Embedding.svelte';
 	import Mlp from '~/components/Mlp.svelte';
 	import { onMount } from 'svelte';
-
-	import { Spinner } from 'flowbite-svelte';
-
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../tailwind.config';
 	import classNames from 'classnames';
 
-	import { getData } from '~/utils/data.ts';
+	import { adjustTemperature, runModel } from '~/utils/data';
 
-	const { theme } = resolveConfig(tailwindConfig);
-
-	// onMount(() => {
-	// 	const tl = gsap.timeline();
-	// 	tl.from('.main-section', { opacity: 0, duration: 1 });
-	// });
-
+	// expanded state control
 	let isExpanded = false;
 	$: if ($expandedBlock.id !== null) {
 		isExpanded = true;
@@ -31,53 +31,84 @@
 		isExpanded = false;
 	}
 
-	const run = async()=>{
-		console.log('run')
-		const res = await getData('Georgia tech is a');
-		console.log(res)
-	}
+	// running model
 	onMount(() => {
-		run()
-		// const tl = gsap.timeline();
-		// tl.from('.main-section', { opacity: 0, duration: 1 });
+		const unsubscribeInputText = inputText.subscribe((value) => {
+			runModel(value, $temperature, $tokens.length);
+		});
+
+		let initialRun = true; // prevent redundant initial adjustTemperature
+		const unsubscribeTemperature = temperature.subscribe((value) => {
+			if (initialRun) {
+				initialRun = false;
+				return;
+			}
+			adjustTemperature($modelData?.prediction, value);
+		});
+
+		return () => {
+			unsubscribeInputText();
+			unsubscribeTemperature();
+		};
 	});
 
-
-	let offset;
-	console.log(offset);
-
-	const rootRem = 16;
-
+	// visual elements
 	let vizHeight = 0;
 	let titleHeight = rootRem * 6;
-	const minVectorHeight = 12;
-	const maxVectorHeight = 36;
 
-	const maxVectorScale = 4;
-	$: gaps = rootRem * 0.5 * ($tokens.length - 1);
+	const calculateVectorHeight = () => {
+		const gaps = rootRem * 0.5 * ($tokens.length - 1);
+		const vectorHeightVal = Math.min(
+			Math.max((vizHeight - titleHeight - gaps) / $tokens.length / maxVectorScale, minVectorHeight),
+			maxVectorHeight
+		);
+		vectorHeight.set(vectorHeightVal);
+		headContentHeight.set($tokens.length * vectorHeightVal * 3 + gaps);
+	};
 
-	$: vectorHeightVal = Math.min(
-		Math.max((vizHeight - titleHeight - gaps) / $tokens.length / maxVectorScale, minVectorHeight),
-		maxVectorHeight
-	);
-
-	$: vectorHeight.set(vectorHeightVal);
-
-	$: headContentHeight = $tokens.length * vectorHeightVal * 3 + gaps;
+	$: if (vizHeight) {
+		calculateVectorHeight();
+	}
 </script>
 
 <div
 	class="main-section h-full"
-	style={`--vector-height: ${vectorHeightVal}px;--title-height: ${titleHeight}px`}
+	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px`}
 >
+	<!-- <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+		<defs>
+			<mask id="reveal-mask">
+				<rect x="0" y="0" width="0" height="800" fill="white">
+					<animate attributeName="width" from="0" to="1200" dur="3s" fill="freeze" />
+				</rect>
+			</mask>
+		</defs>
+		<path
+			class="sankeyy"
+			fill="url(#purple-indigo)"
+			stroke="none"
+			stroke-width="2"
+			opacity="1"
+			d="
+		  M 913.34375,100.28125
+		  C 993.34375,100.28125 995.0078125,722.9140625 1075.0078125,722.9140625
+		  L 1087.0078125,722.9140625
+		  L 1087.0078125,771.828125
+		  L 1075.0078125,771.828125
+		  C 995.0078125,771.828125 993.34375,704.5625 913.34375,704.5625
+		  Z
+		"
+			mask="url(#reveal-mask)"
+		></path>
+	</svg> -->
 	<!-- <Spinner color={theme.colors['primary'][500]} /> -->
-	<div class="sankey opacity-1 pointer-events-none">
+	<div class="sankey opacity-1">
 		<Sankey />
 	</div>
 	<div class="nodes resize-watch">
 		<div class="steps" class:expanded={isExpanded} bind:offsetHeight={vizHeight}>
 			<Embedding className="step" />
-			<Attention className="step" {headContentHeight} />
+			<Attention className="step" />
 			<Mlp className="step" />
 			<SubsequentBlocks className="step" />
 			<LinearSoftmax className="step" />
@@ -91,6 +122,9 @@
 </div>
 
 <style lang="scss">
+	:global(.last) {
+		opacity: 0;
+	}
 	.nodes {
 		height: 100%;
 		width: 100%;
@@ -108,7 +142,7 @@
 		height: 100%;
 		position: relative;
 		display: grid;
-		grid-template-columns: 4fr 6fr 8fr 4fr 2fr;
+		grid-template-columns: 1fr 2fr 1fr 0.5fr 0.5fr;
 		grid-template-rows: var(--title-height) 1fr;
 
 		&.expanded {
@@ -123,7 +157,7 @@
 	}
 
 	:global(.step .title) {
-		z-index: 101;
+		z-index: 100;
 		display: flex;
 		flex-direction: column;
 		justify-content: end;
@@ -135,19 +169,41 @@
 		min-width: 0;
 
 		transition: all 0.5s;
-		&:hover {
-			color: theme('colors.gray.400');
-		}
+		// &:hover {
+		// 	color: theme('colors.gray.400');
+		// }
 	}
 
 	:global(.step .content) {
 		grid-row: 2;
 	}
 
-	:global(.tokens) {
+	:global(.column) {
+		z-index: 100;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		position: relative;
+		height: fit-content;
+
+		:global(.cell) {
+			height: var(--vector-height);
+			display: flex;
+			gap: 1rem;
+			align-items: center;
+			position: relative;
+		}
+
+		:global(.subtitle) {
+			position: absolute;
+			top: 0;
+			transform: translateY(calc(-100% - 1rem));
+			text-align: center;
+			font-size: 0.8rem;
+			color: theme('colors.gray.400');
+			width: 100%;
+			z-index: 101;
+		}
 	}
 
 	:global(.vector),
@@ -158,20 +214,21 @@
 		flex-shrink: 0;
 		justify-content: start;
 	}
-
+	:global(.cell.x1-12),
 	:global(.vector.x1-12),
 	:global(.sub-vector.x1-12) {
 		height: calc(var(--vector-height) / 12);
 	}
 
+	:global(.cell.x3),
 	:global(.vector.x3),
 	:global(.sub-vector.x3) {
 		height: calc(var(--vector-height) * 3);
 	}
-
+	:global(.cell.x4),
 	:global(.vector.x4),
 	:global(.sub-vector.x4) {
-		height: calc(var(--vector-height) * 4);
+		height: calc(var(--vector-height) * 3.2);
 	}
 
 	:global(.vector.vocab),
@@ -184,34 +241,28 @@
 		flex: 1 0 0;
 	}
 
-	:global(.token) {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-		position: relative;
-
-		:global(.label) {
-			font-size: 0.9rem;
-			color: theme('colors.gray.700');
-			z-index: 101;
-			display: inline;
-			width: 4rem;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			text-align: right;
-			line-height: var(--vector-height);
-		}
-		:global(.label.float) {
-			position: absolute;
-			left: -0.8rem;
-			transform: translateX(-100%);
-		}
-		:global(.label.float-right) {
-			position: absolute;
-			right: 1rem;
-			transform: translateX(100%);
-			text-align: left;
-		}
+	:global(.label) {
+		font-size: 0.9rem;
+		color: theme('colors.gray.700');
+		z-index: 101;
+		display: inline;
+		width: 4rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-align: right;
+		line-height: var(--vector-height);
+		height: var(--vector-height);
+	}
+	:global(.label.float) {
+		position: absolute;
+		left: -0.8rem;
+		transform: translateX(-100%);
+	}
+	:global(.label.float-right) {
+		position: absolute;
+		right: 1rem;
+		transform: translateX(100%);
+		text-align: left;
 	}
 
 	:global(.ellipsis) {
@@ -244,6 +295,14 @@
 	}
 	:global(.bounding.active) {
 		opacity: 1;
+	}
+
+	:global(.popover) {
+		z-index: 999;
+		overflow: hidden;
+		max-width: 40rem;
+		max-height: 30rem;
+		position: absolute;
 	}
 
 	.dim {

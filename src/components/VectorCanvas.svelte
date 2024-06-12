@@ -9,7 +9,7 @@
 
 	const { theme } = resolveConfig(tailwindConfig);
 
-	export let data = Array.from({ length: 100 }, () => Math.random());
+	export let data = [];
 	export let colorScale: string | ((t: number) => any) | undefined = undefined;
 
 	let canvas: HTMLCanvasElement;

@@ -1,5 +1,15 @@
 import { writable, derived } from 'svelte/store';
 
+// transformer model output
+export const modelData = writable<ModelData>();
+// export const tokens = derived(modelData, ($modelData) => {
+// 	console.log($modelData?.inputTokens);
+// 	return ($modelData?.inputTokens || initialText).trim().split(' ');
+// });
+
+// is transformer running?
+export const isModelRunning = writable(false);
+
 export const modelMetaMap: Record<string, ModelMetaData> = {
 	'gpt2-sm': { layer_num: 6, attention_head_num: 6, dimension: 12 },
 	'gpt2-md': { layer_num: 12, attention_head_num: 12, dimension: 48 },
@@ -38,21 +48,17 @@ export const temperature = writable(initialtTemperature);
 
 // Prediction result
 export const initialPredictedToken = '';
-export const predictedToken = writable(initialPredictedToken);
+export const predictedToken = writable<PredictionItem>();
 export const highlightedIndex = writable(null);
 export const finalTokenIndex = writable(null);
 
-// Matrix cell width, height
-export const cellWidth = derived(modelMeta, ($meta) => {
-	// return 8;
-	const maxColSize = 100;
-	const minColSize = 0.05;
-	return Math.max(maxColSize / $meta.dimension, minColSize);
-});
-export const cellHeight = writable(8);
-
-export const rowGap = 2;
+// Visual element style
+export const rootRem = 16;
+export const minVectorHeight = 12;
+export const maxVectorHeight = 36;
+export const maxVectorScale = 4;
 
 export const vectorHeight = writable(0);
+export const headContentHeight = writable(0);
 
 export const isBoundingBoxActive = writable(false);

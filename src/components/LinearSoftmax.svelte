@@ -1,18 +1,21 @@
 <script lang="ts">
-	import { Tooltip, Range, Button } from 'flowbite-svelte';
-	import { expandedBlock, cellHeight, cellWidth, highlightedToken, tokens, rowGap } from '~/store';
+	import { Tooltip } from 'flowbite-svelte';
 	import { setContext, getContext } from 'svelte';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
-	import { onMount, tick } from 'svelte';
-	import * as d3 from 'd3';
+	import { tick } from 'svelte';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { writable } from 'svelte/store';
-	import { temperature } from '~/store';
+	import { rootRem, temperature } from '~/store';
 	import { OriginalBarData } from '../utils/mock_data';
-	import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
-	import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
+	import {
+		expandedBlock,
+		predictedToken,
+		highlightedIndex,
+		isModelRunning,
+		modelData
+	} from '~/store';
+	import ProbabilityBars from './ProbabilityBars.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -52,10 +55,10 @@
 
 		Flip.from(containerState, {
 			duration: 1,
-			ease: 'power2.inOut',
-			onStart: () => {
-				drawBars();
-			}
+			ease: 'power2.inOut'
+			// onStart: () => {
+			// 	drawBars();
+			// }
 		});
 		gsap.to('.softmax-detail', {
 			opacity: 1,
@@ -71,10 +74,10 @@
 
 		await Flip.from(containerState, {
 			duration: 0.5,
-			ease: 'power2.inOut',
-			onComplete: () => {
-				drawBars();
-			}
+			ease: 'power2.inOut'
+			// onComplete: () => {
+			// 	drawBars();
+			// }
 		});
 		gsap.to('.softmax-detail', {
 			opacity: 0,
@@ -86,128 +89,14 @@
 		main.style.justifyContent = 'start';
 	};
 
-	// ===========================================================================
-	// ===========================      SVG      =================================
-	// Adjustable PARAMS
-	let rootFontSize = 16; // Default value in case getComputedStyle fails
+	let rowHeight = 0.5 * rootRem;
+	let rowGap = rootRem;
+	let hoveredIndex: number | null = null;
 
-	const dataSize = 20;
-	const barHeight = 0.5 * rootFontSize;
-	const barMaxWidth = 60;
-	const token_left_padding = 0;
-	const token_top_padding = 0;
-	const gap_between_bars = rootFontSize;
-	const gap_between_text_and_bars = 0.2 * rootFontSize;
-	const percentPrecision = 1;
-
-	// HOVER BEHAVIOR
-	const hoveredIndex = writable(null);
-
-	let barData = applyTemperatureToData(OriginalBarData, $temperature);
-	$: barData = applyTemperatureToData(OriginalBarData, $temperature);
-
-	let predicted_tokens = barData.map((d) => d.token);
-	let token_ids = barData.map((d) => d.token_id);
-	$: logits = barData?.map((d) => d.logit) || [];
-	$: exponents = logits?.map((d) => Math.exp(d)) || [];
-	$: probabilities = barData?.map((d) => d.probability) || [];
-	// ===========================================================================
-
-	let svgEl: HTMLOrSVGElement;
-
-	let drawBars = () => {
-		const svg = d3.select(svgEl);
-
-		let xScale = d3
-			.scaleLinear()
-			.domain([0, d3.max(barData, (d) => d.probability)])
-			.range([0, svgEl?.clientWidth - rootFontSize * 3]);
-
-		svg
-			.select('g.bars')
-			.selectAll('rect')
-			.data(barData)
-			.join('rect')
-			.attr('x', token_left_padding)
-			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
-			.attr('height', barHeight)
-			.attr('width', (d) => xScale(d.probability))
-			.attr('rx', 1)
-			.attr('ry', 1)
-			.attr('fill', (d, i) => {
-				if (i === $hoveredIndex) {
-					return theme.colors.blue[500];
-				} else if (i === $highlightedIndex) {
-					return theme.colors.red[300];
-				} else if (i === $finalTokenIndex) {
-					return theme.colors.red[700];
-				} else {
-					return theme.colors.gray[200];
-				}
-			})
-			.on('mouseenter', function (event, d) {
-				hoveredIndex.set(barData.indexOf(d));
-				d3.select(this).style('cursor', 'pointer');
-			})
-			.on('mouseleave', () => hoveredIndex.set(null))
-			.transition()
-			.ease(d3.easeCubic)
-			.duration(500)
-			.attr('width', (d) => xScale(d.probability));
-
-		//label
-		svg
-			.select('g.bar-labels')
-			.selectAll('text')
-			.data(barData)
-			.join('text')
-			.attr('fill', (d, i) => {
-				if (i === $hoveredIndex) {
-					return theme.colors.blue[600];
-				} else if (i === $highlightedIndex) {
-					return theme.colors.red[300];
-				} else if (i === $finalTokenIndex) {
-					return theme.colors.red[700];
-				} else {
-					return theme.colors.gray[400];
-				}
-			})
-			.on('mouseenter', function (event, d) {
-				hoveredIndex.set(barData.indexOf(d));
-				d3.select(this).style('cursor', 'pointer');
-			})
-			.on('mouseleave', () => hoveredIndex.set(null))
-			.attr(
-				'x',
-				(d) =>
-					token_left_padding +
-					gap_between_text_and_bars +
-					xScale(d.probability) +
-					gap_between_text_and_bars
-			)
-			.attr('y', (d, i) => token_top_padding + i * barHeight + i * gap_between_bars)
-			.attr('dy', barHeight / 2 + 3)
-			.attr('text-anchor', 'start')
-			.style('font-size', '0.75rem')
-			.transition()
-			.duration(500)
-			.tween('text', function (d) {
-				const that = d3.select(this),
-					i = d3.interpolateNumber(that.text().replace('%', ''), d.probability * 100);
-				return function (t) {
-					that.text(i(t).toFixed(percentPrecision) + '%');
-				};
-			});
-	};
-
-	// Initial draw without transition
-	onMount(() => {
-		drawBars();
-	});
-
-	$: if (barData && svgEl) {
-		drawBars();
-	}
+	$: data = $modelData?.prediction || [];
+	$: tokenIds = data?.map((d) => d.tokenId);
+	$: logits = data?.map((d) => d.adjustedLogit) || [];
+	$: exponents = data?.map((d) => d.adjustedExp) || [];
 </script>
 
 <div
@@ -222,24 +111,24 @@
 	</div>
 	<div
 		class="content"
-		style={`--softmax-row-height: ${barHeight}px;--softmax-row-gap: ${gap_between_bars}px`}
+		style={`--softmax-row-height: ${rowHeight}px;--softmax-row-gap: ${rowGap}px`}
 	>
 		<div class="first-column relative flex justify-end">
 			<div class="content-box token-string">
-				{#each predicted_tokens as token, idx}
+				{#each data as item, idx}
 					<div
 						role="group"
 						class="text-box"
-						on:mouseenter={() => hoveredIndex.set(idx)}
-						on:mouseleave={() => hoveredIndex.set(null)}
-						class:highlight={idx === $hoveredIndex}
+						on:mouseenter={() => (hoveredIndex = idx)}
+						on:mouseleave={() => (hoveredIndex = null)}
+						class:highlight={idx === hoveredIndex}
 						class:sample_highlight={$highlightedIndex === idx}
-						class:final_token_highlight={$finalTokenIndex === idx}
+						class:final_token_highlight={$predictedToken?.rank === idx}
 					>
-						{token}
+						{item.token}
 					</div>
 					<Tooltip class="text-xs" placement="left" type="light">
-						Token ID: {token_ids[idx]}
+						Token ID: {tokenIds[idx]}
 					</Tooltip>
 				{/each}
 			</div>
@@ -268,20 +157,22 @@
 					{#if isSoftmaxExpanded}
 						<div class="content-box vector-box logits ml-2">
 							{#each logits as logit, idx}
-								<div
-									role="group"
-									class="text-box text-center"
-									on:mouseenter={() => hoveredIndex.set(idx)}
-									on:mouseleave={() => hoveredIndex.set(null)}
-									class:highlight={idx === $hoveredIndex}
-									class:sample_highlight={$highlightedIndex === idx}
-									class:final_token_highlight={$finalTokenIndex === idx}
-								>
-									{logit.toFixed(2)}
-								</div>
-								<Tooltip class="text-xs" placement="left" type="light">
-									{(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)}
-								</Tooltip>
+								{#if logit !== undefined}
+									<div
+										role="group"
+										class="text-box text-center"
+										on:mouseenter={() => (hoveredIndex = idx)}
+										on:mouseleave={() => (hoveredIndex = null)}
+										class:highlight={idx === hoveredIndex}
+										class:sample_highlight={$highlightedIndex === idx}
+										class:final_token_highlight={$predictedToken?.rank === idx}
+									>
+										{logit.toFixed(2)}
+									</div>
+									<Tooltip class="text-xs" placement="left" type="light">
+										{(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)}
+									</Tooltip>
+								{/if}
 							{/each}
 						</div>
 						<div class="content-box vector-box exponents">
@@ -289,11 +180,11 @@
 								<div
 									role="group"
 									class="text-box text-center"
-									on:mouseenter={() => hoveredIndex.set(idx)}
-									on:mouseleave={() => hoveredIndex.set(null)}
-									class:highlight={idx === $hoveredIndex}
+									on:mouseenter={() => (hoveredIndex = idx)}
+									on:mouseleave={() => (hoveredIndex = null)}
+									class:highlight={idx === hoveredIndex}
 									class:sample_highlight={$highlightedIndex === idx}
-									class:final_token_highlight={$finalTokenIndex === idx}
+									class:final_token_highlight={$predictedToken?.rank === idx}
 								>
 									{#if exponent > 100000}
 										{exponent.toExponential(2)}
@@ -310,12 +201,7 @@
 						</div>
 					{/if}
 				</div>
-				<div class="content-box probability flex grow flex-col">
-					<svg bind:this={svgEl} class="h-full w-full">
-						<g class="bars"></g>
-						<g class="bar-labels"></g>
-					</svg>
-				</div>
+				<ProbabilityBars {rowGap} {rowHeight} bind:hoveredIndex />
 			</div>
 			<div class="dim"></div>
 		</div>
@@ -374,11 +260,6 @@
 		.exponents {
 			width: 6rem;
 			z-index: 200;
-		}
-		.probability {
-			flex: 1 0 0;
-			min-width: 6rem;
-			z-index: 201;
 		}
 
 		button {

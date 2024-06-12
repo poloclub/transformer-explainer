@@ -28,3 +28,20 @@ type HighlightedHead = {
 };
 
 type ExpandedBlock = { id: number | string | null };
+
+type PredictionItem = {
+	rank: number;
+	tokenId: number;
+	token: string;
+	logit: number;
+	probability: number;
+	adjustedLogit?: number;
+	adjustedProbability?: number;
+	adjustedExp?: number;
+};
+type Prediction = PredictionItem[];
+type ModelData = {
+	inputTokens: string;
+	outputs: Record<string, { data: number[][]; dims: number[]; size: number }>;
+	prediction: Prediction;
+};

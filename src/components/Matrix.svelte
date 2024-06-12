@@ -16,7 +16,7 @@
 
 	export let className: string | undefined = undefined;
 	export let title: string | undefined = undefined;
-	export let titlePos: 't' | 'b' | undefined = 'b';
+	export let titlePos: 't' | 'b' | undefined = 't';
 
 	export let transpose: boolean = false;
 

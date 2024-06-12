@@ -18,7 +18,7 @@
 >
 	<div class="title"></div>
 	<div class="content">
-		<div class="tokens final relative">
+		<div class="column final relative">
 			<div class="guide flex items-end gap-1">
 				<svg class="arrow" width="28" height="30" viewBox="0 0 28 30" fill="none">
 					<path
@@ -32,10 +32,10 @@
 				</div>
 			</div>
 			{#each $tokens as token, index}
-				<div class="token">
+				<div class="cell" class:last={index === $tokens.length - 1}>
 					<div
 						class={classNames(`vector shrink-0 bg-blue-200`, {
-							last: index === $tokens.length - 1
+							'last-token': index === $tokens.length - 1
 						})}
 					></div>
 					<!-- <span class="label float-right">{token}</span> -->
@@ -77,11 +77,11 @@
 			display: grid;
 			grid-template-columns: repeat(4, minmax(3vw, 1fr));
 
-			.tokens.final {
+			.column.final {
 				grid-column-start: 2;
 			}
 		}
-		.tokens.initial .token {
+		.column.initial .cell {
 			gap: 0.6rem;
 		}
 	}

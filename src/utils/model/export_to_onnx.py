@@ -1,6 +1,8 @@
 import torch
 from model import GPT  # import model
 import os
+# from onnxruntime.transformers import optimizer
+
 
 def create_folder_if_not_exists(folder_path):
     if not os.path.exists(folder_path):
@@ -86,6 +88,11 @@ class wrapper(torch.nn.Module):
 model = GPT.from_pretrained("gpt2")
 model.eval()
 wrapped_model = wrapper(model)
+
+# optimized_model = optimizer.optimize_model("gpt2.onnx", model_type='gpt2', num_heads=12, hidden_size=768)
+# optimized_model.convert_model_float32_to_float16()
+# optimized_model.save_model_to_file("gpt2_fp16.onnx")
+
 
 # create dummy input
 dummy_input = torch.tensor([[41072, 9634, 318, 257]])

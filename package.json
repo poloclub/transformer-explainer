@@ -24,6 +24,7 @@
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.0.0",
 		"autoprefixer": "^10.4.16",
+		"bignumber.js": "^9.1.2",
 		"classnames": "^2.5.1",
 		"d3": "^7.9.0",
 		"d3-color": "^3.1.0",

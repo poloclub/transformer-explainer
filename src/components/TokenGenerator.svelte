@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { Tooltip, Range, Button } from 'flowbite-svelte';
-  import { writable } from 'svelte/store';
-  import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
-  import { OriginalBarData } from '../utils/mock_data.ts';
-  import { applyTemperatureToData, sampleTokenIndex } from '../utils/sampler.js';
-  import { temperature, inputText } from '~/store';
+	import { writable } from 'svelte/store';
+	import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
+	import { OriginalBarData } from '../utils/mock_data.ts';
+	import { applyTemperatureToData } from '../utils/sampler.js';
+	import { temperature, inputText } from '~/store';
 
 	export let handleSubmit;
 
 	let barData = applyTemperatureToData(OriginalBarData, $temperature);
 	$: barData = applyTemperatureToData(OriginalBarData, $temperature);
+	// input:{
+	// 		token: 'member',
+	// 		token_id: 2888,
+	// 		logit: 7.361647129058838,
+	// 		probability: 0.017529413104057312
+	// 	},
 
 	// SAMPLER
 	let finalToken = '';

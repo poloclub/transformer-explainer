@@ -2,7 +2,6 @@
 	import * as d3 from 'd3';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { highlightedToken, rowGap as globalRowGap } from '~/store';
 	import { afterUpdate, beforeUpdate } from 'svelte';
 	import { color } from 'd3-color';
 	import { Tooltip } from 'flowbite-svelte';
@@ -12,7 +11,7 @@
 	export let data: (number | null)[][];
 	export let cellHeight: number;
 	export let cellWidth: number;
-	export let rowGap: number = globalRowGap;
+	export let rowGap: number = 2;
 	export let colGap: number = 0;
 	export let transpose: boolean = false;
 	export let showValue: boolean = false;
@@ -57,10 +56,10 @@
 		if (groupBy === 'col') {
 			let cols;
 			cols = svg
-				.selectAll('g.col')
+				.selectAll('g.g-col')
 				.data(data)
 				.join('g')
-				.attr('class', (d, i) => `col col-${i}`);
+				.attr('class', (d, i) => `g-col g-col-${i}`);
 			cols.attr('transform', (d, i) => `translate(${i * cellWidth + i * colGap},0)`);
 
 			if (shape === 'rect') {
@@ -248,9 +247,7 @@
 		tooltipVisible = true;
 		const bbox = event.target.getBoundingClientRect();
 		tooltipX = bbox.x + bbox.width / 2;
-		tooltipY = bbox.y - 10; // Adjust this value to position the tooltip above the circle
-
-		// You can adjust the position of the tooltip here if needed
+		tooltipY = bbox.y - 10;
 	}
 
 	function hideTooltip() {
@@ -288,6 +285,6 @@
 		border-radius: 3px;
 		pointer-events: none;
 		opacity: 0.8;
-		z-index: 1000;
+		z-index: 999;
 	}
 </style>

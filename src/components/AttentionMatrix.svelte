@@ -5,7 +5,6 @@
 	import { gsap } from '~/utils/gsap';
 	import { mask } from '~/utils/array';
 	import { getContext } from 'svelte';
-	import WeightPopover from '~/components/WeightPopover.svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 	const { theme } = resolveConfig(tailwindConfig);

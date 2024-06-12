@@ -5,6 +5,7 @@
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 	import { gsap, Flip } from '~/utils/gsap';
+	import { gradientMap } from '~/utils/gradient';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -14,7 +15,6 @@
 	let resizeObserver: ResizeObserver;
 
 	const defaultCurveOffset = 80;
-	const defaultGradientBrightness = 100;
 
 	type PathMap = Record<
 		string,
@@ -32,65 +32,85 @@
 	>;
 
 	const backPathMap: PathMap = {
-		heads: [
+		attention: [
 			{
 				from: '.attention .query .head-rest',
 				to: '.head-block .query .vector',
-				fill: theme.colors.blue[defaultGradientBrightness],
+				// fill: theme.colors.blue[defaultGradientBrightness],
+				gradientId: 'blue-blue2',
 				opacity: 0.4
 			},
 			{
 				from: '.attention .key .head-rest',
 				to: '.head-block .key .vector',
-				fill: theme.colors.red[defaultGradientBrightness],
+				// fill: theme.colors.red[defaultGradientBrightness],
+				gradientId: 'red-red2',
 				opacity: 0.4
 			},
 			{
 				from: '.attention .value .head-rest',
 				to: '.head-block .value .vector',
-				fill: theme.colors.green[defaultGradientBrightness],
+				gradientId: 'green-green2',
+				// fill: theme.colors.green[defaultGradientBrightness],
 				opacity: 0.4
 			},
 			{
 				from: '.attention .head-out .vector',
 				to: '.mlp .initial .vector .head-rest',
-				gradientId: 'transparent-purple'
+				gradientId: 'transparent-purple',
+				opacity: 0.4
 			}
 		]
 	};
 	$: pathMap = {
 		embedding: [
 			{
-				from: '.embedding .tokens.vector .vector',
-				to: '.embedding .tokens.ln .cursor',
-				fill: theme.colors.gray[defaultGradientBrightness]
-			},
-			{
-				from: '.embedding .tokens.ln .cursor',
+				from: '.embedding .vector-column .column.vectors .vector',
 				to: '.attention .vector',
-				gradientId: 'gray-blue'
+				gradientId: 'gray-blue',
+				opacity: 0.6,
+				pathGenerator: (source, target, curveOffset: number) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					const rightOffset = 30;
+
+					return `
+					M ${source.right + scrollLeft},${source.top + scrollTop}
+					L ${source.right + rightOffset + scrollLeft},${source.top + scrollTop}
+					C ${source.right + rightOffset + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+					L ${target.left + scrollLeft},${target.bottom + scrollTop}
+					C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + rightOffset + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + rightOffset + scrollLeft},${source.bottom + scrollTop}
+					L ${source.right + scrollLeft},${source.bottom + scrollTop}
+					Z
+				`;
+				}
 			}
 		],
 		attention: [
 			{
 				from: '.attention .query .head1',
 				to: '.head-block .query .vector',
-				fill: theme.colors.blue[200]
+				// fill: theme.colors.blue[200]
+				gradientId: 'blue-blue'
 			},
 			{
 				from: '.attention .key .head1',
 				to: '.head-block .key .vector',
-				fill: theme.colors.red[200]
+				// fill: theme.colors.red[200]
+				gradientId: 'red-red'
 			},
 			{
 				from: '.attention .value .head1',
 				to: '.head-block .value .vector',
-				fill: theme.colors.green[200]
+				// fill: theme.colors.green[200]
+				gradientId: 'green-green'
 			},
 			{
 				from: '.attention .head-out .vector',
 				to: '.mlp .initial .head1',
-				fill: theme.colors.purple[200]
+				gradientId: 'purple-purple'
+				// fill: theme.colors.purple[200]
 			},
 			{
 				from: '.head-block .key .vector',
@@ -180,31 +200,59 @@
 		],
 		mlp: [
 			{
-				from: '.mlp .tokens.initial .vector',
-				to: '.mlp .tokens.residual-start .cursor',
-				fill: theme.colors.purple[defaultGradientBrightness]
-			},
-			{
-				from: '.mlp .tokens.residual-start .cursor',
+				from: '.mlp .column.initial .vector',
 				to: '.mlp .projections .vector',
-				gradientId: 'purple-indigo'
+				gradientId: 'purple-indigo',
+				curve: 50,
+				opacity: 0.4,
+				pathGenerator: (source, target, curveOffset: number) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					const rightOffset = 49;
+
+					return `
+					M ${source.right + scrollLeft},${source.top + scrollTop}
+					L ${source.right + rightOffset + scrollLeft},${source.top + scrollTop}
+					C ${source.right + rightOffset + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
+					L ${target.left + scrollLeft},${target.bottom + scrollTop}
+					C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + rightOffset + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + rightOffset + scrollLeft},${source.bottom + scrollTop}
+					L ${source.right + scrollLeft},${source.bottom + scrollTop}
+					Z
+				`;
+				}
 			},
 			{
 				from: '.mlp .projections .vector',
-				to: '.mlp .second-layer .tokens.residual-end .cursor',
-				gradientId: 'indigo-blue'
-			},
-			{
-				from: '.mlp .second-layer .tokens.residual-end .cursor',
-				to: '.mlp .tokens.out .vector',
-				fill: theme.colors.blue[defaultGradientBrightness]
+				to: '.mlp .column.out .vector',
+				gradientId: 'indigo-blue',
+				curve: 50,
+				opacity: 0.4,
+				pathGenerator: (source, target, curveOffset: number) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					const leftOffset = 20;
+
+					return `
+					M ${source.right + scrollLeft},${source.top + scrollTop}
+					C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left - leftOffset + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left - leftOffset + scrollLeft},${target.top + scrollTop}
+					L ${target.left + scrollLeft},${target.top + scrollTop}
+					L ${target.left + scrollLeft},${target.bottom + scrollTop}
+					L ${target.left - leftOffset + scrollLeft},${target.bottom + scrollTop}
+					C ${target.left - leftOffset + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
+					L ${source.right + scrollLeft},${source.bottom + scrollTop}
+					Z
+				`;
+				}
 			}
 		],
 		'transformer-blocks': [
 			{
 				from: '.mlp .out .vector',
-				to: '.transformer-blocks .tokens.final .vector',
+				to: '.transformer-blocks .column.final .vector',
 				gradientId: 'blue-white-blue',
+				opacity: 0.6,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
@@ -221,60 +269,12 @@
 		],
 		'linear-softmax': [
 			{
-				from: '.transformer-blocks .final .vector.last ',
+				from: '.transformer-blocks .final .vector.last-token ',
 				to: '.softmax .content .vector',
-				gradientId: 'blue-gray'
+				gradientId: 'blue-gray',
+				opacity: 0.4
 			}
 		]
-	};
-
-	const gradientMap = {
-		'gray-blue': {
-			0: theme.colors.gray[defaultGradientBrightness],
-			100: theme.colors.blue[defaultGradientBrightness]
-		},
-		'purple-indigo': {
-			0: theme.colors.purple[defaultGradientBrightness],
-			100: theme.colors.indigo[defaultGradientBrightness]
-		},
-		'indigo-blue': {
-			0: theme.colors.indigo[defaultGradientBrightness],
-			100: theme.colors.blue[defaultGradientBrightness]
-		},
-		'blue-white': { 0: theme.colors.blue[defaultGradientBrightness], 100: theme.colors.white },
-		'red-white': { 0: theme.colors.red[defaultGradientBrightness], 100: theme.colors.white },
-		'green-white': { 0: theme.colors.green[defaultGradientBrightness], 100: theme.colors.white },
-		'red-purple': {
-			0: theme.colors.red[defaultGradientBrightness],
-			100: theme.colors.purple[200]
-		},
-		'blue-purple': {
-			90: theme.colors.blue[defaultGradientBrightness],
-			100: theme.colors.purple[200]
-		},
-		'green-purple': {
-			50: theme.colors.green[defaultGradientBrightness],
-			100: theme.colors.purple[200]
-		},
-		'blue-gray': {
-			0: theme.colors.blue[defaultGradientBrightness],
-			100: theme.colors.gray[defaultGradientBrightness]
-		},
-		'blue-white-blue': {
-			0: theme.colors.blue[defaultGradientBrightness],
-			40: theme.colors.white,
-			60: theme.colors.white,
-			100: theme.colors.blue[defaultGradientBrightness]
-		},
-		'transparent-purple': {
-			0: { color: theme.colors.purple[100], opacity: 0 },
-			70: { color: theme.colors.purple[100], opacity: 0.5 },
-			100: { color: theme.colors.purple[100], opacity: 1 }
-		},
-		'transparent-purple2': {
-			0: { color: theme.colors.purple[300], opacity: 0 },
-			100: { color: theme.colors.purple[300], opacity: 1 }
-		}
 	};
 
 	const createGradients = () => {
@@ -323,9 +323,12 @@
 				.selectAll('g.path-group')
 				.data(Object.keys(dataMap))
 				.join('g')
-				.attr('class', (d) => `path-group ${d}`);
+				.attr('class', (d) => `path-group ${d}`)
+				.on('mouseover', (...args) => {
+					// console.log('snky mouseover', args);
+				});
 
-			g.selectAll('path.sankey')
+			g.selectAll('path.sankey-path')
 				.data((d) => {
 					const data = dataMap[d].map((item) => {
 						const sources = d3.selectAll(item.from).nodes() as Element[];
@@ -339,14 +342,23 @@
 
 							const generator = item.pathGenerator || pathGenerator;
 							const path = generator(source, target, curveOffset);
+
+							const isLast = targets.length > 1 && i === sources.length - 1;
+							let gradUrl = item.gradientId;
+
+							if (isLast && document.getElementById(item.gradientId + '-last')) {
+								gradUrl = item.gradientId + '-last';
+							}
+
 							return {
 								id: item.id,
+								isLast: i === sources.length - 1,
 								path,
 								fill:
 									item.type === 'stroke'
 										? 'none'
 										: item.gradientId
-											? `url(#${item.gradientId})`
+											? `url(#${gradUrl})`
 											: item.fill,
 								opacity: item.opacity,
 								stroke:
@@ -362,7 +374,7 @@
 					return data.flat();
 				})
 				.join('path')
-				.attr('class', (d) => `sankey ${d.id || ''}`)
+				.attr('class', (d) => `sankey-path ${d.id || ''} ${d.isLast ? 'last' : ''}`)
 				.attr('fill', (d) => d.fill)
 				.attr('stroke', (d) => d.stroke)
 				.attr('stroke-width', 2)
@@ -378,8 +390,6 @@
 		return `
         M ${source.right + scrollLeft},${source.top + scrollTop}
         C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
-        L ${target.right + scrollLeft},${target.top + scrollTop}
-        L ${target.right + scrollLeft},${target.bottom + scrollTop}
         L ${target.left + scrollLeft},${target.bottom + scrollTop}
         C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
         Z
@@ -423,10 +433,16 @@
 <svg
 	bind:this={svgBackEl}
 	id="back"
-	class="absolute left-0 top-0 h-full w-full"
+	class="sankey-back absolute left-0 top-0 h-full w-full"
 	style={`z-index:${$modelMeta.attention_head_num - 1};`}
 ></svg><svg
 	bind:this={svgEl}
-	class="absolute left-0 top-0 h-full w-full"
+	class="sankey-top absolute left-0 top-0 h-full w-full"
 	style={`z-index:${$modelMeta.attention_head_num};`}
 />
+
+<style>
+	.sankey-top {
+		/* opacity: 0.8; */
+	}
+</style>

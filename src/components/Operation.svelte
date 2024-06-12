@@ -1,4 +1,5 @@
 <script lang="ts">
+	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import { vectorHeight, expandedBlock } from '~/store';
 
@@ -12,7 +13,7 @@
 </script>
 
 {#if type === 'dropout'}
-	<div class={`dropout`} class:active>
+	<div class={classNames(`dropout`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			<path class="line" d={`M0,0 L0,${$vectorHeight}`}></path>
@@ -28,7 +29,7 @@
 		{/if}
 	</div>
 {:else if type === 'ln'}
-	<div class={`ln`} class:active>
+	<div class={classNames(`ln`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
@@ -54,7 +55,7 @@
 			</svg>{/if}
 	</div>
 {:else if type === 'residual-start'}
-	<div class={`residual residual-start`} class:active>
+	<div class={classNames(`residual residual-start`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			{#if head}<path class="head" d="M0,0 Q0,-20 30,-20"></path>
@@ -63,7 +64,7 @@
 		</svg>
 	</div>
 {:else if type === 'residual-end'}
-	<div class={`residual residual-end`} class:active>
+	<div class={classNames(`residual residual-end`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			{#if head}<path class="head" d="M0,0 Q0,-20 -30,-20"></path>
@@ -79,7 +80,7 @@
 	.dropout,
 	.ln {
 		position: relative;
-		width: 1rem;
+		width: 1.2rem;
 		flex-shrink: 0;
 		z-index: 101;
 		height: var(--vector-height);
@@ -98,7 +99,8 @@
 			transform: translateX(50%);
 		}
 		svg .icon {
-			fill: theme('colors.gray.200');
+			fill: theme('colors.gray.300');
+			opacity: 0.6;
 		}
 		.icon {
 			opacity: 1;
