@@ -21,7 +21,7 @@
 
 	export let groupBy: 'row' | 'col' = 'row';
 	export let shape: 'circle' | 'rect' = 'rect';
-	export let colorScale: string | ((t: number) => any) | undefined = undefined;
+	export let colorScale: string | ((t: number, i: number) => string) | undefined = undefined;
 
 	let svgEl: HTMLOrSVGElement;
 	let highlightedIndex: string | number | null;
@@ -42,13 +42,13 @@
 	// 	}
 	// });
 
-	const colorKey = typeof colorScale === 'string' ? colorScale : 'primary';
+	const colorKey = typeof colorScale === 'string' ? colorScale : 'blue';
 	const matrixColorScale =
 		typeof colorScale === 'function'
 			? colorScale
-			: d3.interpolate('white', theme.colors[colorKey][500]);
+			: d3.interpolate('white', theme.colors[colorKey][400]);
 
-	const highlightColorScale = d3.interpolate('white', theme.colors['secondary'][600]);
+	const highlightColorScale = d3.interpolate('white', theme.colors['yellow'][600]);
 
 	const drawMatrixSvg = () => {
 		const svg = d3.select(svgEl);
@@ -65,7 +65,7 @@
 			if (shape === 'rect') {
 				cols
 					.selectAll('rect.cell')
-					.data((d) => d)
+					.data((d, i) => d.map((value) => ({ value, parentIndex: i })))
 					.join('rect')
 					.attr('class', 'cell')
 					.attr('x', 0)
@@ -73,7 +73,7 @@
 					.attr('width', cellWidth)
 					.attr('height', cellHeight)
 					.attr('fill', function (d) {
-						return matrixColorScale(d);
+						return matrixColorScale(d.value, d.parentIndex);
 					});
 			}
 			if (shape === 'circle') {
@@ -86,8 +86,8 @@
 					.attr('cy', (d, i) => i * cellHeight + i * rowGap)
 					.attr('r', cellWidth / 2)
 					.attr('stroke', theme.colors.gray[500])
-					.attr('fill', function (d) {
-						return matrixColorScale(d);
+					.attr('fill', function (d, i) {
+						return matrixColorScale(d, i);
 					});
 			}
 		}
@@ -136,12 +136,12 @@
 					.attr(transpose ? 'x' : 'y', 0)
 					.attr('width', transpose ? cellHeight : cellWidth)
 					.attr('height', transpose ? cellWidth : cellHeight)
-					.attr('fill', function (d) {
+					.attr('fill', function (d, i) {
 						if (!Number.isFinite(d)) return theme.colors.gray[200];
 						const tokenIdx = this.parentNode.classList[1].split('-')[1];
 						return Number(tokenIdx) === highlightedIndex
 							? highlightColorScale(d)
-							: matrixColorScale(d);
+							: matrixColorScale(d, i);
 					});
 			}
 			if (shape === 'circle') {
@@ -168,24 +168,26 @@
 							d3.select(this).attr('fill', darkerColor);
 						}
 					})
-					.on('mouseout', function (event, d) {
+					.on('mouseout', function (event, d, i) {
 						hideTooltip();
 						if (Number.isFinite(d)) {
 							const tokenIdx = this.parentNode.classList[1].split('-')[1];
 							d3.select(this).attr(
 								'fill',
-								Number(tokenIdx) === highlightedIndex ? highlightColorScale(d) : matrixColorScale(d)
+								Number(tokenIdx) === highlightedIndex
+									? highlightColorScale(d)
+									: matrixColorScale(d, i)
 							);
 						}
 					})
 					.transition()
 					.duration(100)
-					.attr('fill', function (d) {
+					.attr('fill', function (d, i) {
 						if (!Number.isFinite(d)) return theme.colors.gray[200];
 						const tokenIdx = this.parentNode.classList[1].split('-')[1];
 						return Number(tokenIdx) === highlightedIndex
 							? highlightColorScale(d)
-							: matrixColorScale(d);
+							: matrixColorScale(d, i);
 					});
 			}
 

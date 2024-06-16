@@ -89,14 +89,24 @@
 		main.style.justifyContent = 'start';
 	};
 
-	let rowHeight = 0.5 * rootRem;
-	let rowGap = rootRem;
+	let rowHeight = rootRem * 1.2;
+	let rowGap = 0.5 * rootRem;
 	let hoveredIndex: number | null = null;
 
 	$: data = $modelData?.prediction || [];
 	$: tokenIds = data?.map((d) => d.tokenId);
 	$: logits = data?.map((d) => d.adjustedLogit) || [];
 	$: exponents = data?.map((d) => d.adjustedExp) || [];
+
+	let isHovered = false;
+
+	function handleMouseEnter() {
+		isHovered = true;
+	}
+
+	function handleMouseLeave() {
+		isHovered = false;
+	}
 </script>
 
 <div
@@ -106,13 +116,19 @@
 	on:keydown={onClickSoftmax}
 	tabindex="0"
 >
-	<div class="title">
+	<div
+		class="title expandable"
+		on:mouseenter={handleMouseEnter}
+		on:mouseleave={handleMouseLeave}
+		role="group"
+	>
 		<div>Probabilities</div>
 	</div>
 	<div
-		class="content"
+		class="content relative"
 		style={`--softmax-row-height: ${rowHeight}px;--softmax-row-gap: ${rowGap}px`}
 	>
+		<div class="bounding softmax-bounding" class:active={isHovered && !isSoftmaxExpanded}></div>
 		<div class="first-column relative flex justify-end">
 			<div class="content-box token-string">
 				{#each data as item, idx}
@@ -186,13 +202,15 @@
 									class:sample_highlight={$highlightedIndex === idx}
 									class:final_token_highlight={$predictedToken?.rank === idx}
 								>
-									{#if exponent > 100000}
+									{exponent.toExponential(2)}
+
+									<!-- {#if exponent > 100000}
 										{exponent.toExponential(2)}
 									{:else if exponent < 10}
 										{exponent.toFixed(2)}
 									{:else}
 										{exponent.toFixed(0)}
-									{/if}
+									{/if} -->
 								</div>
 								<Tooltip class="text-xs" placement="left" type="light">
 									exp({logits[idx].toFixed(2)}) = {exponent.toFixed(2)}
@@ -201,15 +219,24 @@
 						</div>
 					{/if}
 				</div>
-				<ProbabilityBars {rowGap} {rowHeight} bind:hoveredIndex />
+				<ProbabilityBars bind:hoveredIndex {rowGap} {rowHeight} />
 			</div>
-			<div class="dim"></div>
+			<!-- <div class="dim"></div> -->
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
 	.content {
+		.softmax-bounding {
+			top: -0.5rem;
+			padding: 0.5rem 0;
+			left: -5rem;
+			width: calc(100% + 3rem);
+			height: 100%;
+		}
+
+		// height: auto;
 		padding-right: 3rem;
 		display: grid;
 		grid-template-columns: 0 auto;
@@ -229,7 +256,24 @@
 				justify-content: center;
 				align-items: center;
 				width: 100%;
-				line-height: var(--softmax-row-height);
+
+				&.highlight {
+					color: theme('colors.blue.600');
+					cursor: pointer;
+					transition: background-color 0.2s;
+				}
+
+				&.sample_highlight {
+					color: white;
+					background-color: theme('colors.blue.300');
+				}
+
+				&.final_token_highlight {
+					color: theme('colors.orange.400');
+					font-weight: 600;
+					// background-color: theme('colors.blue.200');
+					transition: background-color 1s;
+				}
 			}
 		}
 
@@ -275,24 +319,6 @@
 		}
 		.current {
 			transform: translateY(0);
-		}
-
-		.highlight {
-			color: white;
-			background-color: theme('colors.blue.500');
-			cursor: pointer;
-			transition: background-color 0.2s;
-		}
-
-		.sample_highlight {
-			color: white;
-			background-color: theme('colors.red.300');
-		}
-
-		.final_token_highlight {
-			color: white;
-			background-color: theme('colors.red.700');
-			transition: background-color 1s;
 		}
 
 		.hyperparams {

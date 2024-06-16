@@ -9,6 +9,7 @@
 
 	const { theme } = resolveConfig(tailwindConfig);
 
+	export let active: boolean = false;
 	export let data = [];
 	export let colorScale: string | ((t: number) => any) | undefined = undefined;
 
@@ -49,13 +50,23 @@
 	}
 </script>
 
-<canvas bind:this={canvas}></canvas>
+<canvas class:active bind:this={canvas}></canvas>
 
-<style>
+<style lang="scss">
 	canvas {
+		opacity: 0;
 		display: block;
 		width: 100%;
 		height: 100%;
 		overflow: hidden;
+		transition: opacity 0.2s;
+
+		&.active {
+			opacity: 1;
+		}
+
+		&:hover {
+			opacity: 1;
+		}
 	}
 </style>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { temperature } from '~/store';
 	import { writable } from 'svelte/store';
+	import HelpPopover from './HelpPopover.svelte';
 
 	const hoveredIndex = writable(null);
 
@@ -18,9 +19,10 @@
 
 <div class="temperature-slider text-gray-900">
 	<div class="slider-container flex w-full flex-col items-end">
-		<div class="flex w-full shrink-0 justify-between">
-			<div class="temperature-text flex">
+		<div class="flex w-full shrink-0 items-center justify-between">
+			<div class="temperature-text flex items-center gap-[2px]">
 				<div>Temperature</div>
+				<HelpPopover>This is temperature</HelpPopover>
 			</div>
 			<div class="temperature-value">
 				<p>{temperatureTemp}</p>

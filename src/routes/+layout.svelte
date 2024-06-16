@@ -34,6 +34,11 @@
 		width: 100%;
 		position: fixed;
 		z-index: 999;
+		.bagel-fat-one-regular {
+			font-family: 'Bagel Fat One', system-ui;
+			font-weight: 400;
+			font-style: normal;
+		}
 	}
 	main {
 		position: relative;

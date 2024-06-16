@@ -31,10 +31,10 @@
 		isExpanded = false;
 	}
 
-	// running model
+	// run model
 	onMount(() => {
 		const unsubscribeInputText = inputText.subscribe((value) => {
-			runModel(value, $temperature, $tokens.length);
+			runModel(value, $temperature);
 		});
 
 		let initialRun = true; // prevent redundant initial adjustTemperature
@@ -54,7 +54,7 @@
 
 	// visual elements
 	let vizHeight = 0;
-	let titleHeight = rootRem * 6;
+	let titleHeight = rootRem * 5;
 
 	const calculateVectorHeight = () => {
 		const gaps = rootRem * 0.5 * ($tokens.length - 1);
@@ -66,7 +66,7 @@
 		headContentHeight.set($tokens.length * vectorHeightVal * 3 + gaps);
 	};
 
-	$: if (vizHeight) {
+	$: if (vizHeight || $tokens.length) {
 		calculateVectorHeight();
 	}
 </script>
@@ -153,6 +153,7 @@
 	}
 
 	:global(.step) {
+		height: 100%;
 		display: contents;
 	}
 
@@ -162,29 +163,32 @@
 		flex-direction: column;
 		justify-content: end;
 		grid-row: 1;
-		color: theme('colors.gray.300');
+		color: theme('colors.gray.400');
+		opacity: 0.7;
 		white-space: nowrap;
 		padding-bottom: 2rem;
 		overflow: visible;
 		min-width: 0;
-
 		transition: all 0.5s;
-		// &:hover {
-		// 	color: theme('colors.gray.400');
-		// }
+	}
+
+	:global(.step .title.expandable) {
+		&:hover {
+			color: theme('colors.gray.600');
+		}
 	}
 
 	:global(.step .content) {
 		grid-row: 2;
+		height: fit-content;
 	}
 
 	:global(.column) {
-		z-index: 100;
+		// z-index: 100;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 		position: relative;
-		height: fit-content;
 
 		:global(.cell) {
 			height: var(--vector-height);
@@ -246,12 +250,13 @@
 		color: theme('colors.gray.700');
 		z-index: 101;
 		display: inline;
-		width: 4rem;
+		width: 7rem;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		text-align: right;
 		line-height: var(--vector-height);
 		height: var(--vector-height);
+		flex-shrink: 0;
 	}
 	:global(.label.float) {
 		position: absolute;
@@ -272,18 +277,30 @@
 	}
 
 	:global(.bounding) {
+		position: absolute;
+		box-sizing: content-box;
+		top: -0.5rem;
+		padding: 0.5rem 0;
+		left: 0;
+		height: 100%;
+		border: 2px dashed theme('colors.gray.300');
+		border-radius: 0.5rem;
+		transition: opacity 0.5s;
+		opacity: 0;
+	}
+	:global(.bounding.active) {
+		opacity: 0.8;
+	}
+
+	:global(.transformer-bounding) {
 		z-index: 200;
 		pointer-events: none;
-		opacity: 0;
-		box-sizing: content-box;
-		position: absolute;
-		padding-top: 3rem;
+		padding: 3rem 0;
 		/* padding-bottom: 1rem; */
 		width: 100%;
-		height: 100%;
+		height: calc(100% + 5rem);
 		top: -5rem;
 		overflow: visible;
-		transition: opacity 0.5s;
 		border: 2px dashed theme('colors.blue.300');
 
 		:global(.title) {
@@ -292,9 +309,6 @@
 			top: -2rem;
 			left: 0;
 		}
-	}
-	:global(.bounding.active) {
-		opacity: 1;
 	}
 
 	:global(.popover) {

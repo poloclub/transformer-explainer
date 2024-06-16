@@ -6,6 +6,7 @@
 	import tailwindConfig from '../../tailwind.config';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { gradientMap } from '~/utils/gradient';
+	// import WeightPopover from './Popovers/WeightPopover.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -323,10 +324,15 @@
 				.selectAll('g.path-group')
 				.data(Object.keys(dataMap))
 				.join('g')
-				.attr('class', (d) => `path-group ${d}`)
-				.on('mouseover', (...args) => {
-					// console.log('snky mouseover', args);
-				});
+				.attr('class', (d) => `path-group ${d}`);
+			// .on('mouseover', (e, d) => {
+			// 	const paths = d3.select(`g.${d}`).selectAll('path');
+			// 	paths.style('opacity', 1);
+			// })
+			// .on('mouseout', (e, d) => {
+			// 	const paths = d3.select(`g.${d}`).selectAll('path');
+			// 	paths.style('opacity', 0.6);
+			// });
 
 			g.selectAll('path.sankey-path')
 				.data((d) => {
@@ -441,8 +447,11 @@
 	style={`z-index:${$modelMeta.attention_head_num};`}
 />
 
-<style>
+<style lang="scss">
 	.sankey-top {
+		g {
+			// opacity: 0.8;
+		}
 		/* opacity: 0.8; */
 	}
 </style>

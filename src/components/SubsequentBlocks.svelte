@@ -43,7 +43,7 @@
 			{/each}
 		</div>
 		<div class="second-column">
-			<div class="dim"></div>
+			<!-- <div class="dim"></div> -->
 		</div>
 	</div>
 </div>
@@ -56,15 +56,20 @@
 			top: 0;
 			left: -50%;
 			transform: translateY(-100%);
-			color: theme('colors.gray.300');
+			color: theme('colors.gray.400');
 
 			.text {
 				margin-bottom: 1.5rem;
 				transition: opacity 0.5s;
 				line-height: 1.2;
 				font-size: 0.8rem;
+				.highlight {
+					font-weight: 600;
+					// color: theme('colors.gray.500');
+				}
 
 				&.active {
+					opacity: 1;
 					.highlight {
 						transition: all 0.5s;
 						color: theme('colors.blue.500');

@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { modelMeta } from '~/store';
+	import { modelMeta, headGap } from '~/store';
 	import classNames from 'classnames';
 	import { onMount } from 'svelte';
 
 	let headContent: HTMLDivElement;
 	let headBlockSize = { width: 0, height: 0 };
-	let headGap = { x: 5, y: 8, scale: 0 };
 	let opacityOffset = 0.1;
 
 	onMount(() => {

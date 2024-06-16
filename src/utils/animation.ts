@@ -274,7 +274,7 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// add MLP output vector
 		// ============================
 		const mlpOutputs = document.querySelectorAll(
-			isNextTokenOnly ? '.mlp .second-layer .ouputs .cell.last' : '.mlp .second-layer .ouputs .cell'
+			isNextTokenOnly ? '.mlp .second-layer .ouputs .last' : '.mlp .second-layer .ouputs .cell'
 		);
 		tl.fromTo(mlpOutputs, { opacity: 0 }, { opacity: 1, duration });
 

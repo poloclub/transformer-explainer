@@ -1,11 +1,19 @@
 import { writable, derived } from 'svelte/store';
+import tailwindConfig from '../../tailwind.config';
+import resolveConfig from 'tailwindcss/resolveConfig';
+const { theme } = resolveConfig(tailwindConfig);
+
+export const inputTextExample = [
+	'Data visualization empowers users to',
+	'Artificial Intelligence is transforming the',
+	'IEEE VIS conference highlights the',
+	'Neural networks can learn to',
+	'Predictive modeling enhances the'
+];
 
 // transformer model output
 export const modelData = writable<ModelData>();
-// export const tokens = derived(modelData, ($modelData) => {
-// 	console.log($modelData?.inputTokens);
-// 	return ($modelData?.inputTokens || initialText).trim().split(' ');
-// });
+export const tokens = writable<string[]>('Data visualization em powers users to'.split(' '));
 
 // is transformer running?
 export const isModelRunning = writable(false);
@@ -33,9 +41,8 @@ export const highlightedHead = writable<HighlightedToken>({
 export const expandedBlock = writable<ExpandedBlock>({ id: null });
 
 // user input text
-const initialText = 'Georgia tech is a big school of';
-export const inputText = writable(initialText);
-export const tokens = derived(inputText, ($inputText) => $inputText.trim().split(' '));
+export const inputText = writable(inputTextExample[0]);
+// export const tokens = derived(inputText, ($inputText) => $inputText.trim().split(' '));
 
 // selected model and meta data
 const initialSelectedModel = 'gpt2-md';
@@ -60,5 +67,8 @@ export const maxVectorScale = 4;
 
 export const vectorHeight = writable(0);
 export const headContentHeight = writable(0);
+export const headGap = { x: 5, y: 8, scale: 0 };
 
 export const isBoundingBoxActive = writable(false);
+
+export const predictedColor = theme.colors.orange[400];

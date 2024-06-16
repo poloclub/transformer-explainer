@@ -12,6 +12,7 @@
 	import WeightPopover from './Popovers/WeightPopover.svelte';
 	import DropoutPopover from './Popovers/DropoutPopover.svelte';
 	import LayerNormPopover from './Popovers/LayerNormPopover.svelte';
+	import OperationGroup from './OperationGroup.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -66,9 +67,6 @@
 	};
 
 	let isHovered = false;
-	let isDOHovered = false;
-	let isRDHovered = false;
-	let isLNHovered = false;
 
 	function handleMouseEnter() {
 		isHovered = true;
@@ -79,33 +77,69 @@
 	}
 
 	const embeddingVectorColor = 'bg-gray-300';
+
+	// Weight Popover
+
+	let mouseX = 0;
+	let mouseY = 0;
+	let showPopover = false;
+
+	function handleMouseOver() {
+		showPopover = true;
+	}
+
+	function handleMouseMove(event) {
+		mouseX = event.clientX;
+		mouseY = event.clientY;
+	}
+
+	function handleMouseOut() {
+		showPopover = false;
+	}
 </script>
 
-<div class={classNames('embedding', className)}>
+<div
+	class={classNames('embedding', className)}
+	role="button"
+	on:click={onClickEmbedding}
+	on:keydown={onClickEmbedding}
+	tabindex="0"
+>
 	<div
-		class="title"
-		on:click={onClickEmbedding}
-		on:keydown={onClickEmbedding}
-		role="button"
-		tabindex="0"
+		class="title expandable"
+		on:mouseenter={handleMouseEnter}
+		on:mouseleave={handleMouseLeave}
+		role="group"
 	>
 		<div>Embedding</div>
 	</div>
 	<div class="content relative">
-		<div class="token-column resizable resize-watch flex">
+		<div
+			class="token-column resizable resize-watch flex"
+			role="button"
+			on:mouseenter={handleMouseEnter}
+			on:mouseleave={handleMouseLeave}
+			on:click={onClickEmbedding}
+			on:keydown={onClickEmbedding}
+			tabindex="0"
+		>
 			<!-- token -->
-			<div class="column token-string">
-				{#if isEmbeddingExpanded}<div class="subtitle embedding-detail">Token String</div>{/if}
+			<div class="column token-string relative">
+				{#if isEmbeddingExpanded}<div class="subtitle embedding-detail">Token</div>{/if}
 				{#each $tokens as token, index}
-					<div class="cell label" class:last={index === $tokens.length - 1}>
-						<span>{token}</span>
+					<div class="cell" class:last={index === $tokens.length - 1}>
+						<span class="label">{token}</span>
 					</div>
 				{/each}
+				<div
+					class="bounding embedding-bounding"
+					class:active={isHovered && !isEmbeddingExpanded}
+				></div>
 			</div>
 			{#if isEmbeddingExpanded}
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
-					<div class="subtitle">Token IDs & Embeddings</div>
+					<div class="subtitle">Token Embedding</div>
 					{#each $tokens as token, index}
 						<div class="token-id flex items-center">
 							<div class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400">
@@ -113,8 +147,6 @@
 									class="h-3 w-3 text-gray-600"
 									aria-hidden="true"
 									xmlns="http://www.w3.org/2000/svg"
-									width="24"
-									height="24"
 									fill="none"
 									viewBox="0 0 24 24"
 								>
@@ -144,7 +176,7 @@
 					{/each}
 				</div>
 				<div class="column embedding-detail position-embedding">
-					<div class="subtitle">Positional Embeddings</div>
+					<div class="subtitle">Positional Embedding</div>
 					{#each $tokens as token, index}
 						<div class="cell flex items-center">
 							<div class={`vector ${embeddingVectorColor}`}><VectorCanvas /></div>
@@ -156,94 +188,47 @@
 						<div class="cell">=</div>
 					{/each}
 				</div>
-				<PositionalEncodingPopover triggeredBy=".position-embedding" />
+				<!-- <PositionalEncodingPopover triggeredBy=".position-embedding" /> -->
 			{/if}
 		</div>
 		<div class="vector-column flex">
 			<div
 				class="column vectors"
-				role="group"
+				role="button"
 				on:mouseenter={handleMouseEnter}
 				on:mouseleave={handleMouseLeave}
+				on:click={onClickEmbedding}
+				on:keydown={onClickEmbedding}
+				tabindex="0"
 			>
 				{#each $tokens as token, index}
 					<div class={`vector ${embeddingVectorColor}`} class:last={index === $tokens.length - 1}>
-						<div
-							class="canvas-container h-full w-full"
-							class:active={isHovered || isEmbeddingExpanded}
-						>
-							<VectorCanvas data={$modelData?.outputs['input_emb']?.data[index]} />
-						</div>
+						<VectorCanvas
+							data={$modelData?.outputs['input_emb']?.data[index]}
+							active={isHovered || isEmbeddingExpanded}
+						/>
 					</div>
 				{/each}
 			</div>
-			<div
-				class="column dropout"
-				role="group"
-				on:mouseenter={() => {
-					isDOHovered = true;
-				}}
-				on:mouseleave={() => {
-					isDOHovered = false;
-				}}
-			>
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="dropout" tail={index === $tokens.length - 1} active={isDOHovered} />
-					</div>
-				{/each}
-				<DropoutPopover triggeredBy=".column.dropout" offset={1} />
-			</div>
-			<div
-				class="column residual"
-				role="group"
-				on:mouseenter={() => {
-					isRDHovered = true;
-				}}
-				on:mouseleave={() => {
-					isRDHovered = false;
-				}}
-			>
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="residual-start" head={index === 0} active={isRDHovered} />
-					</div>
-				{/each}
-			</div>
-			<div
-				class="column ln"
-				role="group"
-				on:mouseenter={() => {
-					isLNHovered = true;
-				}}
-				on:mouseleave={() => {
-					isLNHovered = false;
-				}}
-			>
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="ln" tail={index === $tokens.length - 1} active={isLNHovered} />
-					</div>
-				{/each}
-				<LayerNormPopover triggeredBy=".column.ln" />
-			</div>
+			<OperationGroup type="dropout" id={'embedding-dropout'} />
+			<OperationGroup type="residual-start" id={'residual-first'} />
+			<OperationGroup type="ln" id={'embedding-ln'} />
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
+	.embedding-bounding {
+		top: -0.5rem;
+		padding: 0.5rem 0;
+		left: 0;
+		width: calc(100% + 0.8rem);
+		height: 100%;
+	}
 	:global(.dropout-popover),
 	:global(.ln-popover) {
 		width: 20rem;
 		top: 100% !important;
-	}
-	.canvas-container {
-		transition: opacity 0.5s;
-		opacity: 0;
-		overflow: hidden;
-		&.active {
-			opacity: 1;
-		}
 	}
 
 	.embedding {
@@ -263,7 +248,10 @@
 				// gap: 2rem;
 				.column {
 					padding: 0 1rem;
-					height: fit-content;
+
+					.cell {
+						justify-content: flex-end;
+					}
 				}
 				.symbol {
 					font-size: 0.8rem;
@@ -272,7 +260,7 @@
 			}
 
 			.token-string {
-				width: 5rem;
+				width: 7rem;
 				flex-shrink: 0;
 			}
 

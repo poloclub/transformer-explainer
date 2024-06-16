@@ -25,7 +25,7 @@
 
 	$: {
 		rowLen = data.length;
-		dimension = data[0].length;
+		dimension = data[0]?.length || 0;
 	}
 
 	$: props = {
@@ -53,7 +53,7 @@
 	{#if title && titlePos === 't'}
 		<div class="leading-none">{title}</div>
 	{/if}
-	<div class={classNames('matrix inline-block p-1 align-top')}>
+	<div class={classNames('matrix inline-block  align-top')}>
 		<slot name="inner-title" />
 		{#if isDataReady}
 			<MatrixSvg {...props} />

@@ -12,8 +12,18 @@
 	let width = 50;
 </script>
 
-{#if type === 'dropout'}
-	<div class={classNames(`dropout`, className)} class:active>
+{#if type === 'activation'}
+	<div class={classNames(`cell activation`, className)} class:active>
+		<div class="cursor"></div>
+		<svg class="main">
+			<!-- <path class="line" d={`M 0 0 L 10 0 L 20 -20`} style={'transform:translateY(50%)'}></path> -->
+			<path class="line line1" d={`M0,0 L0,50%`}></path>
+			<path class="line line2" d={`M0,0 L0,40%`}></path>
+			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
+		</svg>
+	</div>
+{:else if type === 'dropout'}
+	<div class={classNames(`cell dropout`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			<path class="line" d={`M0,0 L0,${$vectorHeight}`}></path>
@@ -29,7 +39,7 @@
 		{/if}
 	</div>
 {:else if type === 'ln'}
-	<div class={classNames(`ln`, className)} class:active>
+	<div class={classNames(`cell ln`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
@@ -55,7 +65,7 @@
 			</svg>{/if}
 	</div>
 {:else if type === 'residual-start'}
-	<div class={classNames(`residual residual-start`, className)} class:active>
+	<div class={classNames(`residual residual-start cell`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			{#if head}<path class="head" d="M0,0 Q0,-20 30,-20"></path>
@@ -64,7 +74,7 @@
 		</svg>
 	</div>
 {:else if type === 'residual-end'}
-	<div class={classNames(`residual residual-end`, className)} class:active>
+	<div class={classNames(`residual residual-end cell`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			{#if head}<path class="head" d="M0,0 Q0,-20 -30,-20"></path>
@@ -76,6 +86,7 @@
 {/if}
 
 <style lang="scss">
+	.activation,
 	.residual,
 	.dropout,
 	.ln {
@@ -83,7 +94,7 @@
 		width: 1.2rem;
 		flex-shrink: 0;
 		z-index: 101;
-		height: var(--vector-height);
+		// height: var(--vector-height);
 
 		.cursor {
 			height: 100%;
@@ -161,6 +172,20 @@
 			stroke: theme('colors.gray.400');
 			fill: none;
 			stroke-width: 1;
+		}
+	}
+	.activation {
+		path {
+			stroke: theme('colors.gray.400');
+			fill: none;
+			stroke-width: 1;
+		}
+		.line1 {
+			stroke-dasharray: 2 4;
+		}
+		.line2 {
+			// stroke-dasharray: 2 4;
+			transform: translate(50%, 50%);
 		}
 	}
 

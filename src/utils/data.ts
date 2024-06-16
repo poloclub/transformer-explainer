@@ -1,6 +1,6 @@
-import { AutoTokenizer, PreTrainedTokenizer } from '@xenova/transformers';
+import { AutoTokenizer, PreTrainedTokenizer, GPT2Tokenizer } from '@xenova/transformers';
 import * as ort from 'onnxruntime-web';
-import { modelData, isModelRunning, temperature, predictedToken } from '~/store';
+import { modelData, tokens, isModelRunning, temperature, predictedToken } from '~/store';
 import BigNumber from 'bignumber.js';
 import { applyTemperatureToData, sampleToken } from './sampler';
 import { showFlowAnimation, showSamplingAnimation } from './animation';
@@ -8,23 +8,27 @@ import { base } from '$app/paths';
 
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
-export const runModel = async (input: string, temperature: number, tokenLength: number) => {
+export const runModel = async (input: string, temperature: number) => {
 	isModelRunning.set(true);
 
 	// setTimeout(() => {
 	// 	showFlowAnimation(tokenLength);
 	// }, 100);
 
-	const { outputs, prediction, inputTokens } = await getData(input);
+	const { token_ids, input_tokens } = await getTokenization(input);
+
+	tokens.set(input_tokens);
+
+	const { outputs, prediction } = await getData(token_ids);
+
 	const adjustedData = applyTemperatureToData(prediction, temperature);
 	const sampledToken = sampleToken(adjustedData);
 
-	modelData.set({ inputTokens, outputs, prediction: adjustedData });
+	modelData.set({ outputs, prediction: adjustedData, sampled: sampledToken });
 
-	await showFlowAnimation(tokenLength);
+	await showFlowAnimation(input_tokens.length);
 
 	predictedToken.set(sampledToken);
-
 	isModelRunning.set(false);
 
 	// inputText.update((currentText) => currentText + data.predictedToken);
@@ -48,10 +52,10 @@ const softmax = (logits: number[]) => {
 };
 
 export const getTokenization = async (input: string) => {
-	const tokenizer = await AutoTokenizer.from_pretrained('gpt2');
+	const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
 
 	const token_ids = tokenizer.encode(input);
-	const input_tokens = tokenizer.decode(token_ids);
+	const input_tokens = token_ids.map((id) => tokenizer.decode([id])).flat();
 
 	return {
 		token_ids,
@@ -95,11 +99,8 @@ const getTopKPrediction = (
 		.map((d, i) => ({ ...d, rank: i, token: tokenizer.decode([d.tokenId]) }));
 };
 
-export const getData = async (inputText: string) => {
+export const getData = async (token_ids: number[]) => {
 	try {
-		// Tokenize input text
-		const { token_ids, input_tokens } = await getTokenization(inputText);
-
 		// Convert token_ids to tensor
 		const inputTensor = new ort.Tensor(
 			'int64',
@@ -143,7 +144,6 @@ export const getData = async (inputText: string) => {
 		);
 
 		return {
-			inputTokens: input_tokens,
 			outputs,
 			prediction
 		};
@@ -212,31 +212,3 @@ const targetTensors = [
 	'linear_weight',
 	'linear_output'
 ];
-// test
-
-// const input = 'To be or not to be is the';
-
-// const testGetTokenization = (input) => {
-// 	getTokenization(input)
-// 		.then((result) => {
-// 			console.log('Token IDs:', result.token_ids);
-// 			console.log('Input Tokens:', result.input_tokens);
-// 		})
-// 		.catch((error) => {
-// 			console.error('Error:', error);
-// 		});
-// };
-
-// const testGetData = (input) => {
-// 	getData(input)
-// 		.then((output) => {
-// 			console.log('Final attention matrix:', output.outputs.block_0_attn_head_0_attn_dropout);
-// 			console.log('Generated last token: ', output.last_token, ', ', output.output_text);
-// 		})
-// 		.catch((err) => {
-// 			console.error('Error:', err);
-// 		});
-// };
-
-// testGetTokenization(input);
-// testGetData(input);

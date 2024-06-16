@@ -3,6 +3,7 @@
 	import classNames from 'classnames';
 	import { setContext } from 'svelte';
 	import Operation from './Operation.svelte';
+	import OperationGroup from './OperationGroup.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -11,12 +12,25 @@
 	const firstLayerlColor = 'bg-purple-200';
 	const secondLayerColor = 'bg-indigo-200';
 	const outputColor = 'bg-blue-200';
+
+	let isHovered = false;
+
+	function handleMouseEnter() {
+		isHovered = true;
+	}
+
+	function handleMouseLeave() {
+		isHovered = false;
+	}
 </script>
 
 <div class={classNames('mlp', className)}>
-	<div class="title">MLP</div>
+	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
+		MLP
+	</div>
 	<div class="content relative">
-		<div class="bounding" class:active={$isBoundingBoxActive}></div>
+		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>
+		<div class="bounding mlp-bounding" class:active={isHovered}></div>
 		<div class="layer first-layer flex">
 			<div class="column initial">
 				{#each $tokens as token, index}
@@ -29,61 +43,28 @@
 					</div>
 				{/each}
 			</div>
-			<div class="column dropout">
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="dropout" />
-					</div>
-				{/each}
-			</div>
-			<div class="column residual-end">
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="residual-end" head={index === 0} />
-					</div>
-				{/each}
-			</div>
-			<div class="column ln">
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="ln" />
-					</div>
-				{/each}
-			</div>
-			<div class="column residual-start">
-				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
-						<Operation type="residual-start" head={index === 0} />
-					</div>
-				{/each}
-			</div>
+			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
+			<OperationGroup type="residual-end" id={'residual-first'} />
+			<OperationGroup type="ln" id={'mlp-first-ln'} />
+			<OperationGroup type="residual-start" id={'residual-second'} />
 		</div>
 		<div class="layer second-layer flex justify-between">
-			<div class="column projections">
-				{#each $tokens as token, index}
-					<div
-						class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
-						class:last={index === $tokens.length - 1}
-					>
-						<div class={classNames(`vector x4 ${secondLayerColor} opacity-60`)}></div>
-					</div>
-				{/each}
+			<div class="projections flex">
+				<div class="column">
+					{#each $tokens as token, index}
+						<div
+							class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
+							class:last={index === $tokens.length - 1}
+						>
+							<div class={classNames(`vector x4 ${secondLayerColor} opacity-60`)}></div>
+						</div>
+					{/each}
+				</div>
+				<OperationGroup type="activation" id={'mlp-activation'} className="x4" />
 			</div>
 			<div class="ouputs flex">
-				<div class="column residual-end">
-					{#each $tokens as token, index}
-						<div class="cell" class:last={index === $tokens.length - 1}>
-							<Operation type="residual-end" head={index === 0} />
-						</div>
-					{/each}
-				</div>
-				<div class="column ln">
-					{#each $tokens as token, index}
-						<div class="cell" class:last={index === $tokens.length - 1}>
-							<Operation type="ln" />
-						</div>
-					{/each}
-				</div>
+				<OperationGroup type="residual-end" id={'residual-second'} />
+				<OperationGroup type="ln" id={'mlp-second-ln'} />
 				<div class="column out">
 					{#each $tokens as token, index}
 						<div class="cell" class:last={index === $tokens.length - 1}>
@@ -98,7 +79,14 @@
 
 <style lang="scss">
 	.mlp {
-		.bounding {
+		.mlp-bounding {
+			top: -0.5rem;
+			padding: 0.5rem 0;
+			left: -0.2rem;
+			width: calc(100% + 0.2rem);
+			height: 100%;
+		}
+		.transformer-bounding {
 			border-radius: 0 10px 10px 0;
 			padding-right: 0.5rem;
 			right: -0.5rem;
@@ -113,6 +101,9 @@
 			}
 			.tokens.initial .token {
 				/* gap: 0.6rem; */
+			}
+
+			.column.activation {
 			}
 		}
 	}

@@ -1,23 +1,29 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
-	import { modelData, rootRem } from '~/store';
+	import { modelData, rootRem, predictedToken, predictedColor } from '~/store';
 
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	const { theme } = resolveConfig(tailwindConfig);
 
-	export let rowHeight = 0.5 * rootRem;
-	export let rowGap = rootRem;
+	export let rowHeight;
+	export let rowGap;
 	export let hoveredIndex: number | null = null;
 
-	$: data = $modelData?.prediction || [];
+	const barHeight = 4;
 
 	let svgEl: HTMLOrSVGElement;
 
 	let percentPrecision = 1;
 
+	let normalColor = theme.colors.gray[300];
+	let hoverColor = theme.colors.blue[500];
+
 	let drawBars = () => {
+		const data = $modelData?.prediction;
+		const predicted = $modelData?.sampled;
+
 		const svg = d3.select(svgEl);
 
 		let xScale = d3
@@ -31,20 +37,18 @@
 			.data(data)
 			.join('rect')
 			.attr('x', 0)
-			.attr('y', (d, i) => i * rowHeight + i * rowGap)
-			.attr('height', rowHeight)
+			.attr('y', (d, i) => i * rowHeight + i * rowGap + rowHeight / 2 - barHeight / 2)
+			.attr('height', barHeight)
 			.attr('width', (d) => xScale(d.adjustedProbability))
 			.attr('rx', 1)
 			.attr('ry', 1)
 			.attr('fill', (d, i) => {
 				if (i === hoveredIndex) {
-					return theme.colors.blue[500];
-					// } else if (i === $highlightedIndex) {
-					// 	return theme.colors.red[300];
-					// } else if (i === $finalTokenIndex) {
-					// 	return theme.colors.red[700];
+					return hoverColor;
+				} else if (predicted?.rank === i) {
+					return predictedColor;
 				} else {
-					return theme.colors.gray[200];
+					return normalColor;
 				}
 			})
 			.on('mouseenter', function (event, d) {
@@ -65,13 +69,11 @@
 			.join('text')
 			.attr('fill', (d, i) => {
 				if (i === hoveredIndex) {
-					return theme.colors.blue[600];
-					// } else if (i === $highlightedIndex) {
-					// 	return theme.colors.red[300];
-					// } else if (i === $finalTokenIndex) {
-					// 	return theme.colors.red[700];
+					return hoverColor;
+				} else if (predicted?.rank === i) {
+					return predictedColor;
 				} else {
-					return theme.colors.gray[400];
+					return normalColor;
 				}
 			})
 			.on('mouseenter', function (event, d) {
@@ -82,7 +84,7 @@
 				hoveredIndex = null;
 			})
 			.attr('x', (d) => 0.4 * rootRem + xScale(d.adjustedProbability))
-			.attr('y', (d, i) => i * rowHeight + i * rootRem)
+			.attr('y', (d, i) => i * rowHeight + i * rowGap)
 			.attr('dy', rowHeight / 2 + 3)
 			.attr('text-anchor', 'start')
 			.style('font-size', '0.75rem')
@@ -102,9 +104,38 @@
 		drawBars();
 	});
 
-	$: if (data && svgEl) {
+	$: if ($modelData && svgEl) {
 		drawBars();
 	}
+
+	$: if (hoveredIndex !== undefined) {
+		updateColor();
+	}
+
+	// for hover and sampling
+	const updateColor = () => {
+		if (!svgEl) return;
+		const svg = d3.select(svgEl);
+		svg.selectAll('g.bars rect').attr('fill', (d, i) => {
+			if (i === hoveredIndex) {
+				return hoverColor;
+			} else if ($predictedToken?.rank === i) {
+				return predictedColor;
+			} else {
+				return normalColor;
+			}
+		});
+
+		svg.selectAll('g.bar-labels text').attr('fill', (d, i) => {
+			if (i === hoveredIndex) {
+				return hoverColor;
+			} else if ($predictedToken?.rank === i) {
+				return predictedColor;
+			} else {
+				return normalColor;
+			}
+		});
+	};
 </script>
 
 <div class="content-box probability grow">

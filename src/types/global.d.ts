@@ -41,7 +41,7 @@ type PredictionItem = {
 };
 type Prediction = PredictionItem[];
 type ModelData = {
-	inputTokens: string;
 	outputs: Record<string, { data: number[][]; dims: number[]; size: number }>;
 	prediction: Prediction;
+	sampled: PredictionItem;
 };

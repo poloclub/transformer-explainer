@@ -15,20 +15,19 @@
 		modelData,
 		isModelRunning,
 		temperature,
-		predictedToken
+		predictedToken,
+		inputTextExample
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
 
 	let inputRef: HTMLDivElement;
-
-	// initial value is initial inputText
 	let inputTextTemp = $inputText;
 
 	$: predictedTokenTemp = $predictedToken?.token || '';
 
 	const onFocusInput = (e) => {
-		// set predicted empty
+		// set predicted to empty
 		predictedTokenTemp = '';
 		//add predicted token to inputText
 		inputTextTemp = e.target?.textContent;
@@ -40,9 +39,9 @@
 	};
 
 	const handleSubmit = (e) => {
-		// set predicted empty
+		// set predicted to empty
 		predictedTokenTemp = '';
-		//add predicted token to inputText
+		// add predicted token to inputText
 		inputTextTemp = inputRef?.textContent || '';
 
 		inputText.set(inputTextTemp);
@@ -65,39 +64,35 @@
 	<div class="flex flex-1 items-center gap-1 whitespace-nowrap">
 		<form class=" flex w-full items-center gap-2">
 			<ButtonGroup class="w-full grow" size="sm">
-				<Button
-					size="xs"
-					color="none"
-					class="flex-shrink-0 border border-gray-300 bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-inset focus:ring-gray-300 dark:border-gray-700 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-800"
-				>
-					Select Example<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+				<Button size="xs" class="select-button">
+					Example<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
 				</Button>
 				<Dropdown>
-					<DropdownItem>test1</DropdownItem>
-					<DropdownItem>test2</DropdownItem>
-					<DropdownItem>test3</DropdownItem>
-					<DropdownItem>test4</DropdownItem>
+					{#each inputTextExample as text}
+						<DropdownItem>{text}</DropdownItem>
+					{/each}
 				</Dropdown>
-				<div
-					bind:this={inputRef}
-					contenteditable={!$isModelRunning}
-					class="focus:border-none focus:ring-2 focus:ring-inset focus:ring-gray-300"
-					placeholder="Test your own input text"
-					on:focus={onFocusInput}
-					on:input={onInput}
-				>
-					<span class="user-input">{inputTextTemp}</span><span class="predicted"
-						>{predictedTokenTemp}</span
+				<div class="input-container">
+					<div
+						bind:this={inputRef}
+						contenteditable={!$isModelRunning}
+						class="input-box"
+						placeholder="Test your own input text"
+						on:focus={onFocusInput}
+						on:input={onInput}
 					>
+						<span class="user-input">{inputTextTemp}</span><span class="predicted"
+							>{predictedTokenTemp}</span
+						>
+					</div>
+					{#if $isModelRunning}
+						<div class="loading"><LoadingDots /></div>
+					{/if}
 				</div>
-				{#if $isModelRunning}
-					<LoadingDots />
-				{/if}
 			</ButtonGroup>
 			<Button
 				disabled={$isModelRunning}
-				color="blue"
-				class="!p-1.5 focus:ring-inset"
+				class="generate-button"
 				type="submit"
 				size="sm"
 				on:click={handleSubmit}
@@ -113,19 +108,66 @@
 	.predicted {
 		color: red;
 	}
-	.input-container {
+	:global(.select-button) {
+		flex-shrink: 0;
 		border: 1px solid theme('colors.gray.300');
+		background-color: theme('colors.gray.100');
+		color: theme('colors.gray.900');
+		&:hover {
+			background-color: theme('colors.gray.200');
+		}
+		&:focus {
+			outline: none;
+		}
+	}
+	.input-container {
+		display: flex;
+		flex: 1 0 0;
+		align-items: center;
+
+		border: 1px solid theme('colors.gray.300');
+		color: theme('colors.gray.900');
 		border-left: none;
 		border-start-end-radius: 0.5rem;
 		border-end-end-radius: 0.5rem;
-		font-size: 0.75rem;
+		font-size: 0.9rem;
 		line-height: 1rem;
 		padding: 0.5rem;
 		width: 100%;
-		border-color: theme('colors.gray.300');
+
+		white-space: pre-wrap;
+		gap: 0.3rem;
+		.input-box {
+			// flex: 1 0 0;
+			white-space: nowrap;
+			&:focus {
+				outline: none;
+			}
+		}
 
 		input {
 			width: 100%;
 		}
+		.loading {
+			flex-shrink: 0;
+		}
+		.predicted {
+			color: theme('colors.orange.400');
+			// background-color: theme('colors.blue.100');
+			// padding: 0.1rem;
+		}
+	}
+	:global(.generate-button) {
+		padding: 0.4rem 0.8rem;
+		border: 1px solid theme('colors.orange.400');
+		color: theme('colors.orange.400');
+		transition: all 0.2s;
+
+		&:hover {
+			background-color: theme('colors.orange.100');
+		}
+	}
+	:global(.generate-button):focus {
+		outline: none;
 	}
 </style>
