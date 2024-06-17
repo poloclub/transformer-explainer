@@ -85,7 +85,7 @@
 							class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
 							class:last={index === $tokens.length - 1}
 						>
-							<div class={classNames(`vector x4 ${secondLayerColor} opacity-60`)}>
+							<div class={classNames(`vector x4 ${secondLayerColor} opacity-80`)}>
 								<VectorCanvas colorScale="indigo" />
 							</div>
 						</div>

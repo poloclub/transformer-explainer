@@ -242,6 +242,7 @@
 		grid-template-columns: 0 auto;
 
 		.content-box {
+			// position: absolute;
 			flex-shrink: 0;
 			display: flex;
 			flex-direction: column;

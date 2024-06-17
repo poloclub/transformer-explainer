@@ -6,52 +6,60 @@
 	import LayerNormPopover from './Popovers/LayerNormPopover.svelte';
 	import ActivationPopover from './Popovers/ActivationPopover.svelte';
 	import * as d3 from 'd3';
-	import { onMount } from 'svelte';
+	import ResidualPopover from './Popovers/ResidualPopover.svelte';
 
 	export let id: string;
 	export let className: string | undefined = undefined;
 	export let type: string | undefined = undefined;
 
-	let isActivationHovered = false;
-	let isDOHovered = false;
-	let isRDHovered = false;
-	let isRDEndHovered = false;
-	let isLNHovered = false;
+	let isHovered = false;
 
-	onMount(() => {});
-	const drawConnector = () => {
-		const svg = d3.select('.sankey-top');
+	const onMouseOver = () => {
+		isHovered = true;
+		const startGroup = document.querySelector(`#${id}-start`);
+		const endGroup = document.querySelector(`#${id}-end`);
 
-		const start = d3.select(`.residual-start.${className}`).node()?.getBoundingClientRect();
-		const end = d3.select(`.residual-end.${className}`).node()?.getBoundingClientRect();
+		const connector = d3.select(`.residual-connector.${id}`);
+		connector.style('opacity', 1);
+		connectLine(connector);
 
-		const x1 = start.right;
-		const y1 = start.top + start.height / 2;
-		const x2 = end.left;
-		const y2 = end.top + end.height / 2;
+		startGroup?.classList.add('active');
+		endGroup?.classList.add('active');
+	};
 
-		svg
-			.selectAll('.residual-connector line')
-			.data([0])
-			.join('line')
-			.attr('class', 'residual-connector')
-			.attr('x1', x1)
-			.attr('y1', y1)
-			.attr('x2', x2)
-			.attr('y2', y2);
+	const onMouseOut = () => {
+		isHovered = false;
+		const startGroup = document.querySelector(`#${id}-start`);
+		const endGroup = document.querySelector(`#${id}-end`);
+
+		const connector = d3.select(`.residual-connector.${id}`);
+		connector.style('opacity', 0);
+
+		startGroup?.classList.remove('active');
+		endGroup?.classList.remove('active');
+	};
+
+	const connectLine = (path) => {
+		const length = path.node().getTotalLength();
+		path
+			.attr('stroke-dasharray', length + ' ' + length)
+			.attr('stroke-dashoffset', length)
+			.transition()
+			.duration(300)
+			.attr('stroke-dashoffset', 0);
 	};
 </script>
 
 {#if type === 'activation'}
 	<div
 		{id}
-		class={classNames('column activation', className)}
+		class={classNames('operation-col column activation', className)}
 		role="group"
 		on:mouseenter={() => {
-			isActivationHovered = true;
+			isHovered = true;
 		}}
 		on:mouseleave={() => {
-			isActivationHovered = false;
+			isHovered = false;
 		}}
 	>
 		{#each $tokens as token, index}
@@ -61,7 +69,7 @@
 				})}
 				type="activation"
 				tail={index === $tokens.length - 1}
-				active={isActivationHovered}
+				active={isHovered}
 			/>
 		{/each}
 		<ActivationPopover triggeredBy={`#${id}`} offset={1} />
@@ -69,13 +77,13 @@
 {:else if type === 'dropout'}
 	<div
 		{id}
-		class={classNames('column dropout', className)}
+		class={classNames('operation-col column dropout', className)}
 		role="group"
 		on:mouseenter={() => {
-			isDOHovered = true;
+			isHovered = true;
 		}}
 		on:mouseleave={() => {
-			isDOHovered = false;
+			isHovered = false;
 		}}
 	>
 		{#each $tokens as token, index}
@@ -85,7 +93,7 @@
 				})}
 				type="dropout"
 				tail={index === $tokens.length - 1}
-				active={isDOHovered}
+				active={isHovered}
 			/>
 		{/each}
 		<DropoutPopover triggeredBy={`#${id}`} offset={1} />
@@ -93,13 +101,13 @@
 {:else if type === 'ln'}
 	<div
 		{id}
-		class={classNames('column ln', className)}
+		class={classNames('operation-col column ln', className)}
 		role="group"
 		on:mouseenter={() => {
-			isLNHovered = true;
+			isHovered = true;
 		}}
 		on:mouseleave={() => {
-			isLNHovered = false;
+			isHovered = false;
 		}}
 	>
 		{#each $tokens as token, index}
@@ -109,62 +117,66 @@
 				})}
 				type="ln"
 				tail={index === $tokens.length - 1}
-				active={isLNHovered}
+				active={isHovered}
 			/>
 		{/each}
-		<LayerNormPopover triggeredBy={`#${id}`} open={isLNHovered} />
+		<LayerNormPopover triggeredBy={`#${id}`} />
 	</div>
 {:else if type === 'residual-start'}
 	<div
 		id={`${id}-start`}
-		class={classNames('column residual', className)}
+		class={classNames('operation-col column residual', className)}
 		role="group"
-		on:mouseenter={() => {
-			isRDHovered = true;
-		}}
-		on:mouseleave={() => {
-			isRDHovered = false;
-		}}
+		on:mouseenter={onMouseOver}
+		on:mouseleave={onMouseOut}
 	>
 		{#each $tokens as token, index}
 			<Operation
+				{id}
 				className={classNames(className, {
 					last: index === $tokens.length - 1
 				})}
 				type="residual-start"
 				head={index === 0}
-				active={isRDHovered}
+				active={isHovered}
 			/>
 		{/each}
+		<ResidualPopover triggeredBy={`#${id}`} offset={1} />
 	</div>
 {:else if type === 'residual-end'}
 	<div
 		id={`${id}-end`}
-		class={classNames('column residual', className)}
+		class={classNames('operation-col column residual', className)}
 		role="group"
-		on:mouseenter={() => {
-			isRDEndHovered = true;
-		}}
-		on:mouseleave={() => {
-			isRDEndHovered = false;
-		}}
+		on:mouseenter={onMouseOver}
+		on:mouseleave={onMouseOut}
 	>
 		{#each $tokens as token, index}
 			<Operation
+				{id}
 				className={classNames(className, {
 					last: index === $tokens.length - 1
 				})}
 				type="residual-end"
 				head={index === 0}
-				active={isRDEndHovered}
+				active={isHovered}
 			/>
 		{/each}
 	</div>
 {/if}
 
 <style lang="scss">
-	.column {
+	.column.operation-col {
 		// z-index: 200;
 		height: fit-content;
+
+		&.residual {
+			z-index: 100;
+			opacity: 0.5;
+
+			&.active {
+				opacity: 1;
+			}
+		}
 	}
 </style>

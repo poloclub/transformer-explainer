@@ -75,3 +75,5 @@ export const headGap = { x: 5, y: 8, scale: 0 };
 export const isBoundingBoxActive = writable(false);
 
 export const predictedColor = theme.colors.indigo[400];
+
+export const hoveredPath = writable();

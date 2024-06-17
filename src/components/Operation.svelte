@@ -3,6 +3,7 @@
 	import { Popover } from 'flowbite-svelte';
 	import { vectorHeight, expandedBlock } from '~/store';
 
+	export let id: string | undefined = undefined;
 	export let className: string | undefined = undefined;
 	export let type: string | undefined = undefined;
 	export let head: boolean = false;
@@ -68,8 +69,8 @@
 	<div class={classNames(`residual residual-start cell`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
-			{#if head}<path class="head" d="M0,0 Q0,-20 30,-20"></path>
-				<text x="30" y="-20" dy="4" dx="4">Residual</text>{/if}
+			{#if head}<path {id} class="head" d="M0,0 Q0,-16 30,-16"></path>
+				<text x="30" y="-26" dy="4" dx="4">Residual</text>{/if}
 			<path d={`M0,0 L0,${$vectorHeight}`}></path>
 		</svg>
 	</div>
@@ -77,7 +78,7 @@
 	<div class={classNames(`residual residual-end cell`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
-			{#if head}<path class="head" d="M0,0 Q0,-20 -30,-20"></path>
+			{#if head}<path {id} class="head" d="M0,0 Q0,-16 -30,-16"></path>
 				<!-- <text x="-30" y="-20" text-anchor="end">Residual</text> -->
 			{/if}
 			<path d={`M0,0 L0,${$vectorHeight}`}></path>
@@ -146,25 +147,17 @@
 	.residual {
 		width: 0.5rem;
 		path {
-			stroke: theme('colors.gray.300');
+			stroke: theme('colors.gray.400');
 			fill: none;
 			stroke-width: 1;
 		}
 		text {
 			font-size: 0.8rem;
-			fill: theme('colors.gray.300');
+			fill: theme('colors.gray.400');
 			user-select: none;
 		}
 		.head {
-			stroke: theme('colors.gray.300');
-		}
-		&.active {
-			path {
-				stroke: theme('colors.gray.400');
-			}
-			text {
-				fill: theme('colors.gray.400');
-			}
+			stroke: theme('colors.gray.400');
 		}
 	}
 	.ln {

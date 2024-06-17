@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { tokens, modelMeta } from '~/store';
+	import { tokens, modelMeta, hoveredPath } from '~/store';
 	import * as d3 from 'd3';
 	import { onMount, tick } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { gradientMap } from '~/utils/gradient';
-	// import WeightPopover from './Popovers/WeightPopover.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -311,6 +310,10 @@
 		});
 	};
 
+	let prevOpacity = 1;
+
+	let pathHoverTimeout;
+
 	const drawPath = async () => {
 		await tick();
 		const svg = d3.select(svgEl);
@@ -324,15 +327,24 @@
 				.selectAll('g.path-group')
 				.data(Object.keys(dataMap))
 				.join('g')
-				.attr('class', (d) => `path-group ${d}`);
-			// .on('mouseover', (e, d) => {
-			// 	const paths = d3.select(`g.${d}`).selectAll('path');
-			// 	paths.style('opacity', 1);
-			// })
-			// .on('mouseout', (e, d) => {
-			// 	const paths = d3.select(`g.${d}`).selectAll('path');
-			// 	paths.style('opacity', 0.6);
-			// });
+				.attr('class', (d) => `path-group ${d}`)
+				.on('mouseenter', (e, d) => {
+					clearTimeout(pathHoverTimeout);
+					hoveredPath.set(d);
+					const paths = d3.select(`g.${d}`).selectAll('path');
+					prevOpacity = paths.nodes()[0].getAttribute('opacity');
+					paths
+						.transition()
+						.duration(300)
+						.style('opacity', Number(prevOpacity) + 0.2);
+				})
+				.on('mouseleave', (e, d) => {
+					pathHoverTimeout = setTimeout(() => {
+						hoveredPath.set(null);
+					}, 300);
+					const paths = d3.select(`g.${d}`).selectAll('path');
+					paths.transition().duration(300).style('opacity', prevOpacity);
+				});
 
 			g.selectAll('path.sankey-path')
 				.data((d) => {
@@ -407,6 +419,7 @@
 
 		resizeObserver = new ResizeObserver((entries) => {
 			drawPath();
+			drawResidualPath();
 		});
 		const elements = document?.querySelectorAll('.resize-watch');
 		elements.forEach((el) => resizeObserver.observe(el));
@@ -418,8 +431,42 @@
 	});
 
 	$: if (typeof window !== 'undefined') {
-		$tokens, drawPath();
+		if ($tokens) {
+			drawPath();
+			drawResidualPath();
+		}
 	}
+
+	const drawResidualPath = () => {
+		const svg = d3.select(svgEl);
+
+		const starts = d3.selectAll(`.residual-start path.head`).nodes();
+		const ends = d3.selectAll(`.residual-end path.head`).nodes();
+
+		const lineData = starts.map((start, i) => {
+			const startEl = start.getBoundingClientRect();
+			const endEl = ends[i].getBoundingClientRect();
+
+			const x1 = startEl.right;
+			const y1 = startEl.top;
+			const x2 = endEl.left;
+			const y2 = endEl.top;
+
+			return { x1, y1, x2, y2, id: start.id };
+		});
+		svg
+			.selectAll('line.residual-connector')
+			.data(lineData)
+			.join('line')
+			.attr('class', (d) => `residual-connector ${d.id}`)
+			.attr('x1', (d) => d.x1)
+			.attr('y1', (d) => d.y1)
+			.attr('x2', (d) => d.x2)
+			.attr('y2', (d) => d.y2)
+			.attr('stroke', theme.colors.gray[400])
+			.attr('stroke-width', 1)
+			.style('opacity', 0);
+	};
 
 	const animationTest = () => {
 		const grad = document.querySelector('#gray-blue');
@@ -448,10 +495,7 @@
 />
 
 <style lang="scss">
-	.sankey-top {
-		g {
-			// opacity: 0.8;
-		}
-		/* opacity: 0.8; */
+	.sankey-top,
+	.sankey-back {
 	}
 </style>

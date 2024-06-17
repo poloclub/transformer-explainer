@@ -27,6 +27,7 @@
 
 	import { adjustTemperature, runModel } from '~/utils/data';
 	import { mergeChunks } from '~/utils/mergeChunk';
+	import WeightPopovers from '~/components/WeightPopovers.svelte';
 
 	// expanded state control
 	let isExpanded = false;
@@ -41,10 +42,10 @@
 		// const modelUrl = `${base}/gpt2-quant.onnx`;
 		// const url = `${base}/gpt2.onnx`;
 
-		const chunkNum = 4;
+		const chunkNum = 10;
 		const chunkUrls = Array(chunkNum)
 			.fill(0)
-			.map((d, i) => `${base}/gpt2-quant.onnx.part${i}.gz`);
+			.map((d, i) => `${base}/gpt2-quant.onnx.part${i}`);
 
 		const mergedArray = await mergeChunks(chunkUrls);
 
@@ -141,6 +142,8 @@
 			<SubsequentBlocks className="step" />
 			<LinearSoftmax className="step" />
 		</div>
+
+		<WeightPopovers />
 	</div>
 	<div
 		class={classNames('dim pointer-events-none', `${$expandedBlock.id || ''}`, {

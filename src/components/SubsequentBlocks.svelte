@@ -2,6 +2,8 @@
 	import { tokens, modelMeta, isBoundingBoxActive } from '~/store';
 	import classNames from 'classnames';
 	import Operation from './Operation.svelte';
+	import { Tooltip } from 'flowbite-svelte';
+	import VectorCanvas from './VectorCanvas.svelte';
 
 	export let className: string | undefined = undefined;
 </script>
@@ -18,6 +20,11 @@
 >
 	<div class="title"></div>
 	<div class="content">
+		<Tooltip
+			triggeredBy=".transformer-blocks .vector"
+			placement="right"
+			class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
+		>
 		<div class="column final relative">
 			<div class="guide flex items-end gap-1">
 				<svg class="arrow" width="28" height="30" viewBox="0 0 28 30" fill="none">
@@ -37,7 +44,9 @@
 						class={classNames(`vector shrink-0 bg-blue-200`, {
 							'last-token': index === $tokens.length - 1
 						})}
-					></div>
+					>
+						<VectorCanvas colorScale="blue" />
+					</div>
 					<!-- <span class="label float-right">{token}</span> -->
 				</div>
 			{/each}

@@ -10,6 +10,7 @@
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import { Tooltip } from 'flowbite-svelte';
+
 	const { theme } = resolveConfig(tailwindConfig);
 
 	export let className: string | undefined = undefined;
@@ -230,7 +231,7 @@
 				<!-- <PositionalEncodingPopover triggeredBy=".position-embedding" /> -->
 			{/if}
 		</div>
-		<div class="vector-column flex">
+		<div class="vector-column relative flex">
 			<Tooltip triggeredBy=".embedding .vector" placement="right" class="popover text-sm font-light"
 				>size(1, {$modelMeta.dimension})</Tooltip
 			>
