@@ -11,6 +11,8 @@
 	import classNames from 'classnames';
 	import AttentionMatrix from '~/components/AttentionMatrix.svelte';
 	import { setContext, getContext } from 'svelte';
+	import VectorCanvas from './VectorCanvas.svelte';
+	import { Tooltip } from 'flowbite-svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -45,6 +47,8 @@
 	function handleMouseLeave() {
 		isHovered = false;
 	}
+
+	let vectorHoverIdx: number | null = null;
 </script>
 
 <div class={classNames('attention', className)}>
@@ -61,24 +65,70 @@
 		<!-- <div class="title absolute top-0">First Transformer Block</div> -->
 
 		<div class="column">
+			<!-- QKV vector -->
+			<Tooltip
+				triggeredBy=".attention .qkv-weighted"
+				placement="right"
+				class="popover text-sm font-light">size(1, {$modelMeta.dimension * 3})</Tooltip
+			>
+			<!-- Head1 vector -->
+			<Tooltip
+				triggeredBy=".attention .query .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Query, size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
+			>
+			<Tooltip
+				triggeredBy=".attention .key .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Key, size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
+			>
+			<Tooltip
+				triggeredBy=".attention .value .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Value size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
+			>
+			<Tooltip
+				triggeredBy=".attention .out .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Attention Out, size(1, {$modelMeta.dimension /
+					$modelMeta.attention_head_num})</Tooltip
+			>
+
 			{#each $tokens as token, index}
-				<div class="vector x3 flex flex-col" class:last={index === $tokens.length - 1}>
-					<div class={`sub-vector query flex grow flex-col ${queryVectorColor}`}>
+				<div
+					class="qkv-weighted vector x3 flex flex-col"
+					class:last={index === $tokens.length - 1}
+					on:mouseenter={() => {
+						vectorHoverIdx = index;
+					}}
+					on:mouseleave={() => {
+						vectorHoverIdx = null;
+					}}
+					role="group"
+				>
+					<div class={`sub-vector query relative flex grow flex-col ${queryVectorColor}`}>
+						<VectorCanvas colorScale="blue" active={vectorHoverIdx === index} />
 						<div class={`sub-vector x1-12 head1 ${queryHeadVectorColor}`}></div>
 						<div class="sub-vector head-rest grow">
-							{#if true}<span>Q</span>{/if}
+							{#if vectorHoverIdx !== index}<span>Q</span>{/if}
 						</div>
 					</div>
-					<div class={`sub-vector key flex grow flex-col ${keyVectorColor}`}>
+					<div class={`sub-vector key relative flex grow flex-col ${keyVectorColor}`}>
+						<VectorCanvas colorScale="red" active={vectorHoverIdx === index} />
 						<div class={`sub-vector x1-12 head1 ${keyHeadVectorColor}`}></div>
 						<div class="sub-vector head-rest grow">
-							{#if true}<span>K</span>{/if}
+							{#if vectorHoverIdx !== index}<span>K</span>{/if}
 						</div>
 					</div>
-					<div class={`sub-vector value flex grow flex-col ${valVectorColor}`}>
+					<div class={`sub-vector value relative flex grow flex-col ${valVectorColor}`}>
+						<VectorCanvas colorScale="green" active={vectorHoverIdx === index} />
 						<div class={`sub-vector x1-12 head1 ${valHeadVectorColor}`}></div>
 						<div class="sub-vector head-rest grow">
-							{#if true}<span>V</span>{/if}
+							{#if vectorHoverIdx !== index}<span>V</span>{/if}
 						</div>
 					</div>
 				</div>
@@ -94,7 +144,7 @@
 						<div class="column query">
 							<div class="title">Query</div>
 							{#each $tokens as token, index}
-								<div class="cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
+								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
@@ -104,7 +154,7 @@
 							<div class="title">Key</div>
 
 							{#each $tokens as token, index}
-								<div class="cell x1-12 text-xs class:last={index === $tokens.length - 1}">
+								<div class="head1 cell x1-12 text-xs class:last={index === $tokens.length - 1}">
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
@@ -113,7 +163,7 @@
 						<div class="column value">
 							<div class="title">Value</div>
 							{#each $tokens as token, index}
-								<div class="cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
+								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${valHeadVectorColor}`}></div>
 								</div>
@@ -124,9 +174,10 @@
 						<AttentionMatrix data={attentionData} />
 					</div>
 					<div class="head-out mx-[2rem]">
-						<div class="column">
+						<div class="column out">
+							<div class="title">Out</div>
 							{#each $tokens as token, index}
-								<div class="cell x1-12" class:last={index === $tokens.length - 1}>
+								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
 									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
 							{/each}
@@ -178,6 +229,9 @@
 			&.value .title {
 				color: theme('colors.green.400');
 			}
+			&.out .title {
+				color: theme('colors.purple.400');
+			}
 		}
 		.content {
 			display: grid;
@@ -191,6 +245,7 @@
 			padding: 0 6rem 0 7rem;
 		}
 		.sub-vector {
+			user-select: none;
 			font-size: 0.8rem;
 			&.query {
 				color: theme('colors.blue.300');

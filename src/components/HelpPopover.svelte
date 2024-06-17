@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { Popover } from 'flowbite-svelte';
+
+	export let id: string;
 </script>
 
-<div class="help">
+<div {id} class="help">
 	<svg
 		class="h-4 w-4 text-gray-300"
 		xmlns="http://www.w3.org/2000/svg"
@@ -15,4 +17,10 @@
 		/></svg
 	>
 </div>
-<Popover triggeredBy={'.help'} placement="bottom" class="popover"><slot /></Popover>
+<Popover triggeredBy={`#${id}`} placement="bottom" class="help popover"><slot /></Popover>
+
+<style lang="scss">
+	.help {
+		z-index: 400;
+	}
+</style>

@@ -1,18 +1,16 @@
 <script lang="ts">
-	import { tokens, expandedBlock, modelData } from '~/store';
+	import { tokens, expandedBlock, modelMeta } from '~/store';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick, setContext, getContext } from 'svelte';
-	import Operation from './Operation.svelte';
 	import VectorCanvas from './VectorCanvas.svelte';
-	import { fade } from 'svelte/transition';
-
-	import { getData } from '~/utils/data';
-	import PositionalEncodingPopover from './Popovers/PositionalEncodingPopover.svelte';
-	import WeightPopover from './Popovers/WeightPopover.svelte';
-	import DropoutPopover from './Popovers/DropoutPopover.svelte';
-	import LayerNormPopover from './Popovers/LayerNormPopover.svelte';
+	import * as d3 from 'd3';
 	import OperationGroup from './OperationGroup.svelte';
+	import HelpPopover from './HelpPopover.svelte';
+	import tailwindConfig from '../../tailwind.config';
+	import resolveConfig from 'tailwindcss/resolveConfig';
+	import { Tooltip } from 'flowbite-svelte';
+	const { theme } = resolveConfig(tailwindConfig);
 
 	export let className: string | undefined = undefined;
 
@@ -114,15 +112,7 @@
 		<div>Embedding</div>
 	</div>
 	<div class="content relative">
-		<div
-			class="token-column resizable resize-watch flex"
-			role="button"
-			on:mouseenter={handleMouseEnter}
-			on:mouseleave={handleMouseLeave}
-			on:click={onClickEmbedding}
-			on:keydown={onClickEmbedding}
-			tabindex="0"
-		>
+		<div class="token-column resizable resize-watch flex">
 			<!-- token -->
 			<div class="column token-string relative">
 				{#if isEmbeddingExpanded}<div class="subtitle embedding-detail">Token</div>{/if}
@@ -137,34 +127,63 @@
 				></div>
 			</div>
 			{#if isEmbeddingExpanded}
+				<Tooltip
+					triggeredBy=".embedding .vector"
+					placement="right"
+					class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
+				>
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
-					<div class="subtitle">Token Embedding</div>
+					<div class="subtitle flex items-center gap-1">
+						<span>Token Embedding</span><HelpPopover id="token-embedding"
+							>Token Embedding is</HelpPopover
+						>
+					</div>
 					{#each $tokens as token, index}
 						<div class="token-id flex items-center">
 							<div class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400">
-								<span>vocabulary</span><svg
-									class="h-3 w-3 text-gray-600"
-									aria-hidden="true"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke="currentColor"
-										stroke-linecap="round"
-										stroke-width="2"
-										d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-									/>
-								</svg>
-							</div>
-							<div class="flex">
-								<span class="index-val bg-gray-100 text-center text-xs"
-									>id: {(Math.random() * 10000).toFixed()}</span
-								>
-								<div class={`vector ${embeddingVectorColor}`}>
-									<VectorCanvas />
+								<div class="flex flex-col items-center">
+									{#if index === 0}
+										<div class="look-up flex items-center gap-1">
+											<span>look up</span><svg
+												class="h-3 w-3 text-gray-400"
+												aria-hidden="true"
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke="currentColor"
+													stroke-linecap="round"
+													stroke-width="2"
+													d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
+												/>
+											</svg>
+										</div>
+									{/if}
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 31 9"
+										fill="none"
+										class="w-10 text-gray-300"
+									>
+										<path
+											fill="currentColor"
+											d="M30.3886 4.74352C30.5839 4.54826 30.5839 4.23168 30.3886 4.03642L27.2067 0.854435C27.0114 0.659173 26.6948 0.659173 26.4996 0.854435C26.3043 1.0497 26.3043 1.36628 26.4996 1.56154L29.328 4.38997L26.4996 7.2184C26.3043 7.41366 26.3043 7.73024 26.4996 7.9255C26.6948 8.12076 27.0114 8.12076 27.2067 7.9255L30.3886 4.74352ZM0.31958 4.88997H30.0351V3.88997H0.31958V4.88997Z"
+										/>
+									</svg>
 								</div>
+							</div>
+							<div class="cell flex items-center">
+								<div class={`vector ${embeddingVectorColor}`}>
+									<VectorCanvas active />
+								</div>
+								<span class="index-val text-xs">
+									{#if index === 0}
+										<span class="label">id</span><br />
+									{/if}
+									<span class="val">{(Math.random() * 10000).toFixed()}</span>
+								</span>
 							</div>
 						</div>
 					{/each}
@@ -176,10 +195,30 @@
 					{/each}
 				</div>
 				<div class="column embedding-detail position-embedding">
-					<div class="subtitle">Positional Embedding</div>
+					<div class="subtitle flex gap-1">
+						<span>Positional Embedding</span><HelpPopover id="position-embedding"
+							>Positional Embedding is</HelpPopover
+						>
+					</div>
 					{#each $tokens as token, index}
 						<div class="cell flex items-center">
-							<div class={`vector ${embeddingVectorColor}`}><VectorCanvas /></div>
+							<div class={`vector ${embeddingVectorColor}`}>
+								<VectorCanvas
+									active
+									colorScale={(d, i) => {
+										return d3
+											.scaleDiverging()
+											.domain([0, 0.5, 1])
+											.range([theme.colors['red'][400], 'white', theme.colors['blue'][400]])(d);
+									}}
+								/>
+							</div>
+							<span class="index-val text-xs">
+								{#if index === 0}
+									<span class="label">poition</span><br />
+								{/if}
+								<span class="val">{index}</span>
+							</span>
 						</div>
 					{/each}
 				</div>
@@ -192,21 +231,13 @@
 			{/if}
 		</div>
 		<div class="vector-column flex">
-			<div
-				class="column vectors"
-				role="button"
-				on:mouseenter={handleMouseEnter}
-				on:mouseleave={handleMouseLeave}
-				on:click={onClickEmbedding}
-				on:keydown={onClickEmbedding}
-				tabindex="0"
+			<Tooltip triggeredBy=".embedding .vector" placement="right" class="popover text-sm font-light"
+				>size(1, {$modelMeta.dimension})</Tooltip
 			>
+			<div class="column vectors">
 				{#each $tokens as token, index}
 					<div class={`vector ${embeddingVectorColor}`} class:last={index === $tokens.length - 1}>
-						<VectorCanvas
-							data={$modelData?.outputs['input_emb']?.data[index]}
-							active={isHovered || isEmbeddingExpanded}
-						/>
+						<VectorCanvas active={isHovered || isEmbeddingExpanded} />
 					</div>
 				{/each}
 			</div>
@@ -251,6 +282,8 @@
 
 					.cell {
 						justify-content: flex-end;
+						gap: 0.5rem;
+						text-align: left;
 					}
 				}
 				.symbol {
@@ -264,27 +297,49 @@
 				flex-shrink: 0;
 			}
 
+			.subtitle {
+				justify-content: center;
+				align-items: end;
+			}
+			.index-val .label {
+				color: theme('colors.gray.400');
+				line-height: 1;
+				font-size: 0.7rem;
+			}
+			.index-val .val {
+				width: 4rem;
+				text-align: left;
+				font-size: 0.8rem;
+				color: theme('colors.gray.600');
+				font-family: monospace;
+			}
+
 			.token-embedding {
 				position: relative;
-				width: 13rem;
+				width: 11rem;
 
 				.vocab-index {
-					width: 10rem;
-					margin-right: 0.2rem;
-				}
-				.index-val {
 					width: 5rem;
-					border-radius: 4px;
-					text-align: center;
-					font-size: 0.7rem;
-					color: theme('colors.gray.600');
+					flex-shrink: 0;
+					display: flex;
+					justify-content: center;
+					overflow: visible;
+					padding-right: 1rem;
 				}
 			}
 
 			.position-embedding {
-				&:hover {
-					background-color: theme('colors.gray.100');
+				.cell {
+					justify-content: center;
+					gap: 0.5rem;
 				}
+				.index-val {
+					width: 2rem;
+					justify-content: start;
+				}
+				// &:hover {
+				// 	background-color: theme('colors.gray.100');
+				// }
 			}
 		}
 	}

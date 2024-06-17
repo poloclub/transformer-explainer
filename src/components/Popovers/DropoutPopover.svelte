@@ -17,6 +17,7 @@
 	{triggeredBy}
 	{trigger}
 	{placement}
+	arrow={false}
 >
 	<div class="dropout-content">Drop out is</div></Popover
 >

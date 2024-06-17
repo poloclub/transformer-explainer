@@ -10,7 +10,9 @@
 		maxVectorScale,
 		headContentHeight,
 		temperature,
-		modelData
+		modelData,
+		predictedColor,
+		modelSession
 	} from '~/store';
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
@@ -20,8 +22,11 @@
 	import Mlp from '~/components/Mlp.svelte';
 	import { onMount } from 'svelte';
 	import classNames from 'classnames';
+	import { base } from '$app/paths';
+	import * as ort from 'onnxruntime-web';
 
 	import { adjustTemperature, runModel } from '~/utils/data';
+	import { mergeChunks } from '~/utils/mergeChunk';
 
 	// expanded state control
 	let isExpanded = false;
@@ -32,7 +37,30 @@
 	}
 
 	// run model
-	onMount(() => {
+	onMount(async () => {
+		// const modelUrl = `${base}/gpt2-quant.onnx`;
+		// const url = `${base}/gpt2.onnx`;
+
+		const chunkNum = 4;
+		const chunkUrls = Array(chunkNum)
+			.fill(0)
+			.map((d, i) => `${base}/gpt2-quant.onnx.part${i}.gz`);
+
+		const mergedArray = await mergeChunks(chunkUrls);
+
+		// Create a Blob from the merged array
+		const blob = new Blob([mergedArray], { type: 'application/octet-stream' });
+
+		// Create a URL for the Blob
+		const url = URL.createObjectURL(blob);
+
+		// Create ONNX session using the Blob URL
+		const session = await ort.InferenceSession.create(url, {
+			// logSeverityLevel: 0
+		});
+
+		modelSession.set(session);
+
 		const unsubscribeInputText = inputText.subscribe((value) => {
 			runModel(value, $temperature);
 		});
@@ -73,7 +101,7 @@
 
 <div
 	class="main-section h-full"
-	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px`}
+	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;`}
 >
 	<!-- <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
 		<defs>
@@ -206,12 +234,13 @@
 			font-size: 0.8rem;
 			color: theme('colors.gray.400');
 			width: 100%;
-			z-index: 101;
+			z-index: 102;
 		}
 	}
 
 	:global(.vector),
 	:global(.sub-vector) {
+		position: relative;
 		z-index: 101;
 		width: 12px;
 		height: var(--vector-height);
@@ -310,13 +339,16 @@
 			left: 0;
 		}
 	}
+	:global(.transformer-bounding.active) {
+		opacity: 1;
+	}
 
 	:global(.popover) {
 		z-index: 999;
-		overflow: hidden;
+		// overflow: hidden;
 		max-width: 40rem;
 		max-height: 30rem;
-		position: absolute;
+		// position: absolute;
 	}
 
 	.dim {

@@ -17,6 +17,7 @@
 	{triggeredBy}
 	{trigger}
 	{placement}
+	arrow={false}
 >
 	<div class="ln-content">Layer normalization is</div></Popover
 >

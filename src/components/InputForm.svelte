@@ -152,15 +152,15 @@
 			flex-shrink: 0;
 		}
 		.predicted {
-			color: theme('colors.orange.400');
+			color: var(--predicted-color);
 			// background-color: theme('colors.blue.100');
 			// padding: 0.1rem;
 		}
 	}
 	:global(.generate-button) {
 		padding: 0.4rem 0.8rem;
-		border: 1px solid theme('colors.orange.400');
-		color: theme('colors.orange.400');
+		border: 1px solid var(--predicted-color);
+		color: var(--predicted-color);
 		transition: all 0.2s;
 
 		&:hover {

@@ -1,10 +1,20 @@
 import { AutoTokenizer, PreTrainedTokenizer, GPT2Tokenizer } from '@xenova/transformers';
 import * as ort from 'onnxruntime-web';
-import { modelData, tokens, isModelRunning, temperature, predictedToken } from '~/store';
+import {
+	modelData,
+	tokens,
+	isModelRunning,
+	temperature,
+	predictedToken,
+	modelSession
+} from '~/store';
 import BigNumber from 'bignumber.js';
 import { applyTemperatureToData, sampleToken } from './sampler';
 import { showFlowAnimation, showSamplingAnimation } from './animation';
 import { base } from '$app/paths';
+import externalData from './externalData.json';
+import { get } from 'svelte/store';
+import { nestArray } from './array';
 
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
@@ -19,6 +29,7 @@ export const runModel = async (input: string, temperature: number) => {
 
 	tokens.set(input_tokens);
 
+	console.log(token_ids);
 	const { outputs, prediction } = await getData(token_ids);
 
 	const adjustedData = applyTemperatureToData(prediction, temperature);
@@ -63,24 +74,24 @@ export const getTokenization = async (input: string) => {
 	};
 };
 
-const visibleDimension = 100;
-const processTensorData = (tensor: any, limit = visibleDimension) => {
-	const originalDims = tensor.dims;
-	const originalData = tensor.data;
-	const newData = [];
+// const visibleDimension = 100;
+// const processTensorData = (tensor: any, limit = visibleDimension) => {
+// 	const originalDims = tensor.dims;
+// 	const originalData = tensor.data;
+// 	const newData = [];
 
-	for (let i = 0; i < originalDims[1]; i++) {
-		const start = i * originalDims[2];
-		const end = start + limit;
-		newData.push(Array.from(originalData.slice(start, end)));
-	}
+// 	for (let i = 0; i < originalDims[1]; i++) {
+// 		const start = i * originalDims[2];
+// 		const end = start + limit;
+// 		newData.push(Array.from(originalData.slice(start, end)));
+// 	}
 
-	return {
-		data: newData as number[][],
-		dims: originalDims,
-		size: tensor.size
-	};
-};
+// 	return {
+// 		data: newData as number[][],
+// 		dims: originalDims,
+// 		size: tensor.size
+// 	};
+// };
 
 const getTopKPrediction = (
 	logits: number[],
@@ -102,15 +113,19 @@ const getTopKPrediction = (
 export const getData = async (token_ids: number[]) => {
 	try {
 		// Convert token_ids to tensor
-		const inputTensor = new ort.Tensor(
-			'int64',
-			new BigInt64Array(token_ids.map((x) => BigInt(x))),
-			[1, token_ids.length]
-		);
+		const inputTensor = new ort.Tensor('int64', token_ids, [1, token_ids.length]);
 
 		// Load the model
-		// TODO: use svelte store, create once.
-		const session = await ort.InferenceSession.create(`${base}/model.onnx`);
+		// const session = await ort.InferenceSession.create(`${base}/model-quant.onnx`, {
+		// 	logSeverityLevel: 0, // Verbose logging
+		// 	externalData
+		// });
+
+		// Get the session from the store
+		const session = get(modelSession);
+		if (!session) {
+			throw new Error('Model session is not initialized.');
+		}
 
 		// Prepare the feeds (inputs)
 		const feeds = { input: inputTensor };
@@ -128,7 +143,7 @@ export const getData = async (token_ids: number[]) => {
 		// const maxIndex = probabilities.indexOf(Math.max(...probabilities));
 
 		// Decode the output tokens back to text
-		const tokenizer = await AutoTokenizer.from_pretrained('gpt2');
+		const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
 		// const outputText = tokenizer.decode([maxIndex]);
 
 		const topK = 100;
@@ -137,11 +152,18 @@ export const getData = async (token_ids: number[]) => {
 		// Extract the dictionary values
 		const outputs = targetTensors.reduce(
 			(obj, key) => {
-				obj[key] = processTensorData(results[key]);
+				const out = results[key];
+				// const processedData = {
+				// 	...out,
+				// 	data: nestArray(out.cpuData, out.dims)
+				// };
+				obj[key] = out;
 				return obj;
 			},
 			{} as ModelData['outputs']
 		);
+
+		console.log(outputs);
 
 		return {
 			outputs,

@@ -18,62 +18,151 @@
 
 	// export let data: any;
 
-	let cellLgHeight = 10 * 1.5;
-	let cellLgWidth = 10 * 1.5;
-
-	const colorScale = d3.interpolate('white', theme.colors['blue'][600]);
-
 	const tokenGap = 6;
-
 	let timeline = gsap.timeline({});
+
+	const visibleDimension = 20;
+	$: tokenLen = $tokens.length;
+	$: embeddingData = Array(tokenLen)
+		.fill(0)
+		.map((col) =>
+			Array(visibleDimension)
+				.fill(0)
+				.map((d) => Math.random())
+		);
+
+	const qkvWeightData = Array(visibleDimension * 3)
+		.fill(0)
+		.map((col) =>
+			Array(visibleDimension)
+				.fill(0)
+				.map((d) => Math.random())
+		);
+	const qkvBiasData = Array(1)
+		.fill(0)
+		.map((col) =>
+			Array(visibleDimension * 3)
+				.fill(0)
+				.map((d) => Math.random())
+		);
+
+	$: qkvOutData = Array(tokenLen)
+		.fill(0)
+		.map((col) =>
+			Array(visibleDimension * 3)
+				.fill(0)
+				.map((d) => Math.random())
+		);
 
 	// onMount(() => {
 	// 	draw();
 	// });
 
+	const embeddingColorScale = (d, i) => {
+		return d3.interpolate('white', theme.colors['gray'][400])(d);
+	};
+
+	const qkvColorScale = (d, i) => {
+		let color = i < 20 ? 'blue' : i < 40 ? 'red' : 'green';
+		return d3.interpolate('white', theme.colors[color][400])(d);
+	};
+
+	const highlightColor = theme.colors['red'][500];
+
 	const draw = () => {
 		const embeddingRows = d3.selectAll('.weight-popover-content .token-embedding g.g-row').nodes();
 		const weightCols = d3.selectAll('.weight-popover-content .qkv-weights g.g-col').nodes();
+		const weightBiasCells = d3.selectAll('.weight-popover-content .qkv-bias rect').nodes();
+
 		const outRows = d3.selectAll('.weight-popover-content .qkv-output g.g-row').nodes();
 
-		let previousRowIdx = null;
+		// first row detail animation
+		timeline.set(weightBiasCells, { opacity: 0.1 });
 
+		const firstOutputRowRects = d3.select(outRows[0]).selectAll('rect').nodes();
+		const firstEmbeddingRowRects = d3.select(embeddingRows[0]).selectAll('rect').nodes();
+
+		firstOutputRowRects.forEach((outputRect, outCellIdx) => {
+			const firstWeightColRects = d3.select(weightCols[outCellIdx]).selectAll('rect').nodes();
+			timeline.set(firstEmbeddingRowRects, { opacity: 0.1 });
+
+			firstEmbeddingRowRects.forEach((embeddingRect, i) => {
+				const isFirst = i === 0 && outCellIdx === 0;
+				timeline.fromTo(
+					embeddingRect,
+					{ opacity: 0.1 },
+					{
+						opacity: 1,
+						duration: isFirst ? 1 : 0.005
+					},
+					`<50%`
+				);
+				timeline.fromTo(
+					firstWeightColRects[i],
+					{ opacity: 0.1 },
+					{
+						opacity: 1,
+						duration: isFirst ? 1 : 0.005
+					},
+					`<50%`
+				);
+			});
+
+			timeline.to(
+				weightBiasCells[outCellIdx],
+				{
+					opacity: 1,
+					duration: outCellIdx === 0 ? 1 : 0.005
+				},
+				`<50%`
+			);
+			timeline.from(
+				outputRect,
+				{
+					opacity: 0,
+					duration: outCellIdx === 0 ? 1 : 0.005
+				},
+				`<50%`
+			);
+		});
+
+		// rest row animation
+		let previousRowIdx = 0;
+
+		// out vectors
 		outRows.forEach(function (row, rowIdx) {
-			const rects = d3.select(row).selectAll('rect').nodes();
+			if (rowIdx === 0) return;
+
+			const outputCells = d3.select(row).selectAll('rect').nodes();
+			const embeddingRowRects = d3.select(embeddingRows[rowIdx]).selectAll('rect').nodes();
 
 			// Check if rowIdx has changed
 			if (previousRowIdx !== null && previousRowIdx !== rowIdx) {
-				const previousEmbeddingRowRects = d3
-					.select(embeddingRows[previousRowIdx])
-					.selectAll('rect')
-					.nodes();
-				timeline.to(previousEmbeddingRowRects, {
-					fill: (i, d) => {
-						return colorScale(d.__data__);
-					},
-					duration: 0.05
-				});
-			}
-			rects.forEach((d, colIdx) => {
-				const weightColRects = d3.select(weightCols[colIdx]).selectAll('rect').nodes();
-				const embeddingRowRects = d3.select(embeddingRows[rowIdx]).selectAll('rect').nodes();
-
-				const isFirst = colIdx === 0 && rowIdx === 0;
-
-				timeline.to([weightColRects, embeddingRowRects], {
-					fill: (i, d) => {
-						return theme.colors['yellow'][600];
-					},
-					duration: isFirst ? 0.5 : 0.01
-				});
-
-				timeline.to(
-					weightColRects,
+				timeline.fromTo(
+					embeddingRowRects,
+					{ opacity: 0.1 },
 					{
-						fill: (i, d) => {
-							return colorScale(d.__data__);
-						},
-						duration: isFirst ? 0.5 : 0.01
+						opacity: 1,
+						duration: 0.01
+					},
+					`<50%`
+				);
+
+				const weightColRects = d3
+					.selectAll('.weight-popover-content .qkv-weights g.g-col rect')
+					.nodes();
+				timeline.set(weightColRects, { opacity: 0.1 });
+			}
+
+			outputCells.forEach((d, colIdx) => {
+				const weightColRects = d3.select(weightCols[colIdx]).selectAll('rect').nodes();
+
+				timeline.fromTo(
+					weightColRects,
+					{ opacity: 0.1 },
+					{
+						opacity: 1,
+						duration: 0.01
 					},
 					`<50%`
 				);
@@ -81,36 +170,15 @@
 				timeline.from(
 					d,
 					{
-						fill: 'white',
-						duration: isFirst ? 0.5 : 0.01
+						opacity: 0,
+						duration: 0.01
 					},
 					`<50%`
 				);
 			});
 			previousRowIdx = rowIdx;
 		});
-
-		if (previousRowIdx !== null) {
-			const previousEmbeddingRowRects = d3
-				.select(embeddingRows[previousRowIdx])
-				.selectAll('rect')
-				.nodes();
-			timeline.to(previousEmbeddingRowRects, {
-				fill: (i, d) => {
-					return colorScale(d.__data__);
-				},
-				duration: 0.01
-			});
-		}
 	};
-
-	onMount(() => {
-		draw();
-		timeline.play();
-	});
-
-	$: tokenLen = $tokens.length;
-	const matrixHeight = Math.max(120, rootRem * 0.8 * tokenLen);
 </script>
 
 <button class="btn"> click</button>
@@ -199,21 +267,14 @@
 			<div class="matrix flex flex-col items-center">
 				<div class="title self-end">Token Embedding</div>
 				<!-- (tokenLen, 768) -->
-				<!-- (tokenLen,20) -->
 				<Matrix
 					className="token-embedding"
-					data={Array(tokenLen)
-						.fill(0)
-						.map((col) =>
-							Array(20)
-								.fill(0)
-								.map((d) => Math.random())
-						)}
+					data={embeddingData}
 					showSize={false}
 					cellHeight={rootRem * 0.8}
 					cellWidth={2}
 					rowGap={tokenGap}
-					colorScale={'gray'}
+					colorScale={embeddingColorScale}
 				/>
 				<div class="size">({tokenLen},{$modelMeta.dimension})</div>
 			</div>
@@ -221,26 +282,16 @@
 			<div class="matrix flex flex-col items-center">
 				<div class="title">QKV Weights</div>
 				<!-- (768,2034) -->
-				<!-- (20,60) -->
 				<div class="flex gap-0">
 					<Matrix
 						className="qkv-weights"
-						data={Array(60)
-							.fill(0)
-							.map((col) =>
-								Array(20)
-									.fill(0)
-									.map((d) => Math.random())
-							)}
+						data={qkvWeightData}
 						showSize={false}
 						groupBy={'col'}
 						cellHeight={3}
 						cellWidth={3}
 						rowGap={0}
-						colorScale={(d, i) => {
-							let color = i < 20 ? 'blue' : i < 40 ? 'red' : 'green';
-							return d3.interpolate('white', theme.colors[color][400])(d);
-						}}
+						colorScale={qkvColorScale}
 					/>
 				</div>
 
@@ -250,21 +301,15 @@
 			<div class="matrix flex flex-col items-center">
 				<div class="title">QKV Bias</div>
 				<!-- (768) -->
-				<!-- (20) -->
 				<Matrix
 					className="qkv-bias"
-					data={Array(1)
-						.fill(0)
-						.map((col) =>
-							Array(60)
-								.fill(0)
-								.map((d) => Math.random())
-						)}
+					data={qkvBiasData}
 					showSize={false}
 					groupBy={'col'}
-					cellHeight={1}
+					cellHeight={2}
 					cellWidth={8}
 					rowGap={0}
+					colorScale={embeddingColorScale}
 				/>
 				<div class="size">({$modelMeta.dimension * 3})</div>
 			</div>
@@ -279,25 +324,15 @@
 			<div class="matrix flex flex-col items-center">
 				<div class="title">QKV Vectors</div>
 				<!-- (tokenLen, 2034) -->
-				<!-- (tokenLen, 60) -->
 				<div class="flex">
 					<Matrix
 						className="qkv-output"
-						data={Array(tokenLen)
-							.fill(0)
-							.map((col) =>
-								Array(60)
-									.fill(0)
-									.map((d) => Math.random())
-							)}
+						data={qkvOutData}
 						showSize={false}
 						cellHeight={rootRem * 0.8}
 						cellWidth={2}
 						rowGap={tokenGap}
-						colorScale={(d, i) => {
-							let color = i < 20 ? 'blue' : i < 40 ? 'red' : 'green';
-							return d3.interpolate('white', theme.colors[color][400])(d);
-						}}
+						colorScale={qkvColorScale}
 					/>
 				</div>
 				<div class="size">({tokenLen},{$modelMeta.dimension * 3})</div>

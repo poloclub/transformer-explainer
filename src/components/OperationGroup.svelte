@@ -5,6 +5,8 @@
 	import { tokens } from '~/store';
 	import LayerNormPopover from './Popovers/LayerNormPopover.svelte';
 	import ActivationPopover from './Popovers/ActivationPopover.svelte';
+	import * as d3 from 'd3';
+	import { onMount } from 'svelte';
 
 	export let id: string;
 	export let className: string | undefined = undefined;
@@ -15,6 +17,29 @@
 	let isRDHovered = false;
 	let isRDEndHovered = false;
 	let isLNHovered = false;
+
+	onMount(() => {});
+	const drawConnector = () => {
+		const svg = d3.select('.sankey-top');
+
+		const start = d3.select(`.residual-start.${className}`).node()?.getBoundingClientRect();
+		const end = d3.select(`.residual-end.${className}`).node()?.getBoundingClientRect();
+
+		const x1 = start.right;
+		const y1 = start.top + start.height / 2;
+		const x2 = end.left;
+		const y2 = end.top + end.height / 2;
+
+		svg
+			.selectAll('.residual-connector line')
+			.data([0])
+			.join('line')
+			.attr('class', 'residual-connector')
+			.attr('x1', x1)
+			.attr('y1', y1)
+			.attr('x2', x2)
+			.attr('y2', y2);
+	};
 </script>
 
 {#if type === 'activation'}

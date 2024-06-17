@@ -5,13 +5,14 @@
 	import * as d3 from 'd3';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { highlightedToken } from '~/store';
+	import { highlightedToken, vectorHeight } from '~/store';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
+	let visibleDimension = 100;
 	export let active: boolean = false;
-	export let data = [];
-	export let colorScale: string | ((t: number) => any) | undefined = undefined;
+	export let data: number[] = new Array(visibleDimension).fill(0).map((d) => Math.random());
+	export let colorScale: string | ((t: number, i: number) => string) | undefined = undefined;
 
 	let canvas: HTMLCanvasElement;
 
@@ -21,7 +22,7 @@
 	const color =
 		typeof colorScale === 'function'
 			? colorScale
-			: d3.interpolate(theme.colors[colorKey][100], theme.colors[colorKey][500]);
+			: d3.interpolate(theme.colors[colorKey][100], theme.colors[colorKey][400]);
 
 	function drawCanvas() {
 		const ctx = canvas.getContext('2d');
@@ -39,11 +40,18 @@
 		canvas.style.height = `${height}px`;
 
 		for (let i = 0; i < height / lineHeight; i++) {
-			const value = data[i % data.length];
+			const value = data[i];
 			ctx.fillStyle = color(value);
 			ctx.fillRect(0, i * lineHeight * pixelRatio, width * pixelRatio, lineHeight * pixelRatio);
 		}
 	}
+
+	onMount(() => {
+		const unsubscribe = vectorHeight.subscribe(drawCanvas);
+		return () => {
+			unsubscribe();
+		};
+	});
 
 	$: if (data && canvas) {
 		drawCanvas();
@@ -54,6 +62,9 @@
 
 <style lang="scss">
 	canvas {
+		position: absolute;
+		top: 0;
+		left: 0;
 		opacity: 0;
 		display: block;
 		width: 100%;

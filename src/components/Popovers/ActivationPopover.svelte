@@ -17,6 +17,7 @@
 	{triggeredBy}
 	{trigger}
 	{placement}
+	arrow={false}
 >
 	<div class="activation-content">
 		The GELU (Gaussian Error Linear Unit) activation function combines linear and non-linear

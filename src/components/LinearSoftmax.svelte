@@ -269,7 +269,7 @@
 				}
 
 				&.final_token_highlight {
-					color: theme('colors.orange.400');
+					color: var(--predicted-color);
 					font-weight: 600;
 					// background-color: theme('colors.blue.200');
 					transition: background-color 1s;

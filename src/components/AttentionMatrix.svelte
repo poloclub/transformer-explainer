@@ -3,7 +3,7 @@
 	import classNames from 'classnames';
 	import Matrix from '~/components/Matrix.svelte';
 	import { gsap } from '~/utils/gsap';
-	import { mask } from '~/utils/array';
+	import { maskArray } from '~/utils/array';
 	import { getContext } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
@@ -242,7 +242,7 @@
 				/>
 				<Matrix
 					className="main opacity-0"
-					data={mask(data)}
+					data={maskArray(data)}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
@@ -265,7 +265,7 @@
 			<div>
 				<Matrix
 					className="prev absolute top-0 left-0  pointer-events-none"
-					data={mask(data)}
+					data={maskArray(data)}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
@@ -276,7 +276,7 @@
 				/>
 				<Matrix
 					className="main opacity-0"
-					data={mask(data)}
+					data={maskArray(data)}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
@@ -300,7 +300,7 @@
 		>
 			<Matrix
 				className="main"
-				data={mask(data)}
+				data={maskArray(data)}
 				showSize={false}
 				cellHeight={cellSize}
 				cellWidth={cellSize}

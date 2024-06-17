@@ -90,19 +90,19 @@
 		],
 		attention: [
 			{
-				from: '.attention .query .head1',
+				from: '.attention .query .sub-vector.head1',
 				to: '.head-block .query .vector',
 				// fill: theme.colors.blue[200]
 				gradientId: 'blue-blue'
 			},
 			{
-				from: '.attention .key .head1',
+				from: '.attention .key .sub-vector.head1',
 				to: '.head-block .key .vector',
 				// fill: theme.colors.red[200]
 				gradientId: 'red-red'
 			},
 			{
-				from: '.attention .value .head1',
+				from: '.attention .value .sub-vector.head1',
 				to: '.head-block .value .vector',
 				// fill: theme.colors.green[200]
 				gradientId: 'green-green'

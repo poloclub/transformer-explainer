@@ -4,6 +4,8 @@
 	import { setContext } from 'svelte';
 	import Operation from './Operation.svelte';
 	import OperationGroup from './OperationGroup.svelte';
+	import VectorCanvas from './VectorCanvas.svelte';
+	import { Tooltip } from 'flowbite-svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -22,6 +24,8 @@
 	function handleMouseLeave() {
 		isHovered = false;
 	}
+
+	let vectorHoverIdx: number | null = null;
 </script>
 
 <div class={classNames('mlp', className)}>
@@ -29,14 +33,39 @@
 		MLP
 	</div>
 	<div class="content relative">
+		<Tooltip
+			triggeredBy=".mlp .first-layer .vector"
+			placement="right"
+			class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
+		>
+		<Tooltip triggeredBy=".mlp .out .vector" placement="right" class="popover text-sm font-light"
+			>size(1, {$modelMeta.dimension})</Tooltip
+		>
+		<Tooltip
+			triggeredBy=".mlp .projections .vector"
+			placement="right"
+			class="popover text-sm font-light">size(1, {$modelMeta.dimension * 4})</Tooltip
+		>
+
 		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>
 		<div class="bounding mlp-bounding" class:active={isHovered}></div>
 		<div class="layer first-layer flex">
 			<div class="column initial">
 				{#each $tokens as token, index}
-					<div class="cell" class:last={index === $tokens.length - 1}>
+					<div
+						class="cell"
+						class:last={index === $tokens.length - 1}
+						on:mouseenter={() => {
+							vectorHoverIdx = index;
+						}}
+						on:mouseleave={() => {
+							vectorHoverIdx = null;
+						}}
+						role="group"
+					>
 						<span class="label float">{token}</span>
 						<div class={`vector flex flex-col  ${firstLayerlColor}`}>
+							<VectorCanvas colorScale="purple" active={vectorHoverIdx === index} />
 							<div class="sub-vector x1-12 head1"></div>
 							<div class="sub-vector head-rest grow"></div>
 						</div>
@@ -56,7 +85,9 @@
 							class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
 							class:last={index === $tokens.length - 1}
 						>
-							<div class={classNames(`vector x4 ${secondLayerColor} opacity-60`)}></div>
+							<div class={classNames(`vector x4 ${secondLayerColor} opacity-60`)}>
+								<VectorCanvas colorScale="indigo" />
+							</div>
 						</div>
 					{/each}
 				</div>
@@ -68,7 +99,9 @@
 				<div class="column out">
 					{#each $tokens as token, index}
 						<div class="cell" class:last={index === $tokens.length - 1}>
-							<div class={`vector ${outputColor}`}></div>
+							<div class={`vector ${outputColor}`}>
+								<VectorCanvas colorScale="blue" />
+							</div>
 						</div>
 					{/each}
 				</div>

@@ -17,8 +17,8 @@
 		<div class="cursor"></div>
 		<svg class="main">
 			<!-- <path class="line" d={`M 0 0 L 10 0 L 20 -20`} style={'transform:translateY(50%)'}></path> -->
-			<path class="line line1" d={`M0,0 L0,50%`}></path>
-			<path class="line line2" d={`M0,0 L0,40%`}></path>
+			<path class="line line1" d={`M0,0 L0,90%`}></path>
+			<!-- <path class="line line2" d={`M0,0 L0,40%`}></path> -->
 			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
 		</svg>
 	</div>
@@ -178,14 +178,15 @@
 		path {
 			stroke: theme('colors.gray.400');
 			fill: none;
-			stroke-width: 1;
+			stroke-dasharray: 2, 4;
+			fill: none;
+			stroke-width: 2;
 		}
 		.line1 {
-			stroke-dasharray: 2 4;
 		}
 		.line2 {
-			// stroke-dasharray: 2 4;
-			transform: translate(50%, 50%);
+			// stroke-dasharray: 2 1;
+			// transform: translate(50%, 50%);
 		}
 	}
 
