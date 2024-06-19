@@ -20,6 +20,7 @@ export const tokens = writable<string[]>('Data visualization em powers users to'
 
 // is transformer running?
 export const isModelRunning = writable(false);
+export const isFetchingModel = writable(true);
 
 export const modelMetaMap: Record<string, ModelMetaData> = {
 	gpt2: { layer_num: 12, attention_head_num: 12, dimension: 768 },
@@ -74,6 +75,6 @@ export const headGap = { x: 5, y: 8, scale: 0 };
 
 export const isBoundingBoxActive = writable(false);
 
-export const predictedColor = theme.colors.indigo[400];
+export const predictedColor = theme.colors.purple[600];
 
 export const hoveredPath = writable();

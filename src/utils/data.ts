@@ -14,7 +14,7 @@ import { showFlowAnimation, showSamplingAnimation } from './animation';
 import { base } from '$app/paths';
 import externalData from './externalData.json';
 import { get } from 'svelte/store';
-import { nestArray } from './array';
+import { reshapeArray } from './array';
 
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
@@ -29,7 +29,6 @@ export const runModel = async (input: string, temperature: number) => {
 
 	tokens.set(input_tokens);
 
-	console.log(token_ids);
 	const { outputs, prediction } = await getData(token_ids);
 
 	const adjustedData = applyTemperatureToData(prediction, temperature);
@@ -153,17 +152,18 @@ export const getData = async (token_ids: number[]) => {
 		const outputs = targetTensors.reduce(
 			(obj, key) => {
 				const out = results[key];
-				// const processedData = {
-				// 	...out,
-				// 	data: nestArray(out.cpuData, out.dims)
-				// };
-				obj[key] = out;
+				console.log(out);
+				const processedData = {
+					...out,
+					data: reshapeArray([...out.cpuData], out.dims)
+				};
+				obj[key] = processedData;
 				return obj;
 			},
 			{} as ModelData['outputs']
 		);
 
-		console.log(outputs);
+		console.log('out', outputs);
 
 		return {
 			outputs,

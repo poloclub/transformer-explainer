@@ -1,5 +1,21 @@
 import torch
 from model import GPT  # import model
+import os
+# from onnxruntime.transformers import optimizer, float16
+# import onnx
+
+modelname="gpt2"
+
+def create_folder_if_not_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_path}' created.")
+    else:
+        print(f"Folder '{folder_path}' already exists.")
+
+# Example usage
+folder_path = 'src/utils/model/params_output'
+create_folder_if_not_exists(folder_path)
 
 # create wrapper function to extract outputs from dictionary
 class wrapper(torch.nn.Module):
@@ -71,18 +87,26 @@ class wrapper(torch.nn.Module):
         )
 
 # initialize model
-model = GPT.from_pretrained("gpt2")
+model = GPT.from_pretrained(modelname)
 model.eval()
 wrapped_model = wrapper(model)
 
+# optimized_model = optimizer.optimize_model("gpt2.onnx", model_type='gpt2', num_heads=12, hidden_size=768)
+# optimized_model.convert_model_float32_to_float16()
+# optimized_model.save_model_to_file("gpt2_fp16.onnx")
+
 # create dummy input
-dummy_input = torch.tensor([[41072, 9634, 318, 257]])
+dummy_input = torch.tensor([[6601, 32704, 795, 30132, 2985, 284]])
+# dummy_input = torch.randint(0, 50257, (1, 1), dtype=torch.long)
 
 # export model to ONNX
+onnx_model_path = "src/utils/model/params_output/"+ modelname +".onnx"
+
 torch.onnx.export(
     wrapped_model,
     dummy_input,
-    "src/utils/model/model.onnx",
+    # "src/utils/model/params_output/model.onnx",
+    onnx_model_path,
     export_params=True,
     opset_version=11,
     do_constant_folding=True,
@@ -102,11 +126,10 @@ torch.onnx.export(
     #     "linear_weight", 
     #     "linear_output"
     # ],
-    output_names=[
-        "block_0_attn_head_0_attn", "block_0_attn_head_0_attn_scaled", "block_0_attn_head_0_attn_masked", "block_0_attn_head_0_attn_softmax", "block_0_attn_head_0_attn_dropout",
+        output_names=[
+"block_0_attn_head_0_attn", "block_0_attn_head_0_attn_scaled", "block_0_attn_head_0_attn_masked", "block_0_attn_head_0_attn_softmax", "block_0_attn_head_0_attn_dropout",
         "linear_output"
     ],
-    
     dynamic_axes={
         'input': {0: '0', 1: '1'},
         # 'tok_emb': {0: '0', 1: '1'},
@@ -153,7 +176,7 @@ torch.onnx.export(
         # 'block_0_mlp_linear_1_bias': {0: '0'},
         # 'block_0_mlp_linear_1_output': {0: '0', 1: '1', 2: '2'},
         # 'block_0_mlp_gelu_output': {0: '0', 1: '1', 2: '2'},
-        # 'block_0_mlp_linear_2_weight': {0: '0', 1: '1'},
+        # 'block_0_mlp_linear_2_weight': {0: '0', 1: '2'},
         # 'block_0_mlp_linear_2_bias': {0: '0'},
         # 'block_0_mlp_linear_2_output': {0: '0', 1: '1', 2: '2'},
         # 'block_0_mlp_output_after_dropout': {0: '0', 1: '1', 2: '2'},
@@ -164,9 +187,10 @@ torch.onnx.export(
         # 'ln_f_weight': {0: '0'},
         # 'ln_f_bias': {0: '0'},
         # 'ln_f_output': {0: '0', 1: '1'},
-        # 'linear_weight': {0: '0', 1: '1'},
+        # 'linear_weight': {0: '0', 1: '2'},
         'linear_output': {0: '0', 1: '1', 2: '2'}
     }
 )
 
 print("Model has been successfully exported to ONNX format.")
+

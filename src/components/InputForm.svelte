@@ -16,10 +16,12 @@
 		isModelRunning,
 		temperature,
 		predictedToken,
-		inputTextExample
+		inputTextExample,
+		isFetchingModel
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
+	import classNames from 'classnames';
 
 	let inputRef: HTMLDivElement;
 	let inputTextTemp = $inputText;
@@ -46,6 +48,14 @@
 
 		inputText.set(inputTextTemp);
 	};
+
+	const handleKeyDown = (e) => {
+		if (e.key === 'Enter') {
+			handleSubmit(e);
+		}
+	};
+
+	$: disabled = $isFetchingModel || $isModelRunning;
 </script>
 
 <div class="input-area flex flex-shrink-0 gap-4 p-1.5 px-5">
@@ -64,41 +74,49 @@
 	<div class="flex flex-1 items-center gap-1 whitespace-nowrap">
 		<form class=" flex w-full items-center gap-2">
 			<ButtonGroup class="w-full grow" size="sm">
-				<Button size="xs" class="select-button">
+				<button
+					class="select-button inline-flex items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
+				>
 					Example<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
-				</Button>
+				</button>
 				<Dropdown>
 					{#each inputTextExample as text}
 						<DropdownItem>{text}</DropdownItem>
 					{/each}
 				</Dropdown>
-				<div class="input-container">
+				<div class="input-container relative">
 					<div
 						bind:this={inputRef}
-						contenteditable={!$isModelRunning}
+						contenteditable={!disabled}
 						class="input-box"
 						placeholder="Test your own input text"
 						on:focus={onFocusInput}
 						on:input={onInput}
+						on:keydown={handleKeyDown}
+						role="input"
 					>
 						<span class="user-input">{inputTextTemp}</span><span class="predicted"
 							>{predictedTokenTemp}</span
 						>
 					</div>
-					{#if $isModelRunning}
+					{#if disabled}
 						<div class="loading"><LoadingDots /></div>
 					{/if}
+					{#if $isFetchingModel}
+						<span class="helper-text">Loading GPT-2 model, please wait a moment...</span>{/if}
 				</div>
 			</ButtonGroup>
-			<Button
-				disabled={$isModelRunning}
-				class="generate-button"
+			<button
+				{disabled}
+				class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
+					disabled,
+					active: !disabled
+				})}
 				type="submit"
-				size="sm"
 				on:click={handleSubmit}
 			>
 				Generate
-			</Button>
+			</button>
 		</form>
 	</div>
 	<Temperature />
@@ -111,7 +129,7 @@
 	:global(.select-button) {
 		flex-shrink: 0;
 		border: 1px solid theme('colors.gray.300');
-		background-color: theme('colors.gray.100');
+		// background-color: theme('colors.gray.50');
 		color: theme('colors.gray.900');
 		&:hover {
 			background-color: theme('colors.gray.200');
@@ -153,21 +171,38 @@
 		}
 		.predicted {
 			color: var(--predicted-color);
-			// background-color: theme('colors.blue.100');
-			// padding: 0.1rem;
+			font-weight: 600;
 		}
+	}
+	.helper-text {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		transform: translate(0, calc(100% + 4px));
+		color: theme('colors.gray.400');
+		font-size: 0.8rem;
 	}
 	:global(.generate-button) {
 		padding: 0.4rem 0.8rem;
-		border: 1px solid var(--predicted-color);
-		color: var(--predicted-color);
+		border: 1px solid theme('colors.gray.300');
+		color: theme('colors.gray.900');
 		transition: all 0.2s;
-
+	}
+	:global(.generate-button.active) {
 		&:hover {
-			background-color: theme('colors.orange.100');
+			border: 1px solid var(--predicted-color);
+			color: var(--predicted-color);
 		}
 	}
+	:global(.generate-button.disabled) {
+		opacity: 1;
+		background-color: theme('colors.gray.100');
+		color: theme('colors.gray.400');
+		cursor: not-allowed;
+	}
+
 	:global(.generate-button):focus {
-		outline: none;
+		border: 1px solid var(--predicted-color);
+		color: var(--predicted-color);
 	}
 </style>

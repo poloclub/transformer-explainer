@@ -12,7 +12,8 @@
 		temperature,
 		modelData,
 		predictedColor,
-		modelSession
+		modelSession,
+		isFetchingModel
 	} from '~/store';
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
@@ -39,13 +40,13 @@
 
 	// run model
 	onMount(async () => {
+		// Fetch model onnx
 		// const modelUrl = `${base}/gpt2-quant.onnx`;
 		// const url = `${base}/gpt2.onnx`;
-
-		const chunkNum = 10;
+		const chunkNum = 63;
 		const chunkUrls = Array(chunkNum)
 			.fill(0)
-			.map((d, i) => `${base}/gpt2-quant.onnx.part${i}`);
+			.map((d, i) => `${base}/gpt2.onnx.part${i}`);
 
 		const mergedArray = await mergeChunks(chunkUrls);
 
@@ -61,7 +62,9 @@
 		});
 
 		modelSession.set(session);
+		isFetchingModel.set(false);
 
+		// Subscribe input change
 		const unsubscribeInputText = inputText.subscribe((value) => {
 			runModel(value, $temperature);
 		});
@@ -102,7 +105,7 @@
 
 <div
 	class="main-section h-full"
-	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;`}
+	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;--content-height:${vizHeight - titleHeight}px;`}
 >
 	<!-- <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
 		<defs>
@@ -153,9 +156,10 @@
 </div>
 
 <style lang="scss">
-	:global(.last) {
-		opacity: 0;
-	}
+	// :global(.embedding .last),
+	// :global(.attention .last) {
+	// 	opacity: 0;
+	// }
 	.nodes {
 		height: 100%;
 		width: 100%;
@@ -264,7 +268,7 @@
 	:global(.cell.x4),
 	:global(.vector.x4),
 	:global(.sub-vector.x4) {
-		height: calc(var(--vector-height) * 3.2);
+		height: calc(var(--vector-height) * 3.1);
 	}
 
 	:global(.vector.vocab),
@@ -297,9 +301,9 @@
 	}
 	:global(.label.float-right) {
 		position: absolute;
-		right: 1rem;
-		transform: translateX(100%);
-		text-align: left;
+		left: -0.8rem;
+		// transform: translateX(100%);
+		// text-align: left;
 	}
 
 	:global(.ellipsis) {
@@ -330,16 +334,18 @@
 		padding: 3rem 0;
 		/* padding-bottom: 1rem; */
 		width: 100%;
-		height: calc(100% + 5rem);
+		height: calc(var(--content-height) - 2rem);
 		top: -5rem;
 		overflow: visible;
-		border: 2px dashed theme('colors.blue.300');
+		border: 2px dashed theme('colors.blue.400');
 
-		:global(.title) {
-			color: theme('colors.blue.400');
+		:global(.bounding-title) {
+			color: theme('colors.blue.500');
 			position: absolute;
-			top: -2rem;
+			top: 0;
 			left: 0;
+			transform: translate(0, -50%);
+			background-color: white;
 		}
 	}
 	:global(.transformer-bounding.active) {

@@ -1,19 +1,16 @@
-export function nestArray(data, dims) {
-	if (dims.length === 1 && dims[0] === 1) {
-		return data;
-	}
+export const reshapeArray = (arr, dimensions) => {
+	console.log(arr, dimensions);
+	const filteredDimensions = dimensions.filter((dim) => dim !== 1);
 
-	let nestedData = new Array(data);
-	for (let i = dims.length - 1; i >= 0; i--) {
-		const dim = dims[i];
-		const newNestedData = [];
-		while (data.length) {
-			newNestedData.push(nestedData.slice(0, dim));
-		}
-		nestedData = newNestedData;
-	}
-	return dims[0] === 1 ? nestedData[0] : nestedData;
-}
+	const createNestedArray = (arr, dims) => {
+		if (dims.length === 1) return arr.splice(0, dims[0]);
+		const size = dims[0];
+		const restDims = dims.slice(1);
+		return Array.from({ length: size }, () => createNestedArray(arr, restDims));
+	};
+
+	return createNestedArray(arr, filteredDimensions);
+};
 
 export const findArrayDepth = (arr: any) =>
 	Array.isArray(arr) ? 1 + arr.reduce((max, item) => Math.max(max, findArrayDepth(item)), 0) : 0;
@@ -30,7 +27,6 @@ export const splitArray = (doubleArray: number[][], x: number) => {
 };
 
 export const maskArray = (data) => {
-	return data;
 	return data.map((array, index) => {
 		let newArray = new Array(array.length).fill(-Infinity);
 		for (let i = 0; i <= index && i < array.length; i++) {

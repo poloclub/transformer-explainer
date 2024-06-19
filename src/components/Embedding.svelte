@@ -97,18 +97,15 @@
 	}
 </script>
 
-<div
-	class={classNames('embedding', className)}
-	role="button"
-	on:click={onClickEmbedding}
-	on:keydown={onClickEmbedding}
-	tabindex="0"
->
+<div class={classNames('embedding', className)}>
 	<div
 		class="title expandable"
+		role="button"
+		on:click={onClickEmbedding}
+		on:keydown={onClickEmbedding}
+		tabindex="0"
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
-		role="group"
 	>
 		<div>Embedding</div>
 	</div>
@@ -256,11 +253,6 @@
 		left: 0;
 		width: calc(100% + 0.8rem);
 		height: 100%;
-	}
-	:global(.dropout-popover),
-	:global(.ln-popover) {
-		width: 20rem;
-		top: 100% !important;
 	}
 
 	.embedding {

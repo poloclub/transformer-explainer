@@ -13,20 +13,13 @@
 	import { setContext, getContext } from 'svelte';
 	import VectorCanvas from './VectorCanvas.svelte';
 	import { Tooltip } from 'flowbite-svelte';
+	import { active } from 'd3';
 
 	export let className: string | undefined = undefined;
 
 	setContext('block-id', 'attention');
 	const blockId = getContext('block-id');
 	let isAttentionExpanded = $expandedBlock.id === blockId;
-
-	$: attentionData = Array($tokens.length)
-		.fill(0)
-		.map((col) =>
-			Array($tokens.length)
-				.fill(0)
-				.map((d) => Math.random())
-		);
 
 	const queryVectorColor = 'bg-blue-200';
 	const keyVectorColor = 'bg-red-200';
@@ -56,7 +49,9 @@
 		<div>Multi-head Self Attention</div>
 	</div>
 	<div class="content relative">
-		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>
+		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}>
+			<div class="bounding-title">Transformer Block 1</div>
+		</div>
 		<div
 			class="bounding attention-bounding"
 			class:active={isHovered && !isAttentionExpanded}
@@ -171,7 +166,7 @@
 						</div>
 					</div>
 					<div class="resize-watch attention-matrix flex">
-						<AttentionMatrix data={attentionData} />
+						<AttentionMatrix />
 					</div>
 					<div class="head-out mx-[2rem]">
 						<div class="column out">
@@ -197,7 +192,7 @@
 		.transformer-bounding {
 			border-radius: 10px 0 0 10px;
 			padding-left: 0.5rem;
-			padding-bottom: 5.3rem;
+
 			left: -0.5rem;
 			border-right: none;
 		}

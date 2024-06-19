@@ -35,7 +35,7 @@
 	.dot {
 		width: 6px;
 		height: 6px;
-		background-color: theme('colors.blue.600');
+		background-color: var(--predicted-color);
 		border-radius: 50%;
 		margin: 0 2px;
 	}

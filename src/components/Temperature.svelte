@@ -22,28 +22,25 @@
 		<div class="flex w-full shrink-0 items-center justify-between">
 			<div class="temperature-text flex items-center gap-[2px]">
 				<div>Temperature</div>
-				<HelpPopover>This is temperature</HelpPopover>
+				<HelpPopover id="temperature-help">This is temperature</HelpPopover>
 			</div>
 			<div class="temperature-value">
 				<p>{temperatureTemp}</p>
 			</div>
 		</div>
-		<div class="w-full">
-			<input
-				class="slider"
-				type="range"
-				min={0}
-				max={temperatureArray.length - 1}
-				step={1}
-				bind:value={temperatureIndex}
-			/>
-		</div>
+		<input
+			class="slider"
+			type="range"
+			min={0}
+			max={temperatureArray.length - 1}
+			step={1}
+			bind:value={temperatureIndex}
+		/>
 	</div>
 </div>
 
 <style lang="scss">
 	.temperature-slider {
-		margin-top: 0.6rem;
 		max-width: 400px;
 		min-width: 200px;
 		width: 10%;
@@ -74,12 +71,17 @@
 		flex-shrink: 0;
 		font-size: 0.8rem;
 		line-height: 0;
+		font-family: monospace;
+		color: theme('colors.gray.800');
 	}
 
 	.slider-container {
 		display: flex;
 		flex: 1 0 0;
 		width: 100%;
+		height: 2rem;
+		gap: 0.6rem;
+		justify-content: center;
 	}
 
 	.slider {

@@ -127,10 +127,10 @@
 		}
 		.content {
 			display: grid;
-			grid-template-columns: repeat(4, minmax(3vw, 1fr));
+			grid-template-columns: repeat(2, minmax(3vw, 1fr));
 
 			.layer {
-				grid-column: span 2;
+				grid-column: span 1;
 			}
 			.tokens.initial .token {
 				/* gap: 0.6rem; */

@@ -2,6 +2,7 @@
 	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
+	import { fade } from 'svelte/transition';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
@@ -18,6 +19,8 @@
 	{trigger}
 	{placement}
 	arrow={false}
+	transition={fade}
+	params={{ duration: 100 }}
 >
 	<div class="dropout-content">Drop out is</div></Popover
 >

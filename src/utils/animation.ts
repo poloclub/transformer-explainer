@@ -4,19 +4,9 @@ import tailwindConfig from '../../tailwind.config';
 import { tokens } from '~/store';
 const { theme } = resolveConfig(tailwindConfig);
 
-const generateNodeAnimation = (tl, elements, options: GSAPTweenVars = {}) => {
-	const { opacityTo = 1, duration = 0.2, ease = 'power1.in', position, ...restOptions } = options;
-	tl.fromTo(
-		elements,
-		{ opacity: 0 },
-		{ opacity: opacityTo, duration, ease, ...restOptions },
-		position
-	);
-};
-
 const generateGradientAnimation = (
 	tl,
-	gradStop: SVGPathElement | SVGPathElement[],
+	gradStop: undefined | SVGPathElement | (SVGPathElement | undefined)[],
 	options: GSAPTweenVars = {}
 ) => {
 	const {
@@ -66,7 +56,7 @@ export const showFlowAnimation = async (tokenLength: number) => {
 	return new Promise((resolve) => {
 		const tl = gsap.timeline({ onComplete: resolve });
 
-		const isNextTokenOnly = true;
+		const isNextTokenOnly = false;
 		const duration = 0.01;
 
 		// ============================
@@ -86,8 +76,8 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		const embeddingLastPath = document.querySelectorAll('.sankey .embedding .last');
 		tl.set(embeddingLastPath, { opacity: 0.6 });
 
-		const qkvGrad = document.querySelector('#gray-blue-last')?.querySelectorAll('stop')[1];
-		generateGradientAnimation(tl, qkvGrad, { duration: duration * 1.5 });
+		const qkvGradLast = document.querySelector('#gray-blue-last')?.querySelectorAll('stop')[1];
+		generateGradientAnimation(tl, qkvGradLast, { duration: duration * 1.5 });
 
 		// ============================
 		// add qkv vector to attention
@@ -210,21 +200,31 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		const outputHead1 = document.querySelectorAll(
 			isNextTokenOnly
 				? '.attention .head-block .head-out .column .last'
-				: '.attention .head-block .head-out .column '
+				: '.attention .head-block .head-out .column .cell'
 		);
 		tl.fromTo(outputHead1, { opacity: 0 }, { opacity: 1, duration });
 
 		// ============================
 		// draw concat path
 		// ============================
-		const outputH1Grad = document.querySelector('#purple-purple-last')?.querySelectorAll('stop')[1];
-		const outputGrad = document
+		const outputH1Grad = document.querySelector('#purple-purple')?.querySelectorAll('stop')[1];
+		const outputGrad = document.querySelector('#transparent-purple')?.querySelectorAll('stop')[1];
+		const outputH1GradLast = document
+			.querySelector('#purple-purple-last')
+			?.querySelectorAll('stop')[1];
+		const outputGradLast = document
 			.querySelector('#transparent-purple-last')
 			?.querySelectorAll('stop')[1];
 
-		generateGradientAnimation(tl, [outputH1Grad, outputGrad], {
-			stagger: 0.2
-		});
+		generateGradientAnimation(
+			tl,
+			isNextTokenOnly
+				? [outputH1GradLast, outputGradLast]
+				: [outputH1Grad, outputGrad, outputH1GradLast, outputGradLast],
+			{
+				// stagger: 0.2
+			}
+		);
 
 		// ============================
 		// add MLP input vector
@@ -247,7 +247,11 @@ export const showFlowAnimation = async (tokenLength: number) => {
 			?.querySelectorAll('stop')[1];
 
 		// generateGradientAnimation(tl, mlpInputPath, { color: theme.colors.gray[200] });
-		generateGradientAnimation(tl, mlpInputPathLast, {});
+		generateGradientAnimation(
+			tl,
+			isNextTokenOnly ? mlpInputPathLast : [mlpInputPath, mlpInputPathLast],
+			{}
+		);
 
 		// ============================
 		// add MLP first layer output vector
@@ -268,7 +272,11 @@ export const showFlowAnimation = async (tokenLength: number) => {
 			?.querySelectorAll('stop')[1];
 
 		// generateGradientAnimation(tl, mlpSecondPath, { color: theme.colors.gray[200] });
-		generateGradientAnimation(tl, mlpSecondPathLast, {});
+		generateGradientAnimation(
+			tl,
+			isNextTokenOnly ? mlpSecondPathLast : [mlpSecondPath, mlpSecondPathLast],
+			{}
+		);
 
 		// ============================
 		// add MLP output vector
@@ -285,25 +293,43 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		tl.set(blockPath, { opacity: 0.6 });
 
 		const transformerBlocksStop1 = document
-			.querySelector('#blue-white-blue-last')
+			.querySelector('#blue-white-blue')
 			?.querySelectorAll('stop')[1];
 		const transformerBlocksStop2 = document
+			.querySelector('#blue-white-blue')
+			?.querySelectorAll('stop')[3];
+		const transformerBlocksStop1Last = document
+			.querySelector('#blue-white-blue-last')
+			?.querySelectorAll('stop')[1];
+		const transformerBlocksStop2Last = document
 			.querySelector('#blue-white-blue-last')
 			?.querySelectorAll('stop')[3];
 
 		const blockTl = gsap.timeline({
 			// repeat: 2
 		});
-		generateGradientAnimation(blockTl, transformerBlocksStop1, {
-			duration: 0.3,
-			offset: { to: '50%' },
-			ease: 'sine.inOut'
-		});
-		generateGradientAnimation(blockTl, transformerBlocksStop2, {
-			duration: 0.3,
-			offset: { from: '50%' },
-			ease: 'sine.inOut'
-		});
+		generateGradientAnimation(
+			blockTl,
+			isNextTokenOnly
+				? transformerBlocksStop1
+				: [transformerBlocksStop1, transformerBlocksStop1Last],
+			{
+				duration: 0.3,
+				offset: { to: '50%' },
+				ease: 'sine.inOut'
+			}
+		);
+		generateGradientAnimation(
+			blockTl,
+			isNextTokenOnly
+				? transformerBlocksStop2
+				: [transformerBlocksStop2, transformerBlocksStop2Last],
+			{
+				duration: 0.3,
+				offset: { from: '50%' },
+				ease: 'sine.inOut'
+			}
+		);
 
 		tl.add(blockTl);
 

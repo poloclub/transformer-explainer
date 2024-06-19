@@ -90,7 +90,7 @@
 	};
 
 	let rowHeight = rootRem * 1.2;
-	let rowGap = 0.5 * rootRem;
+	let rowGap = 0.4 * rootRem;
 	let hoveredIndex: number | null = null;
 
 	$: data = $modelData?.prediction || [];
@@ -246,7 +246,7 @@
 			flex-shrink: 0;
 			display: flex;
 			flex-direction: column;
-			color: theme('colors.gray.400');
+			color: theme('colors.gray.500');
 			gap: var(--softmax-row-gap);
 
 			.text-box {

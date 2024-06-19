@@ -141,7 +141,7 @@
 				active={isHovered}
 			/>
 		{/each}
-		<ResidualPopover triggeredBy={`#${id}`} offset={1} />
+		<ResidualPopover reference={`#${id}-start`} triggeredBy={`[id^='${id}-']`} offset={1} />
 	</div>
 {:else if type === 'residual-end'}
 	<div
@@ -167,16 +167,22 @@
 
 <style lang="scss">
 	.column.operation-col {
-		// z-index: 200;
+		z-index: 300;
 		height: fit-content;
 
 		&.residual {
-			z-index: 100;
 			opacity: 0.5;
 
 			&.active {
 				opacity: 1;
 			}
 		}
+	}
+
+	:global(.dropout-popover),
+	:global(.ln-popover),
+	:global(.residual-popover) {
+		width: 10rem;
+		top: 100% !important;
 	}
 </style>
