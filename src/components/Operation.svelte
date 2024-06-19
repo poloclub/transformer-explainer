@@ -1,7 +1,9 @@
 <script lang="ts">
+	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import { vectorHeight, expandedBlock } from '~/store';
 
+	export let id: string | undefined = undefined;
 	export let className: string | undefined = undefined;
 	export let type: string | undefined = undefined;
 	export let head: boolean = false;
@@ -11,8 +13,18 @@
 	let width = 50;
 </script>
 
-{#if type === 'dropout'}
-	<div class={`dropout`} class:active>
+{#if type === 'activation'}
+	<div class={classNames(`cell activation`, className)} class:active>
+		<div class="cursor"></div>
+		<svg class="main">
+			<!-- <path class="line" d={`M 0 0 L 10 0 L 20 -20`} style={'transform:translateY(50%)'}></path> -->
+			<path class="line line1" d={`M0,0 L0,90%`}></path>
+			<!-- <path class="line line2" d={`M0,0 L0,40%`}></path> -->
+			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
+		</svg>
+	</div>
+{:else if type === 'dropout'}
+	<div class={classNames(`cell dropout`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			<path class="line" d={`M0,0 L0,${$vectorHeight}`}></path>
@@ -28,7 +40,7 @@
 		{/if}
 	</div>
 {:else if type === 'ln'}
-	<div class={`ln`} class:active>
+	<div class={classNames(`cell ln`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
 			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
@@ -54,19 +66,19 @@
 			</svg>{/if}
 	</div>
 {:else if type === 'residual-start'}
-	<div class={`residual residual-start`} class:active>
+	<div class={classNames(`residual residual-start cell`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
-			{#if head}<path class="head" d="M0,0 Q0,-20 30,-20"></path>
-				<text x="30" y="-20" dy="4" dx="4">Residual</text>{/if}
+			{#if head}<path {id} class="head" d="M0,0 Q0,-16 30,-16"></path>
+				<text x="30" y="-26" dy="4" dx="4">Residual</text>{/if}
 			<path d={`M0,0 L0,${$vectorHeight}`}></path>
 		</svg>
 	</div>
 {:else if type === 'residual-end'}
-	<div class={`residual residual-end`} class:active>
+	<div class={classNames(`residual residual-end cell`, className)} class:active>
 		<div class="cursor"></div>
 		<svg class="main">
-			{#if head}<path class="head" d="M0,0 Q0,-20 -30,-20"></path>
+			{#if head}<path {id} class="head" d="M0,0 Q0,-16 -30,-16"></path>
 				<!-- <text x="-30" y="-20" text-anchor="end">Residual</text> -->
 			{/if}
 			<path d={`M0,0 L0,${$vectorHeight}`}></path>
@@ -75,14 +87,15 @@
 {/if}
 
 <style lang="scss">
+	.activation,
 	.residual,
 	.dropout,
 	.ln {
 		position: relative;
-		width: 1rem;
+		width: 1.2rem;
 		flex-shrink: 0;
 		z-index: 101;
-		height: var(--vector-height);
+		// height: var(--vector-height);
 
 		.cursor {
 			height: 100%;
@@ -98,7 +111,8 @@
 			transform: translateX(50%);
 		}
 		svg .icon {
-			fill: theme('colors.gray.200');
+			fill: theme('colors.gray.300');
+			opacity: 0.6;
 		}
 		.icon {
 			opacity: 1;
@@ -133,25 +147,17 @@
 	.residual {
 		width: 0.5rem;
 		path {
-			stroke: theme('colors.gray.300');
+			stroke: theme('colors.gray.400');
 			fill: none;
 			stroke-width: 1;
 		}
 		text {
 			font-size: 0.8rem;
-			fill: theme('colors.gray.300');
+			fill: theme('colors.gray.400');
 			user-select: none;
 		}
 		.head {
-			stroke: theme('colors.gray.300');
-		}
-		&.active {
-			path {
-				stroke: theme('colors.gray.400');
-			}
-			text {
-				fill: theme('colors.gray.400');
-			}
+			stroke: theme('colors.gray.400');
 		}
 	}
 	.ln {
@@ -159,6 +165,21 @@
 			stroke: theme('colors.gray.400');
 			fill: none;
 			stroke-width: 1;
+		}
+	}
+	.activation {
+		path {
+			stroke: theme('colors.gray.400');
+			fill: none;
+			stroke-dasharray: 2, 4;
+			fill: none;
+			stroke-width: 2;
+		}
+		.line1 {
+		}
+		.line2 {
+			// stroke-dasharray: 2 1;
+			// transform: translate(50%, 50%);
 		}
 	}
 

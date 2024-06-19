@@ -3,84 +3,105 @@
 	import classNames from 'classnames';
 	import { setContext } from 'svelte';
 	import Operation from './Operation.svelte';
+	import OperationGroup from './OperationGroup.svelte';
+	import VectorCanvas from './VectorCanvas.svelte';
+	import { Tooltip } from 'flowbite-svelte';
 
 	export let className: string | undefined = undefined;
 
 	setContext('block-id', 'mlp');
+
+	const firstLayerlColor = 'bg-purple-200';
+	const secondLayerColor = 'bg-indigo-200';
+	const outputColor = 'bg-blue-200';
+
+	let isHovered = false;
+
+	function handleMouseEnter() {
+		isHovered = true;
+	}
+
+	function handleMouseLeave() {
+		isHovered = false;
+	}
+
+	let vectorHoverIdx: number | null = null;
 </script>
 
 <div class={classNames('mlp', className)}>
-	<div class="title">MLP</div>
+	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
+		MLP
+	</div>
 	<div class="content relative">
-		<div class="bounding" class:active={$isBoundingBoxActive}></div>
+		<Tooltip
+			triggeredBy=".mlp .first-layer .vector"
+			placement="right"
+			class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
+		>
+		<Tooltip triggeredBy=".mlp .out .vector" placement="right" class="popover text-sm font-light"
+			>size(1, {$modelMeta.dimension})</Tooltip
+		>
+		<Tooltip
+			triggeredBy=".mlp .projections .vector"
+			placement="right"
+			class="popover text-sm font-light">size(1, {$modelMeta.dimension * 4})</Tooltip
+		>
+
+		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>
+		<div class="bounding mlp-bounding" class:active={isHovered}></div>
 		<div class="layer first-layer flex">
-			<div class="tokens initial">
+			<div class="column initial">
 				{#each $tokens as token, index}
-					<div class="token">
+					<div
+						class="cell"
+						class:last={index === $tokens.length - 1}
+						on:mouseenter={() => {
+							vectorHoverIdx = index;
+						}}
+						on:mouseleave={() => {
+							vectorHoverIdx = null;
+						}}
+						role="group"
+					>
 						<span class="label float">{token}</span>
-						<div class={`vector flex flex-col  bg-purple-200`}>
+						<div class={`vector flex flex-col  ${firstLayerlColor}`}>
+							<VectorCanvas colorScale="purple" active={vectorHoverIdx === index} />
 							<div class="sub-vector x1-12 head1"></div>
 							<div class="sub-vector head-rest grow"></div>
 						</div>
 					</div>
 				{/each}
 			</div>
-			<div class="tokens dropout">
-				{#each $tokens as token, index}
-					<div class="token">
-						<Operation type="dropout" />
-					</div>
-				{/each}
-			</div>
-			<div class="tokens residual-end">
-				{#each $tokens as token, index}
-					<div class="token">
-						<Operation type="residual-end" head={index === 0} />
-					</div>
-				{/each}
-			</div>
-			<div class="tokens ln">
-				{#each $tokens as token, index}
-					<div class="token">
-						<Operation type="ln" />
-					</div>
-				{/each}
-			</div>
-			<div class="tokens residual-start">
-				{#each $tokens as token, index}
-					<div class="token">
-						<Operation type="residual-start" head={index === 0} />
-					</div>
-				{/each}
-			</div>
+			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
+			<OperationGroup type="residual-end" id={'residual-first'} />
+			<OperationGroup type="ln" id={'mlp-first-ln'} />
+			<OperationGroup type="residual-start" id={'residual-second'} />
 		</div>
 		<div class="layer second-layer flex justify-between">
-			<div class="tokens projections">
-				{#each $tokens as token, index}
-					<div class="token">
-						<div class={`vector x4 bg-indigo-200`}></div>
-					</div>
-				{/each}
+			<div class="projections flex">
+				<div class="column">
+					{#each $tokens as token, index}
+						<div
+							class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
+							class:last={index === $tokens.length - 1}
+						>
+							<div class={classNames(`vector x4 ${secondLayerColor} opacity-80`)}>
+								<VectorCanvas colorScale="indigo" />
+							</div>
+						</div>
+					{/each}
+				</div>
+				<OperationGroup type="activation" id={'mlp-activation'} className="x4" />
 			</div>
-			<div class="flex">
-				<div class="tokens residual-end">
+			<div class="ouputs flex">
+				<OperationGroup type="residual-end" id={'residual-second'} />
+				<OperationGroup type="ln" id={'mlp-second-ln'} />
+				<div class="column out">
 					{#each $tokens as token, index}
-						<div class="token">
-							<Operation type="residual-end" head={index === 0} />
-						</div>
-					{/each}
-				</div>
-				<div class="tokens ln">
-					{#each $tokens as token, index}
-						<div class="token">
-							<Operation type="ln" />
-						</div>
-					{/each}
-				</div>
-				<div class="tokens out">
-					{#each $tokens as token, index}
-						<div class="token">
-							<div class={`vector bg-blue-200`}></div>
+						<div class="cell" class:last={index === $tokens.length - 1}>
+							<div class={`vector ${outputColor}`}>
+								<VectorCanvas colorScale="blue" />
+							</div>
 						</div>
 					{/each}
 				</div>
@@ -91,7 +112,14 @@
 
 <style lang="scss">
 	.mlp {
-		.bounding {
+		.mlp-bounding {
+			top: -0.5rem;
+			padding: 0.5rem 0;
+			left: -0.2rem;
+			width: calc(100% + 0.2rem);
+			height: 100%;
+		}
+		.transformer-bounding {
 			border-radius: 0 10px 10px 0;
 			padding-right: 0.5rem;
 			right: -0.5rem;
@@ -99,14 +127,37 @@
 		}
 		.content {
 			display: grid;
-			grid-template-columns: repeat(8, minmax(3vw, 1fr));
+			grid-template-columns: repeat(2, minmax(3vw, 1fr));
 
 			.layer {
-				grid-column: span 4;
+				grid-column: span 1;
 			}
 			.tokens.initial .token {
 				/* gap: 0.6rem; */
 			}
+
+			.column.activation {
+			}
 		}
 	}
+	// .layer {
+	// 	height: 500px;
+	// 	display: flex;
+	// 	align-items: center;
+	// }
+	// :global(.transformer-blocks .final) {
+	// 	height: 500px !important;
+	// 	display: flex !important;
+	// 	align-items: center !important;
+	// 	justify-content: center;
+	// }
+	// .projections {
+	// 	.small {
+	// 		height: 2px !important;
+
+	// 		.vector {
+	// 			height: 2px !important;
+	// 		}
+	// 	}
+	// }
 </style>

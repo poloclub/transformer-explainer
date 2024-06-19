@@ -1,46 +1,130 @@
 <script lang="ts">
 	import HeadStack from '~/components/HeadStack.svelte';
-	import { tokens, modelMeta, isBoundingBoxActive } from '~/store';
+	import {
+		tokens,
+		modelMeta,
+		isBoundingBoxActive,
+		headContentHeight,
+		expandedBlock,
+		headGap
+	} from '~/store';
 	import classNames from 'classnames';
 	import AttentionMatrix from '~/components/AttentionMatrix.svelte';
-	import { setContext } from 'svelte';
+	import { setContext, getContext } from 'svelte';
+	import VectorCanvas from './VectorCanvas.svelte';
+	import { Tooltip } from 'flowbite-svelte';
+	import { active } from 'd3';
 
 	export let className: string | undefined = undefined;
-	export let headContentHeight: number = 0;
 
 	setContext('block-id', 'attention');
+	const blockId = getContext('block-id');
+	let isAttentionExpanded = $expandedBlock.id === blockId;
 
-	$: attentionData = Array($tokens.length)
-		.fill(0)
-		.map((col) =>
-			Array($tokens.length)
-				.fill(0)
-				.map((d) => Math.random())
-		);
+	const queryVectorColor = 'bg-blue-200';
+	const keyVectorColor = 'bg-red-200';
+	const valVectorColor = 'bg-green-200';
+
+	const queryHeadVectorColor = 'bg-blue-300';
+	const keyHeadVectorColor = 'bg-red-300';
+	const valHeadVectorColor = 'bg-green-300';
+
+	const outputVectorColor = 'bg-purple-300';
+
+	let isHovered = false;
+
+	function handleMouseEnter() {
+		isHovered = true;
+	}
+
+	function handleMouseLeave() {
+		isHovered = false;
+	}
+
+	let vectorHoverIdx: number | null = null;
 </script>
 
 <div class={classNames('attention', className)}>
-	<div class="title">
+	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
 		<div>Multi-head Self Attention</div>
 	</div>
 	<div class="content relative">
-		<div class="bounding" class:active={$isBoundingBoxActive}>
-			<!-- <div class="title absolute top-0">First Transformer Block</div> -->
+		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}>
+			<div class="bounding-title">Transformer Block 1</div>
 		</div>
-		<div class="tokens">
+		<div
+			class="bounding attention-bounding"
+			class:active={isHovered && !isAttentionExpanded}
+			style={`padding-bottom:${$modelMeta.attention_head_num * headGap.y}px`}
+		></div>
+		<!-- <div class="title absolute top-0">First Transformer Block</div> -->
+
+		<div class="column">
+			<!-- QKV vector -->
+			<Tooltip
+				triggeredBy=".attention .qkv-weighted"
+				placement="right"
+				class="popover text-sm font-light">size(1, {$modelMeta.dimension * 3})</Tooltip
+			>
+			<!-- Head1 vector -->
+			<Tooltip
+				triggeredBy=".attention .query .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Query, size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
+			>
+			<Tooltip
+				triggeredBy=".attention .key .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Key, size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
+			>
+			<Tooltip
+				triggeredBy=".attention .value .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Value size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
+			>
+			<Tooltip
+				triggeredBy=".attention .out .head1"
+				placement="right"
+				class="popover text-sm font-light"
+				>Head1 Attention Out, size(1, {$modelMeta.dimension /
+					$modelMeta.attention_head_num})</Tooltip
+			>
+
 			{#each $tokens as token, index}
-				<div class="vector x3 flex flex-col">
-					<div class={`sub-vector query flex grow flex-col bg-blue-200`}>
-						<div class="sub-vector x1-12 head1"></div>
-						<div class="sub-vector head-rest grow"></div>
+				<div
+					class="qkv-weighted vector x3 flex flex-col"
+					class:last={index === $tokens.length - 1}
+					on:mouseenter={() => {
+						vectorHoverIdx = index;
+					}}
+					on:mouseleave={() => {
+						vectorHoverIdx = null;
+					}}
+					role="group"
+				>
+					<div class={`sub-vector query relative flex grow flex-col ${queryVectorColor}`}>
+						<VectorCanvas colorScale="blue" active={vectorHoverIdx === index} />
+						<div class={`sub-vector x1-12 head1 ${queryHeadVectorColor}`}></div>
+						<div class="sub-vector head-rest grow">
+							{#if vectorHoverIdx !== index}<span>Q</span>{/if}
+						</div>
 					</div>
-					<div class={`sub-vector key flex grow flex-col bg-red-200`}>
-						<div class="sub-vector x1-12 head1"></div>
-						<div class="sub-vector head-rest grow"></div>
+					<div class={`sub-vector key relative flex grow flex-col ${keyVectorColor}`}>
+						<VectorCanvas colorScale="red" active={vectorHoverIdx === index} />
+						<div class={`sub-vector x1-12 head1 ${keyHeadVectorColor}`}></div>
+						<div class="sub-vector head-rest grow">
+							{#if vectorHoverIdx !== index}<span>K</span>{/if}
+						</div>
 					</div>
-					<div class={`sub-vector value flex grow flex-col bg-green-200`}>
-						<div class="sub-vector x1-12 head1"></div>
-						<div class="sub-vector head-rest grow"></div>
+					<div class={`sub-vector value relative flex grow flex-col ${valVectorColor}`}>
+						<VectorCanvas colorScale="green" active={vectorHoverIdx === index} />
+						<div class={`sub-vector x1-12 head1 ${valHeadVectorColor}`}></div>
+						<div class="sub-vector head-rest grow">
+							{#if vectorHoverIdx !== index}<span>V</span>{/if}
+						</div>
 					</div>
 				</div>
 			{/each}
@@ -49,42 +133,47 @@
 			<HeadStack>
 				<div
 					class="head-block flex w-full items-center justify-between px-2"
-					style={`height:${headContentHeight}px;`}
+					style={`height:${$headContentHeight}px;`}
 				>
-					<div class="flex h-full flex-col justify-center gap-[5rem] pl-[5rem]">
-						<div class="tokens query">
+					<div class="qkv flex h-full flex-col justify-center gap-[5rem] pl-[6rem]">
+						<div class="column query">
+							<div class="title">Query</div>
 							{#each $tokens as token, index}
-								<div class="token text-xs">
+								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
-									<div class={`vector x1-12  bg-blue-300`}></div>
+									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
-						<div class="tokens key">
+						<div class="column key">
+							<div class="title">Key</div>
+
 							{#each $tokens as token, index}
-								<div class="token text-xs">
+								<div class="head1 cell x1-12 text-xs class:last={index === $tokens.length - 1}">
 									<span class="label float">{token}</span>
-									<div class={`vector x1-12 bg-red-300`}></div>
+									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
-						<div class="tokens value">
+						<div class="column value">
+							<div class="title">Value</div>
 							{#each $tokens as token, index}
-								<div class="token text-xs">
+								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
-									<div class={`vector x1-12 bg-green-300`}></div>
+									<div class={`vector x1-12 ${valHeadVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
 					</div>
 					<div class="resize-watch attention-matrix flex">
-						<AttentionMatrix data={attentionData} />
+						<AttentionMatrix />
 					</div>
-					<div class="head-out mx-4">
-						<div class="tokens">
+					<div class="head-out mx-[2rem]">
+						<div class="column out">
+							<div class="title">Out</div>
 							{#each $tokens as token, index}
-								<div class="token">
-									<div class={`vector x1-12 bg-purple-400`}></div>
+								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
+									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
 							{/each}
 						</div>
@@ -100,11 +189,44 @@
 
 <style lang="scss">
 	.attention {
-		.bounding {
+		.transformer-bounding {
 			border-radius: 10px 0 0 10px;
 			padding-left: 0.5rem;
+
 			left: -0.5rem;
 			border-right: none;
+		}
+		.attention-bounding {
+			top: -0.5rem;
+			padding: 0.5rem 0;
+			left: -0.2rem;
+			width: calc(100% + 1rem);
+			height: calc(100%);
+		}
+		.column {
+			.label {
+				font-size: 0.7rem;
+				color: theme('colors.gray.600');
+			}
+			.title {
+				position: absolute;
+				top: -1.5rem;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 0.8rem;
+			}
+			&.query .title {
+				color: theme('colors.blue.400');
+			}
+			&.key .title {
+				color: theme('colors.red.400');
+			}
+			&.value .title {
+				color: theme('colors.green.400');
+			}
+			&.out .title {
+				color: theme('colors.purple.400');
+			}
 		}
 		.content {
 			display: grid;
@@ -115,7 +237,26 @@
 			}
 		}
 		.heads {
-			padding: 0 5rem;
+			padding: 0 6rem 0 7rem;
+		}
+		.sub-vector {
+			user-select: none;
+			font-size: 0.8rem;
+			&.query {
+				color: theme('colors.blue.300');
+			}
+			&.key {
+				color: theme('colors.red.300');
+			}
+			&.value {
+				color: theme('colors.green.300');
+			}
+
+			.head-rest {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
 		}
 	}
 </style>

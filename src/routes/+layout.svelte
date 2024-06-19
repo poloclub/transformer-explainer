@@ -2,6 +2,7 @@
 	import '~/styles/app.css';
 	import '~/styles/global.scss';
 	import Topbar from '~/components/Topbar.svelte';
+	import { predictedColor } from '~/store';
 
 	let topBarHeight = 0;
 </script>
@@ -10,7 +11,7 @@
 	<title>Transformer Explainer</title>
 </svelte:head>
 
-<div id="app">
+<div id="app" style={`--predicted-color:${predictedColor};`}>
 	<div class="landing h-screen">
 		<header bind:offsetHeight={topBarHeight}>
 			<Topbar />

@@ -3,7 +3,9 @@
 </script>
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2">
-	<div class="logo text-bold text-gray-700">Transformer Explainer</div>
+	<div class="logo text-bold text-gray-700">
+		T<span class="small">RANSFORMER</span> E<span class="small">XPLAINER</span>
+	</div>
 	<div class="inputs flex grow items-center">
 		<div class="flex w-full">
 			<div class="grow"><InputForm /></div>
@@ -53,8 +55,26 @@
 			0px 2px 4px -2px rgba(0, 0, 0, 0.05); */
 
 		.logo {
-			font-weight: bold;
 			white-space: nowrap;
+			font-family: 'Jersey 10', sans-serif;
+
+			font-optical-sizing: auto;
+			font-style: normal;
+
+			font-size: 2.2rem;
+			// color: theme('colors.blue.800');
+
+			background: linear-gradient(
+				to right,
+				theme('colors.blue.500') 0%,
+				theme('colors.purple.500') 60%
+			);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+
+			.small {
+				font-size: 1.8rem;
+			}
 		}
 		.icons {
 			svg {

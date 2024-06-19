@@ -13,7 +13,7 @@ class LayerNorm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(ndim)) if bias else None
 
         self.epsilon = 1e-5
-        self.dict = {}
+        # self.dict = {}
 
     def forward(self, input):
         layer_norm = F.layer_norm(input, self.weight.shape, self.weight, self.bias, self.epsilon)
@@ -24,14 +24,14 @@ class LayerNorm(nn.Module):
         input_normalized = (input - input_mean) / torch.sqrt(input_var + self.epsilon)
 
         # Store values
-        self.dict.update({
-            'input_mean': input_mean,
-            'input_var': input_var,
-            'input_normalized': input_normalized,
-            'weight': self.weight,
-            'bias': self.bias,
-            'output': layer_norm
-        })
+        # self.dict.update({
+        #     'input_mean': input_mean,
+        #     'input_var': input_var,
+        #     'input_normalized': input_normalized,
+        #     'weight': self.weight,
+        #     'bias': self.bias,
+        #     'output': layer_norm
+        # })
 
         return layer_norm
 
@@ -91,22 +91,22 @@ class CausalSelfAttention(nn.Module):
         for i in range(self.n_head):
             if (i == 0):
                 self.dict[f"head_{i}"] = {}
-                self.dict[f"head_{i}"]["q_weights"], self.dict[f"head_{i}"]["k_weights"], self.dict[f"head_{i}"]["v_weights"] = q_weights[0], k_weights[0], v_weights[0],
-                self.dict[f"head_{i}"]["q_bias"], self.dict[f"head_{i}"]["k_bias"], self.dict[f"head_{i}"]["v_bias"] = q_bias[0], k_bias[0], v_bias[0],
-                self.dict[f"head_{i}"]["q"], self.dict[f"head_{i}"]["k"], self.dict[f"head_{i}"]["v"] = q[:, 0], k[:, 0], v[:, 0]
+                # self.dict[f"head_{i}"]["q_weights"], self.dict[f"head_{i}"]["k_weights"], self.dict[f"head_{i}"]["v_weights"] = q_weights[0], k_weights[0], v_weights[0],
+                # self.dict[f"head_{i}"]["q_bias"], self.dict[f"head_{i}"]["k_bias"], self.dict[f"head_{i}"]["v_bias"] = q_bias[0], k_bias[0], v_bias[0],
+                # self.dict[f"head_{i}"]["q"], self.dict[f"head_{i}"]["k"], self.dict[f"head_{i}"]["v"] = q[:, 0], k[:, 0], v[:, 0]
                 q_transposed, k_transposed, v_transposed = q.transpose(-2, -1), k.transpose(-2, -1), v.transpose(-2, -1)
-                self.dict[f"head_{i}"]["q_transposed"], self.dict[f"head_{i}"]["k_transposed"], self.dict[f"head_{i}"]["v_transposed"] = q_transposed[:, 0], k_transposed[:, 0], v_transposed[:, 0]
+                # self.dict[f"head_{i}"]["q_transposed"], self.dict[f"head_{i}"]["k_transposed"], self.dict[f"head_{i}"]["v_transposed"] = q_transposed[:, 0], k_transposed[:, 0], v_transposed[:, 0]
                 self.dict[f"head_{i}"]["attn"], self.dict[f"head_{i}"]["attn_scaled"], self.dict[f"head_{i}"]["attn_masked"], self.dict[f"head_{i}"]["attn_softmax"], self.dict[f"head_{i}"]["attn_dropout"] = attn[:, 0], attn_scaled[:, 0], attn_masked[:, 0], attn_softmax[:, 0], attn_dropout[:, 0]
-                self.dict[f"head_{i}"]["v_output"] = y[:, 0]
+                # self.dict[f"head_{i}"]["v_output"] = y[:, 0]
 
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
-        self.dict["v_output_combined"] = y
+        # self.dict["v_output_combined"] = y
 
         # output projection
         y = self.resid_dropout(self.c_proj(y))
-        self.dict["proj_weights"] = self.c_proj.weight
-        self.dict["proj_bias"] = self.c_proj.bias
-        self.dict["attn_output"] = y
+        # self.dict["proj_weights"] = self.c_proj.weight
+        # self.dict["proj_bias"] = self.c_proj.bias
+        # self.dict["attn_output"] = y
 
         return y
 
@@ -119,21 +119,21 @@ class MLP(nn.Module):
         self.c_proj  = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
         self.dropout = nn.Dropout(config.dropout)
 
-        self.dict = {}
+        # self.dict = {}
 
     def forward(self, x):
         x = self.c_fc(x)
-        self.dict["linear_1_weight"] = self.c_fc.weight 
-        self.dict["linear_1_bias"] = self.c_fc.bias 
-        self.dict["linear_1_output"] = x 
+        # self.dict["linear_1_weight"] = self.c_fc.weight 
+        # self.dict["linear_1_bias"] = self.c_fc.bias 
+        # self.dict["linear_1_output"] = x 
         x = self.gelu(x)
-        self.dict["gelu_output"] = x 
+        # self.dict["gelu_output"] = x 
         x = self.c_proj(x)
-        self.dict["linear_2_weight"] = self.c_proj.weight
-        self.dict["linear_2_bias"] = self.c_proj.bias 
-        self.dict["linear_2_output"] = x 
+        # self.dict["linear_2_weight"] = self.c_proj.weight
+        # self.dict["linear_2_bias"] = self.c_proj.bias 
+        # self.dict["linear_2_output"] = x 
         x = self.dropout(x)
-        self.dict["output_after_dropout"] = x 
+        # self.dict["output_after_dropout"] = x 
         return x
     
 class Block(nn.Module):
@@ -148,17 +148,17 @@ class Block(nn.Module):
         self.dict = {}
 
     def forward(self, x):
-        self.dict["ln_1"] = self.ln_1.dict 
+        # self.dict["ln_1"] = self.ln_1.dict 
         self.dict["attn"] = self.attn.dict 
 
         x = x + self.attn(self.ln_1(x))
-        self.dict["res_1"] = x 
+        # self.dict["res_1"] = x 
 
-        self.dict["ln_2"] = self.ln_2.dict
-        self.dict["mlp"] = self.mlp.dict 
+        # self.dict["ln_2"] = self.ln_2.dict
+        # self.dict["mlp"] = self.mlp.dict 
 
         x = x + self.mlp(self.ln_2(x))
-        self.dict["res_2"] = x 
+        # self.dict["res_2"] = x 
  
         return x
 
@@ -256,18 +256,18 @@ class GPT(nn.Module):
             logits = self.lm_head(x[:, [-1], :]) # note: using list [-1] to preserve the time dim
             loss = None
   
-        self.dictionary["embedding"] = {
-            "tok_emb": tok_emb,
-            "transformer.wpe.weight": self.transformer.wpe.weight,
-            "pos_emb": pos_emb,
-            "input_emb": input_emb,
-            "input_emb_dropout": input_emb_dropout
-        }
+        # self.dictionary["embedding"] = {
+        #     "tok_emb": tok_emb,
+        #     "transformer.wpe.weight": self.transformer.wpe.weight,
+        #     "pos_emb": pos_emb,
+        #     "input_emb": input_emb,
+        #     "input_emb_dropout": input_emb_dropout
+        # }
 
-        self.dictionary["ln_f"] = self.transformer.ln_f.dict
+        # self.dictionary["ln_f"] = self.transformer.ln_f.dict
         
         self.dictionary["linear"] = {
-            "weight": self.lm_head.weight,
+            # "weight": self.lm_head.weight,
             "output": logits
         }
 

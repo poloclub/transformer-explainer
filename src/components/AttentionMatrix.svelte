@@ -1,17 +1,22 @@
 <script lang="ts">
-	import { expandedBlock, tokens } from '~/store';
+	import { expandedBlock, tokens, modelData } from '~/store';
 	import classNames from 'classnames';
 	import Matrix from '~/components/Matrix.svelte';
 	import { gsap } from '~/utils/gsap';
-	import { mask } from '~/utils/array';
+	import { maskArray } from '~/utils/array';
 	import { getContext } from 'svelte';
-	import WeightPopover from '~/components/WeightPopover.svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
-	const { theme } = resolveConfig(tailwindConfig);
-	import { attentionOutput, masked, qk } from '~/utils/mock_data';
+	import * as d3 from 'd3';
 
-	export let data: any;
+	const { theme } = resolveConfig(tailwindConfig);
+
+	$: placeHolderData = Array($tokens.length)
+		.fill(0)
+		.map((col) => Array($tokens.length).fill(-Infinity));
+	$: queryKey = $modelData?.outputs?.block_0_attn_head_0_attn?.data || placeHolderData;
+	$: masked = $modelData?.outputs?.block_0_attn_head_0_attn_masked?.data || placeHolderData;
+	$: softmaxed = $modelData?.outputs?.block_0_attn_head_0_attn_dropout?.data || placeHolderData;
 
 	let rem = 16;
 	let maxCellSize = 20;
@@ -193,9 +198,26 @@
 			0
 		);
 	};
+
+	$: qkColorScaleDomain = d3.extent(queryKey.flat());
+	$: qkColorScale = (d, i) => {
+		return d3
+			.scaleLinear()
+			.domain(qkColorScaleDomain)
+			.range(['white', theme.colors['purple'][700]])(d);
+	};
+	const maskedColorScale = (d, i) => {
+		return d3.scaleLinear().domain([-3, 3]).range(['white', theme.colors['purple'][700]])(d);
+	};
+	const softmaxColorScale = (d, i) => {
+		return d3.interpolate('white', theme.colors['purple'][700])(d);
+	};
 </script>
 
-<div class="flex items-center gap-8 px-10">
+<div
+	class="flex items-center gap-8 px-5"
+	style={`--attention-matrix-width: ${attentionMatrixWidth}px;`}
+>
 	<!-- <WeightPopover triggeredBy={'#key-container'} title={'Key Calculation'} {data} /> -->
 	<div
 		role="button"
@@ -214,47 +236,76 @@
 		>
 			<Matrix
 				className="main"
-				{data}
+				data={queryKey}
 				showSize={false}
 				cellHeight={cellSize}
 				cellWidth={cellSize}
 				rowGap={3}
 				colGap={3}
 				shape={'circle'}
-				colorScale={'purple'}
+				colorScale={qkColorScale}
 			/>
-			<div class="text-gray-400">QK<sup>T</sup></div>
+			<div class="matrix-label">QK<sup>T</sup></div>
+
+			<div class="color-scale">
+				<span class="val">{qkColorScaleDomain[0]?.toFixed(1)}</span>
+				<div class="bar"></div>
+				<span class="val">{qkColorScaleDomain[1]?.toFixed(1)}</span>
+			</div>
 		</div>
 		<div
 			class="attention-matrix attention-mask flex flex-col items-center"
 			bind:this={attentionMask}
 		>
+			<svg
+				class="arrow"
+				aria-hidden="true"
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke="currentColor"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M19 12H5m14 0-4 4m4-4-4-4"
+				/>
+			</svg>
+
 			<div>
 				<Matrix
 					className="prev absolute top-0 left-0 pointer-events-none"
-					{data}
+					data={queryKey}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
 					rowGap={3}
 					colGap={3}
 					shape={'circle'}
-					colorScale={'purple'}
+					colorScale={qkColorScale}
 				/>
 				<Matrix
 					className="main opacity-0"
-					data={mask(data)}
+					data={maskArray(masked)}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
 					rowGap={3}
 					colGap={3}
 					shape={'circle'}
-					colorScale={'purple'}
+					colorScale={maskedColorScale}
 				/>
 			</div>
+			<div class="matrix-label">Scaling · Mask</div>
 
-			<div class="text-gray-400">Mask</div>
+			<div class="color-scale">
+				<span class="val">-3.0</span>
+				<div class="bar"></div>
+				<span class="val">3.0</span>
+			</div>
 		</div>
 
 		<div
@@ -263,33 +314,55 @@
 			})}
 			bind:this={attentionSoftmax}
 		>
+			<svg
+				class="arrow"
+				aria-hidden="true"
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke="currentColor"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M19 12H5m14 0-4 4m4-4-4-4"
+				/>
+			</svg>
 			<div>
 				<Matrix
 					className="prev absolute top-0 left-0  pointer-events-none"
-					data={mask(data)}
+					data={maskArray(masked)}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
 					rowGap={3}
 					colGap={3}
 					shape={'circle'}
-					colorScale={'purple'}
+					colorScale={maskedColorScale}
 				/>
 				<Matrix
 					className="main opacity-0"
-					data={mask(data)}
+					data={maskArray(softmaxed)}
 					showSize={false}
 					cellHeight={cellSize}
 					cellWidth={cellSize}
 					rowGap={3}
 					colGap={3}
-					showValue={true}
 					shape={'circle'}
-					colorScale={'purple'}
+					colorScale={softmaxColorScale}
 				/>
 			</div>
 
-			<div class="text-gray-400">Softmax</div>
+			<div class="matrix-label">Softmax · Dropout</div>
+
+			<div class="color-scale">
+				<span class="val">-1.0</span>
+				<div class="bar"></div>
+				<span class="val">1.0</span>
+			</div>
 		</div>
 		<div
 			class={classNames('attention-matrix attention-result flex flex-col items-center', {
@@ -301,17 +374,17 @@
 		>
 			<Matrix
 				className="main"
-				data={mask(data)}
+				data={maskArray(softmaxed)}
 				showSize={false}
 				cellHeight={cellSize}
 				cellWidth={cellSize}
 				rowGap={3}
 				colGap={3}
-				showValue={false}
 				shape={'circle'}
-				colorScale={'purple'}
+				colorScale={softmaxColorScale}
 			/>
-			<div class="text-gray-400">Attention</div>
+
+			<div class="matrix-label">Attention</div>
 		</div>
 	</div>
 </div>
@@ -332,6 +405,49 @@
 		.attention-mask,
 		.attention-softmax {
 			display: none;
+		}
+
+		:global(.matrix) {
+			padding: 0.5rem;
+		}
+		.matrix-label {
+			white-space: nowrap;
+			color: theme('colors.gray.400');
+		}
+		.attention-result {
+			.matrix-label:hover {
+				color: theme('colors.gray.600');
+			}
+		}
+		.arrow {
+			position: absolute;
+			left: -0.8rem;
+			top: calc(var(--attention-matrix-width) / 2 - 0.5rem);
+			width: 1.2rem;
+			height: 1.2rem;
+			color: theme('colors.gray.300');
+		}
+	}
+	.color-scale {
+		height: 1rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+		padding: 0 1rem;
+		gap: 0.2rem;
+
+		.bar {
+			height: 0.4rem;
+			flex: 1 0 0;
+			border: 1px solid theme('colors.gray.200');
+			background: linear-gradient(90deg, white 0%, theme('colors.purple.700') 100%);
+		}
+		.val {
+			flex-shrink: 0;
+			font-family: monospace;
+			font-size: 0.7rem;
+			color: theme('colors.gray.600');
 		}
 	}
 </style>

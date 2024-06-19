@@ -2,7 +2,6 @@
 	import * as d3 from 'd3';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { highlightedToken, rowGap as globalRowGap } from '~/store';
 	import { afterUpdate, beforeUpdate } from 'svelte';
 	import { color } from 'd3-color';
 	import { Tooltip } from 'flowbite-svelte';
@@ -12,17 +11,16 @@
 	export let data: (number | null)[][];
 	export let cellHeight: number;
 	export let cellWidth: number;
-	export let rowGap: number = globalRowGap;
+	export let rowGap: number = 2;
 	export let colGap: number = 0;
 	export let transpose: boolean = false;
-	export let showValue: boolean = false;
 
 	export let rowLen: number;
 	export let dimension: number;
 
 	export let groupBy: 'row' | 'col' = 'row';
 	export let shape: 'circle' | 'rect' = 'rect';
-	export let colorScale: string | ((t: number) => any) | undefined = undefined;
+	export let colorScale: string | ((t: number, i: number) => string) | undefined = undefined;
 
 	let svgEl: HTMLOrSVGElement;
 	let highlightedIndex: string | number | null;
@@ -43,13 +41,13 @@
 	// 	}
 	// });
 
-	const colorKey = typeof colorScale === 'string' ? colorScale : 'primary';
+	const colorKey = typeof colorScale === 'string' ? colorScale : 'blue';
 	const matrixColorScale =
 		typeof colorScale === 'function'
 			? colorScale
-			: d3.interpolate('white', theme.colors[colorKey][500]);
+			: d3.interpolate('white', theme.colors[colorKey][400]);
 
-	const highlightColorScale = d3.interpolate('white', theme.colors['secondary'][600]);
+	const highlightColorScale = d3.interpolate('white', theme.colors['yellow'][600]);
 
 	const drawMatrixSvg = () => {
 		const svg = d3.select(svgEl);
@@ -57,16 +55,16 @@
 		if (groupBy === 'col') {
 			let cols;
 			cols = svg
-				.selectAll('g.col')
+				.selectAll('g.g-col')
 				.data(data)
 				.join('g')
-				.attr('class', (d, i) => `col col-${i}`);
+				.attr('class', (d, i) => `g-col g-col-${i}`);
 			cols.attr('transform', (d, i) => `translate(${i * cellWidth + i * colGap},0)`);
 
 			if (shape === 'rect') {
 				cols
 					.selectAll('rect.cell')
-					.data((d) => d)
+					.data((d, i) => d.map((value) => ({ value, parentIndex: i })))
 					.join('rect')
 					.attr('class', 'cell')
 					.attr('x', 0)
@@ -74,7 +72,7 @@
 					.attr('width', cellWidth)
 					.attr('height', cellHeight)
 					.attr('fill', function (d) {
-						return matrixColorScale(d);
+						return matrixColorScale(d.value, d.parentIndex);
 					});
 			}
 			if (shape === 'circle') {
@@ -87,8 +85,8 @@
 					.attr('cy', (d, i) => i * cellHeight + i * rowGap)
 					.attr('r', cellWidth / 2)
 					.attr('stroke', theme.colors.gray[500])
-					.attr('fill', function (d) {
-						return matrixColorScale(d);
+					.attr('fill', function (d, i) {
+						return matrixColorScale(d, i);
 					});
 			}
 		}
@@ -101,25 +99,6 @@
 				.data(data)
 				.join('g')
 				.attr('class', (d, i) => `g-row g-row-${i}`);
-
-			// .on('click', function (d) {
-			// 	if ($highlightedToken.index !== null && !!$highlightedToken.fix) {
-			// 		highlightedToken.set({ index: null, fix: false });
-			// 	} else {
-			// 		const tokenIdx = this.classList[1].split('-')[1];
-			// 		highlightedToken.set({ index: Number(tokenIdx), fix: true });
-			// 	}
-			// })
-			// rows
-			// 	.on('mouseenter', function (d) {
-			// 		if ($highlightedToken.fix) return;
-			// 		const tokenIdx = this.classList[1].split('-')[1];
-			// 		highlightedToken.update((cur) => ({ ...cur, index: Number(tokenIdx) }));
-			// 	})
-			// 	.on('mouseleave', function (d) {
-			// 		if ($highlightedToken.fix) return;
-			// 		highlightedToken.update((cur) => ({ ...cur, index: null }));
-			// 	});
 
 			if (shape === 'rect') {
 				rows.attr('transform', (d, i) =>
@@ -137,12 +116,12 @@
 					.attr(transpose ? 'x' : 'y', 0)
 					.attr('width', transpose ? cellHeight : cellWidth)
 					.attr('height', transpose ? cellWidth : cellHeight)
-					.attr('fill', function (d) {
+					.attr('fill', function (d, i) {
 						if (!Number.isFinite(d)) return theme.colors.gray[200];
 						const tokenIdx = this.parentNode.classList[1].split('-')[1];
 						return Number(tokenIdx) === highlightedIndex
 							? highlightColorScale(d)
-							: matrixColorScale(d);
+							: matrixColorScale(d, i);
 					});
 			}
 			if (shape === 'circle') {
@@ -159,80 +138,33 @@
 					.attr(transpose ? 'cy' : 'cx', (d, i) => cellWidth / 2 + i * cellWidth + i * colGap)
 					.attr(transpose ? 'cx' : 'cy', 0)
 					.attr('r', cellWidth / 2)
-					// .attr('stroke-width', 4)
 					.attr('stroke', (d) => (!Number.isFinite(d) ? 'none' : theme.colors.gray[200]))
-					.on('mouseover', function (event, d) {
+					.on('mouseenter', function (event, d) {
 						if (Number.isFinite(d)) {
 							showTooltip(event, d);
 							const currentColor = d3.select(this).attr('fill');
 							const darkerColor = d3.color(currentColor).darker(1);
-							d3.select(this).attr('fill', darkerColor);
+							d3.select(this).attr('stroke', darkerColor);
 						}
 					})
-					.on('mouseout', function (event, d) {
+					.on('mouseleave', function (event, d, i) {
 						hideTooltip();
 						if (Number.isFinite(d)) {
-							const tokenIdx = this.parentNode.classList[1].split('-')[1];
-							d3.select(this).attr(
-								'fill',
-								Number(tokenIdx) === highlightedIndex ? highlightColorScale(d) : matrixColorScale(d)
-							);
+							d3.select(this).attr('stroke', !Number.isFinite(d) ? 'none' : theme.colors.gray[200]);
 						}
 					})
 					.transition()
 					.duration(100)
-					.attr('fill', function (d) {
+					.attr('fill', function (d, i) {
 						if (!Number.isFinite(d)) return theme.colors.gray[200];
 						const tokenIdx = this.parentNode.classList[1].split('-')[1];
 						return Number(tokenIdx) === highlightedIndex
 							? highlightColorScale(d)
-							: matrixColorScale(d);
+							: matrixColorScale(d, i);
 					});
 			}
-
-			// if (showValue && cellWidth > 18) {
-			// 	rows
-			// 		.selectAll('text.cell-val-back')
-			// 		.data((d) => d.filter((d) => Number.isFinite(d)))
-			// 		.join('text')
-			// 		.attr('class', 'cell-text cell-val-back')
-			// 		.attr(transpose ? 'y' : 'x', (d, i) => i * cellWidth + i * colGap)
-			// 		.attr(transpose ? 'x' : 'y', 0)
-			// 		.attr('dy', 4)
-			// 		.attr('dx', cellWidth / 2)
-			// 		.text((d) => '.' + d.toFixed(2).split('.')[1])
-			// 		.style('stroke', 'white')
-			// 		.style('stroke-width', 1.5);
-
-			// 	rows
-			// 		.selectAll('text.cell-val')
-			// 		.data((d) => d.filter((d) => Number.isFinite(d)))
-			// 		.join('text')
-			// 		.attr('class', 'cell-text cell-val')
-			// 		.attr(transpose ? 'y' : 'x', (d, i) => i * cellWidth + i * colGap)
-			// 		.attr(transpose ? 'x' : 'y', 0)
-			// 		.attr('dy', 4)
-			// 		.attr('dx', cellWidth / 2)
-			// 		.text((d) => '.' + d.toFixed(2).split('.')[1])
-			// 		.style('fill', theme.colors.gray[800]);
-			// }
 		}
 	};
-
-	// const highlightRow = () => {
-	// 	const svg = d3.select(svgEl);
-	// 	svg
-	// 		.selectAll('rect.cell')
-	// 		.transition()
-	// 		.duration(400)
-	// 		.ease(d3.easeExpOut)
-	// 		.attr('fill', function (d) {
-	// 			if (!Number.isFinite(d)) return theme.colors.gray[100];
-
-	// 			const tokenIdx = this.parentNode.classList[1].split('-')[1];
-	// 			return Number(tokenIdx) === highlightedIndex ? highlightColorScale(d) : matrixColorScale(d);
-	// 		});
-	// };
 
 	$: if (data && svgEl) {
 		drawMatrixSvg(data);
@@ -244,17 +176,16 @@
 	let tooltipY = 0;
 
 	function showTooltip(event, d) {
-		tooltipData = `Value: ${d}`;
+		tooltipData = d.toFixed(2);
 		tooltipVisible = true;
 		const bbox = event.target.getBoundingClientRect();
+		console.log(event.target, bbox.leftOffset);
 		tooltipX = bbox.x + bbox.width / 2;
-		tooltipY = bbox.y - 10; // Adjust this value to position the tooltip above the circle
-
-		// You can adjust the position of the tooltip here if needed
+		tooltipY = bbox.y;
 	}
 
 	function hideTooltip() {
-		tooltipVisible = false;
+		// tooltipVisible = false;
 	}
 </script>
 
@@ -266,14 +197,20 @@
 		height={transpose ? svgWidth : svgHeight}
 	>
 	</svg>
-	{#if tooltipVisible}
-		<div class="tooltip" style="left: {tooltipX}px; top: {tooltipY}px;">
-			{tooltipData}
-		</div>
-	{/if}
 </div>
+{#if tooltipVisible}
+	<div
+		class="popover tooltip relative divide-gray-200 border border-gray-200 bg-white text-gray-500 shadow-md"
+		style="left: {tooltipX}px; top: {tooltipY}px;"
+	>
+		{tooltipData}
+		<div
+			class="arrow pointer-events-none absolute block h-[10px] w-[10px] rotate-45 border-b border-e border-inherit bg-inherit"
+		></div>
+	</div>
+{/if}
 
-<style>
+<style lang="scss">
 	:global(.cell-text) {
 		font-size: 0.6rem;
 		font-family: monospace;
@@ -281,13 +218,16 @@
 	}
 
 	.tooltip {
-		position: absolute;
-		background: #000;
-		color: #fff;
+		position: fixed;
 		padding: 5px;
-		border-radius: 3px;
 		pointer-events: none;
-		opacity: 0.8;
-		z-index: 1000;
+		transform: translate(-50%, calc(-100% - 8px));
+		font-family: monospace;
+		border-radius: 3px;
+
+		.arrow {
+			left: calc(50% - 5px);
+			bottom: -5px;
+		}
 	}
 </style>

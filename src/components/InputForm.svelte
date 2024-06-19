@@ -9,13 +9,53 @@
 	import TokenGenerator from './TokenGenerator.svelte';
 
 	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
-	import { inputText, selectedModel } from '~/store';
+	import {
+		inputText,
+		selectedModel,
+		modelData,
+		isModelRunning,
+		temperature,
+		predictedToken,
+		inputTextExample,
+		isFetchingModel
+	} from '~/store';
+	import { Spinner } from 'flowbite-svelte';
+	import LoadingDots from './LoadingDots.svelte';
+	import classNames from 'classnames';
 
-	$: inputTextTemp = $inputText;
+	let inputRef: HTMLDivElement;
+	let inputTextTemp = $inputText;
 
-	function handleSubmit() {
+	$: predictedTokenTemp = $predictedToken?.token || '';
+
+	const onFocusInput = (e) => {
+		// set predicted to empty
+		predictedTokenTemp = '';
+		//add predicted token to inputText
+		inputTextTemp = e.target?.textContent;
+	};
+
+	const onInput = (e) => {
+		const userInput = e.target?.querySelector('.user-input');
+		inputTextTemp = userInput.innerText;
+	};
+
+	const handleSubmit = (e) => {
+		// set predicted to empty
+		predictedTokenTemp = '';
+		// add predicted token to inputText
+		inputTextTemp = inputRef?.textContent || '';
+
 		inputText.set(inputTextTemp);
-	}
+	};
+
+	const handleKeyDown = (e) => {
+		if (e.key === 'Enter') {
+			handleSubmit(e);
+		}
+	};
+
+	$: disabled = $isFetchingModel || $isModelRunning;
 </script>
 
 <div class="input-area flex flex-shrink-0 gap-4 p-1.5 px-5">
@@ -34,38 +74,135 @@
 	<div class="flex flex-1 items-center gap-1 whitespace-nowrap">
 		<form class=" flex w-full items-center gap-2">
 			<ButtonGroup class="w-full grow" size="sm">
-				<Button
-					size="xs"
-					color="none"
-					class="flex-shrink-0 border border-gray-300 bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-inset focus:ring-gray-300 dark:border-gray-700 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-800"
+				<button
+					class="select-button inline-flex items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
 				>
-					Select Example<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
-				</Button>
+					Example<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+				</button>
 				<Dropdown>
-					<DropdownItem>test1</DropdownItem>
-					<DropdownItem>test2</DropdownItem>
-					<DropdownItem>test3</DropdownItem>
-					<DropdownItem>test4</DropdownItem>
+					{#each inputTextExample as text}
+						<DropdownItem>{text}</DropdownItem>
+					{/each}
 				</Dropdown>
-				<Input
-					id="input"
-					class="focus:border-none focus:ring-2 focus:ring-inset focus:ring-gray-300"
-					size="sm"
-					placeholder="Test your own input text"
-					bind:value={inputTextTemp}
-				/>
+				<div class="input-container relative">
+					<div
+						bind:this={inputRef}
+						contenteditable={!disabled}
+						class="input-box"
+						placeholder="Test your own input text"
+						on:focus={onFocusInput}
+						on:input={onInput}
+						on:keydown={handleKeyDown}
+						role="input"
+					>
+						<span class="user-input">{inputTextTemp}</span><span class="predicted"
+							>{predictedTokenTemp}</span
+						>
+					</div>
+					{#if disabled}
+						<div class="loading"><LoadingDots /></div>
+					{/if}
+					{#if $isFetchingModel}
+						<span class="helper-text">Loading GPT-2 model, please wait a moment...</span>{/if}
+				</div>
 			</ButtonGroup>
-			<TokenGenerator {handleSubmit} />
-			<!-- <Button
-				color="blue"
-				class="!p-1.5 focus:ring-inset"
+			<button
+				{disabled}
+				class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
+					disabled,
+					active: !disabled
+				})}
 				type="submit"
-				size="sm"
 				on:click={handleSubmit}
 			>
 				Generate
-			</Button> -->
+			</button>
 		</form>
 	</div>
 	<Temperature />
 </div>
+
+<style lang="scss">
+	.predicted {
+		color: red;
+	}
+	:global(.select-button) {
+		flex-shrink: 0;
+		border: 1px solid theme('colors.gray.300');
+		// background-color: theme('colors.gray.50');
+		color: theme('colors.gray.900');
+		&:hover {
+			background-color: theme('colors.gray.200');
+		}
+		&:focus {
+			outline: none;
+		}
+	}
+	.input-container {
+		display: flex;
+		flex: 1 0 0;
+		align-items: center;
+
+		border: 1px solid theme('colors.gray.300');
+		color: theme('colors.gray.900');
+		border-left: none;
+		border-start-end-radius: 0.5rem;
+		border-end-end-radius: 0.5rem;
+		font-size: 0.9rem;
+		line-height: 1rem;
+		padding: 0.5rem;
+		width: 100%;
+
+		white-space: pre-wrap;
+		gap: 0.3rem;
+		.input-box {
+			// flex: 1 0 0;
+			white-space: nowrap;
+			&:focus {
+				outline: none;
+			}
+		}
+
+		input {
+			width: 100%;
+		}
+		.loading {
+			flex-shrink: 0;
+		}
+		.predicted {
+			color: var(--predicted-color);
+			font-weight: 600;
+		}
+	}
+	.helper-text {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		transform: translate(0, calc(100% + 4px));
+		color: theme('colors.gray.400');
+		font-size: 0.8rem;
+	}
+	:global(.generate-button) {
+		padding: 0.4rem 0.8rem;
+		border: 1px solid theme('colors.gray.300');
+		color: theme('colors.gray.900');
+		transition: all 0.2s;
+	}
+	:global(.generate-button.active) {
+		&:hover {
+			border: 1px solid var(--predicted-color);
+			color: var(--predicted-color);
+		}
+	}
+	:global(.generate-button.disabled) {
+		opacity: 1;
+		background-color: theme('colors.gray.100');
+		color: theme('colors.gray.400');
+		cursor: not-allowed;
+	}
+
+	:global(.generate-button):focus {
+		border: 1px solid var(--predicted-color);
+		color: var(--predicted-color);
+	}
+</style>
