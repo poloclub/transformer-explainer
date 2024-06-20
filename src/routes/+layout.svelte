@@ -25,9 +25,9 @@
 
 <style lang="scss">
 	#app {
-		height: 100vh;
+		// height: 100vh;
 		min-width: 900px;
-		overflow: hidden;
+		// overflow: hidden;
 	}
 
 	header {
