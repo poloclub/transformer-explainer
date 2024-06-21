@@ -331,6 +331,7 @@
 				</div>
 				<div class="size">({tokenLen}, {$modelMeta.dimension * 3})</div>
 			</div>
+
 		</div>
 	</div>
 </Card>
