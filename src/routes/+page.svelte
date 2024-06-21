@@ -41,7 +41,7 @@
 		const chunkNum = 63;
 		const chunkUrls = Array(chunkNum)
 			.fill(0)
-			.map((d, i) => `${base}/gpt2.onnx.part${i}`);
+			.map((d, i) => `${base}/model/gpt2.onnx.part${i}`);
 
 		const mergedArray = await mergeChunks(chunkUrls);
 
@@ -214,6 +214,7 @@
 	}
 
 	:global(.step .title.expandable) {
+		cursor: pointer;
 		&:hover {
 			color: theme('colors.gray.600');
 		}

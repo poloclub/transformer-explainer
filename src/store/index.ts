@@ -7,6 +7,9 @@ const { theme } = resolveConfig(tailwindConfig);
 export const selectedExampleIdx = writable<number>(0);
 export const inputTextExample = [
 	'Data visualization empowers users to',
+	'As the ship was approaching the',
+	'On the deserted planet they discovered a',
+	'On a warm Saturday morning, we',
 	'Artificial Intelligence is transforming the',
 	'IEEE VIS conference highlights the',
 	'Neural networks can learn to',

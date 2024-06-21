@@ -3,6 +3,7 @@
 	import '~/styles/global.scss';
 	import Topbar from '~/components/Topbar.svelte';
 	import { predictedColor, rootRem } from '~/store';
+	import Article from '~/components/article/Article.svelte';
 
 	let topBarHeight = 0;
 
@@ -26,7 +27,9 @@
 			<slot />
 		</main>
 	</div>
-	<div class="article h-[1000px] w-full bg-gray-200"></div>
+	<div class="article h-auto w-full bg-gray-200">
+		<!-- <Article></Article> -->
+	</div>
 	<!-- <footer></footer> -->
 </div>
 
@@ -34,12 +37,13 @@
 	#app {
 		height: 100vh;
 		min-width: 900px;
-		overflow: hidden;
+		// overflow: hidden;
 	}
 
 	#landing {
 		height: 100%;
 		width: 100%;
+	}
 
 	header {
 		min-width: var(--min-screen-width);
