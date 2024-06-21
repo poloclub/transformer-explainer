@@ -27,8 +27,8 @@
 			<slot />
 		</main>
 	</div>
-	<div class="article h-auto w-full bg-gray-200">
-		<!-- <Article></Article> -->
+	<div class="article h-auto w-full">
+		<Article></Article>
 	</div>
 	<!-- <footer></footer> -->
 </div>
@@ -37,7 +37,6 @@
 	#app {
 		height: 100vh;
 		min-width: 900px;
-		// overflow: hidden;
 	}
 
 	#landing {

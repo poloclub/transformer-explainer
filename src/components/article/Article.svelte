@@ -477,12 +477,12 @@
 				</div>
 
 				<div class="article-section">
-					<h1>Video Tutorial</h1>
+					<h2>Video Tutorial</h2>
 					<span class="attention">FUTURE_LINK_TO_YOUTUBE_TUTORIAL</span>
 				</div>
 
 				<div class="article-section">
-					<h1>How is Transformer Explainer implemented?</h1>
+					<h2>How is Transformer Explainer implemented?</h2>
 					<p>
 						Transformer Explainer features a live GPT-2 (small) model running directly in the
 						browser. This model is derived from the PyTorch implementation of GPT by Andrej
@@ -502,7 +502,7 @@
 				</div>
 
 				<div class="article-section">
-					<h1>Who developed the Transformer Explainer?</h1>
+					<h2>Who developed the Transformer Explainer?</h2>
 					<p>
 						Transformer Explainer was created by
 
@@ -570,8 +570,18 @@
 		color: theme('colors.purple.500');
 	}
 
+	.article-section {
+		padding-bottom: 2rem;
+	}
+	.architecture-section {
+		padding-top: 1rem;
+	}
+	.article-subsection {
+		// padding-bottom: 1rem;
+	}
+
 	#description {
-		margin-bottom: 60px;
+		padding-bottom: 3rem;
 		margin-left: auto;
 		margin-right: auto;
 		max-width: 78ch;
@@ -579,39 +589,35 @@
 
 	#description h1 {
 		color: theme('colors.purple.700');
-		font-size: 36px;
+		font-size: 2.3rem;
 		font-weight: 300;
-		margin-bottom: 12px;
-		margin-top: 20px;
+		padding-top: 1rem;
 	}
 
 	#description h2 {
 		// color: #444;
 		color: theme('colors.purple.700');
-		font-size: 34px;
-		font-weight: 150;
-		margin-bottom: 12px;
-		margin-top: 20px;
+		font-size: 2rem;
+		font-weight: 300;
+		padding-top: 1rem;
 	}
 
 	#description h3 {
-		color: #444;
-		font-size: 30px;
+		color: theme('colors.gray.700');
+		font-size: 1.6rem;
 		font-weight: 200;
-		margin-bottom: 12px;
-		margin-top: 15px;
+		padding-top: 1rem;
 	}
 
 	#description h4 {
-		color: #444;
-		font-size: 24px;
+		color: theme('colors.gray.700');
+		font-size: 1.6rem;
 		font-weight: 200;
-		margin-bottom: 8px;
-		margin-top: 15px;
+		padding-top: 1rem;
 	}
 
 	#description p {
-		margin: 16px 0;
+		margin: 1rem 0;
 	}
 
 	#description p img {
@@ -619,32 +625,32 @@
 	}
 
 	#description .figure-caption {
-		font-size: 13px;
-		margin-top: 5px;
+		font-size: 0.8rem;
+		margin-top: 0.5rem;
 		text-align: center;
+		margin-bottom: 2rem;
 	}
 
 	#description ol {
-		margin-left: 40px;
+		margin-left: 3rem;
 		list-style-type: decimal;
 	}
 
 	#description li {
-		margin-bottom: 10px;
-		margin-top: 10px;
+		margin: 0.6rem 0;
 	}
 
 	#description p,
 	#description div,
 	#description li {
-		color: #555;
+		color: theme('colors.gray.600');
 		// font-size: 17px;
-		font-size: 15px;
+		// font-size: 15px;
 		line-height: 1.6;
 	}
 
 	#description small {
-		font-size: 12px;
+		font-size: 0.8rem;
 	}
 
 	#description ol li img {
@@ -652,7 +658,7 @@
 	}
 
 	#description .video-link {
-		color: #3273dc;
+		color: theme('colors.blue.600');
 		cursor: pointer;
 		font-weight: normal;
 		text-decoration: none;
@@ -660,8 +666,8 @@
 
 	#description ul {
 		list-style-type: disc;
-		margin-left: 40px;
-		margin-bottom: 15px;
+		margin-left: 2.5rem;
+		margin-bottom: 1rem;
 	}
 
 	#description a:hover,
