@@ -43,7 +43,7 @@
 				href="https://www.deeplearning.ai/the-batch/reinforcement-learning-plus-transformers-equals-efficiency/"
 				title="Deep Learning AI"
 				target="_blank">game playing</a
-			>, demonstrating their versatility across numerous domains.
+			>, demonstrating its versatility across numerous domains.
 		</p>
 		<p>
 			Fundamentally, text-generative Transformer models operate on the principle of <strong
@@ -59,7 +59,7 @@
 			<a href="https://huggingface.co/openai-community/gpt2" title="Hugging Face" target="_blank"
 				>GPT-2</a
 			>
-			(small) model which has 124 million parameter. While it is not the latest or most powerful Transformer
+			(small) model which has 124 million parameters. While it is not the latest or most powerful Transformer
 			model, it shares many of the same architectural components and principles found in the current
 			state-of-the-art models making it an ideal starting point for understanding the basics.
 		</p>
@@ -116,7 +116,7 @@
 				<img src="./static/article_assets/embedding.png" width="60%" height="60%" align="middle" />
 			</div>
 			<div class="figure-caption">
-				Figure <span class="attention">X</span>. Expanding the Embedding layer view, showing how the
+				Figure <span class="attention">1</span>. Expanding the Embedding layer view, showing how the
 				input prompt is converted to a vector representation. The process involves
 				<span class="fig-numbering">(1)</span> Tokenization, (2) Token Embedding, (3) Positional Encoding,
 				and (4) Final Embedding.
@@ -140,7 +140,7 @@
 				<p>
 					GPT-2 Small represents each token in the vocabulary as a 768-dimensional vector; the
 					dimension of the vector depends on the model. These embedding vectors are stored in a
-					matrix of shape <code>(50,257, 768)</code>, containing approximately 39 million
+					matrix of shape <code>(50, 257, 768)</code>, containing approximately 39 million
 					parameters! This extensive matrix allows the model to assign semantic meaning to each
 					token.
 				</p>
@@ -148,7 +148,7 @@
 			<div class="article-subsection">
 				<h3>Step 3. Positional Encoding</h3>
 				<p>
-					The embedding layer also encodes information about each token's position in the input
+					The Embedding layer also encodes information about each token's position in the input
 					prompt. Different models use various methods for positional encoding. GPT-2 trains its own
 					positional encoding matrix from scratch, integrating it directly into the training
 					process.
@@ -211,7 +211,7 @@
 
 			<p>
 				The core of the Transformer's processing lies in the Transformer block, which comprises
-				multi-head self-attention and a Multi-Layer Perceptron layers. Most models consist of
+				multi-head self-attention and a Multi-Layer Perceptron layer. Most models consist of
 				multiple such blocks that are stacked sequentially one after the other. The token
 				representations evolve through layers, from the first block to the 12th one, allowing the
 				model to build up an intricate understanding of each token. This layered approach leads to
@@ -232,7 +232,7 @@
 						<img src="static/article_assets/QKV.png" width="80%" align="middle" />
 					</div>
 					<div class="figure-caption">
-						Figure <span class="attention">X</span>. Computing Query, Key, and Value matrices from
+						Figure <span class="attention">2</span>. Computing Query, Key, and Value matrices from
 						the original embedding.
 					</div>
 
@@ -255,11 +255,11 @@
 						</li>
 						<li>
 							<strong class="k-color font-medium">Key (K)</strong> is the title of each web page in the
-							search resul window. It represents the possible tokens the query can attend to.
+							search result window. It represents the possible tokens the query can attend to.
 						</li>
 						<li>
 							<strong class="v-color font-medium">Value (V)</strong> is the actual content of web pages
-							shown. Once we matched the appropriate search term (Query) with the relevant results (Keys),
+							shown. Once we matched the appropriate search term (Query) with the relevant results (Key),
 							we want to get the content (Value) of the most relevant pages.
 						</li>
 					</ul>
@@ -279,7 +279,7 @@
 						<img src="static/article_assets/attention.png" width="80%" align="middle" />
 					</div>
 					<div class="figure-caption">
-						Figure <span class="attention">X</span>. Using Query, Key, and Value matrices to
+						Figure <span class="attention">3</span>. Using Query, Key, and Value matrices to
 						calculate masked self-attention.
 					</div>
 
@@ -323,7 +323,7 @@
 						<img src="static/article_assets/mlp.png" width="70%" align="middle" />
 					</div>
 					<div class="figure-caption">
-						Figure <span class="attention">X</span>. Using MLP layer to project the self-attention
+						Figure <span class="attention">4</span>. Using MLP layer to project the self-attention
 						representations into higher dimensions to enhance the model's representational capacity.
 					</div>
 
@@ -335,8 +335,8 @@
 						transformation increases the dimensionality of the input four-fold from <code>768</code>
 						to <code>3072</code>. The second linear transformation reduces the dimensionality back
 						to the original size of <code>768</code>, ensuring that the subsequent layers receive
-						inputs of consistent dimensions. Unlile the self-attention mechanis, the MLP processes
-						tokens independently and simply maps them from one representation to another.
+						inputs of consistent dimensions. Unlike the self-attention mechanism, the MLP processes
+						tokens independently and simply map them from one representation to another.
 					</p>
 				</div>
 
@@ -357,7 +357,7 @@
 						<img src="static/article_assets/softmax.png" width="60%" align="middle" />
 					</div>
 					<div class="figure-caption">
-						Figure <span class="attention">X</span>. Each token in the vocabulary is assigned a
+						Figure <span class="attention">5</span>. Each token in the vocabulary is assigned a
 						probability based on the model's output logits. These probabilities determine the
 						likelihood of each token being the next word in the sequence.
 					</div>
@@ -415,7 +415,7 @@
 							It works by normalizing the inputs across the features, ensuring that the mean and
 							variance of the activations are consistent. This normalization helps mitigate issues
 							related to internal covariate shift, allowing the model to learn more effectively and
-							reducing the sensitivity to the initial weights. Layer Norm is applied twice in each
+							reducing the sensitivity to the initial weights. Layer Normalization is applied twice in each
 							Transformer block, once before the self-attention mechanism and once before the MLP
 							layer.
 						</p>
@@ -425,7 +425,7 @@
 
 						<p>
 							Dropout is a regularization technique used to prevent overfitting in neural networks
-							by randomly setting a fraction of model wights to zero during training. This
+							by randomly setting a fraction of model weights to zero during training. This
 							encourages the model to learn more robust features and reduces dependency on specific
 							neurons, helping the network generalize better to new, unseen data. During model
 							inference, dropout is deactivated. This essentially means that we are using an
@@ -452,7 +452,7 @@
 				<div class="article-section">
 					<h1>Interactive Features</h1>
 					<p>
-						Transformer Explainer is built to be interactive and allow you to explore the inner
+						Transformer Explainer is built to be interactive and allows you to explore the inner
 						workings of the Transformer. Here are some of the interactive features you can play
 						with:
 					</p>
@@ -527,7 +527,7 @@
 <style lang="scss">
 	.attention {
 		// color: white;
-		background-color: theme('colors.red.200');
+		// background-color: theme('colors.red.200');
 	}
 
 	// .fig-numbering {

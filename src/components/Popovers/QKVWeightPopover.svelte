@@ -271,7 +271,7 @@
 					/>
 				</svg></button
 			>
-		{/if}
+		{/if}w
 	</div>
 	<div class="content">
 		<div class="weight-popover-content flex items-center justify-start">
@@ -283,7 +283,7 @@
 				</div>
 			</div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title self-end">Token Embedding</div>
+				<div class="title self-end">Embedding</div>
 				<!-- (tokenLen, 768) -->
 				<Matrix
 					className="token-embedding"
