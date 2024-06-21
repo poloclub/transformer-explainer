@@ -20,7 +20,7 @@
 	{placement}
 	arrow={false}
 	transition={fade}
-	params={{ duration: 100 }}
+	params={{ duration: 0 }}
 >
 	<div class="activation-content">
 		The GELU (Gaussian Error Linear Unit) activation function combines linear and non-linear

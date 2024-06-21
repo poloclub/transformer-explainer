@@ -14,15 +14,27 @@
 
 <Popover
 	class={classNames('popover residual-popover text-sm', className)}
-	title="Residual"
+	title="Residual Connection"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
 	arrow={false}
 	transition={fade}
-	params={{ duration: 100 }}
+	params={{ duration: 0 }}
 	{reference}
 >
-	<div class="residual-content">Residual out is</div></Popover
+	<div class="residual-content">
+		A shortcut that facilitates the flow of information by adding the input of a layer to its
+		output, allowing important information to skip the layer and preventing its loss.
+	</div></Popover
 >
+
+<style lang="scss">
+	:global(.residual-popover) {
+		width: 20rem !important;
+		.residual-content {
+			font-size: 0.8rem;
+		}
+	}
+</style>

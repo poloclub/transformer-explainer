@@ -33,20 +33,6 @@
 		MLP
 	</div>
 	<div class="content relative">
-		<Tooltip
-			triggeredBy=".mlp .first-layer .vector"
-			placement="right"
-			class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
-		>
-		<Tooltip triggeredBy=".mlp .out .vector" placement="right" class="popover text-sm font-light"
-			>size(1, {$modelMeta.dimension})</Tooltip
-		>
-		<Tooltip
-			triggeredBy=".mlp .projections .vector"
-			placement="right"
-			class="popover text-sm font-light">size(1, {$modelMeta.dimension * 4})</Tooltip
-		>
-
 		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>
 		<div class="bounding mlp-bounding" class:active={isHovered}></div>
 		<div class="layer first-layer flex">
@@ -70,6 +56,7 @@
 							<div class="sub-vector head-rest grow"></div>
 						</div>
 					</div>
+					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				{/each}
 			</div>
 			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
@@ -89,11 +76,19 @@
 								<VectorCanvas colorScale="indigo" />
 							</div>
 						</div>
+						<Tooltip placement="right" class="popover">vector({$modelMeta.dimension * 4})</Tooltip>
 					{/each}
 				</div>
 				<OperationGroup type="activation" id={'mlp-activation'} className="x4" />
 			</div>
 			<div class="ouputs flex">
+				<div class="column out-label">
+					{#each $tokens as token, index}
+						<div class="cell" class:last={index === $tokens.length - 1}>
+							<span class="label float">{token}</span>
+						</div>
+					{/each}
+				</div>
 				<OperationGroup type="residual-end" id={'residual-second'} />
 				<OperationGroup type="ln" id={'mlp-second-ln'} />
 				<div class="column out">
@@ -103,6 +98,7 @@
 								<VectorCanvas colorScale="blue" />
 							</div>
 						</div>
+						<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 					{/each}
 				</div>
 			</div>
@@ -127,16 +123,24 @@
 		}
 		.content {
 			display: grid;
-			grid-template-columns: repeat(2, minmax(3vw, 1fr));
+			grid-template-columns: repeat(4, minmax(var(--min-column-width), 1fr));
 
 			.layer {
-				grid-column: span 1;
+				grid-column: span 2;
 			}
 			.tokens.initial .token {
 				/* gap: 0.6rem; */
 			}
 
 			.column.activation {
+			}
+		}
+		.column.out-label {
+			.label {
+				opacity: 0;
+			}
+			.last .label {
+				opacity: 1;
 			}
 		}
 	}

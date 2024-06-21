@@ -3,13 +3,14 @@
 	import { writable } from 'svelte/store';
 	import HelpPopover from './HelpPopover.svelte';
 
+	export let disabled: boolean = false;
 	const hoveredIndex = writable(null);
 
 	// TEMPERATURE
-	let temperatureIndex = 10; // Default to the value corresponding to 1.0 in the array
+	let temperatureIndex = 8; // Default to the value corresponding to 1.0 in the array
 	const temperatureArray = [
-		0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
-		10.0
+		// 0.05, 0.1, // error in Math.exp()
+		0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0
 	];
 	const ticks = [0, temperatureArray.length - 1];
 
@@ -22,19 +23,24 @@
 		<div class="flex w-full shrink-0 items-center justify-between">
 			<div class="temperature-text flex items-center gap-[2px]">
 				<div>Temperature</div>
-				<HelpPopover id="temperature-help">This is temperature</HelpPopover>
+				<HelpPopover id="temperature-help" placement="right">This is temperature</HelpPopover>
 			</div>
 			<div class="temperature-value">
 				<p>{temperatureTemp}</p>
 			</div>
 		</div>
 		<input
+			{disabled}
 			class="slider"
 			type="range"
 			min={0}
 			max={temperatureArray.length - 1}
 			step={1}
 			bind:value={temperatureIndex}
+			on:click={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			}}
 		/>
 	</div>
 </div>
@@ -100,9 +106,13 @@
 			width: 12px;
 			height: 12px;
 			border-radius: 50%;
-			border: 1px solid theme('colors.gray.500');
+			border: 1px solid theme('colors.gray.400');
 			background: white;
 			cursor: pointer;
+		}
+		&:disabled::-webkit-slider-thumb {
+			background: theme('colors.gray.200');
+			cursor: not-allowed;
 		}
 	}
 </style>

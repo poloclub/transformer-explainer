@@ -17,7 +17,9 @@
 		temperature,
 		predictedToken,
 		inputTextExample,
-		isFetchingModel
+		isFetchingModel,
+		expandedBlock,
+		selectedExampleIdx
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
@@ -44,7 +46,7 @@
 		// set predicted to empty
 		predictedTokenTemp = '';
 		// add predicted token to inputText
-		inputTextTemp = inputRef?.textContent || '';
+		inputTextTemp = inputRef?.textContent?.trim() || '';
 
 		inputText.set(inputTextTemp);
 	};
@@ -55,10 +57,20 @@
 		}
 	};
 
-	$: disabled = $isFetchingModel || $isModelRunning;
+	let dropdownOpen = false;
+	const onSelectExample = (d, i) => {
+		dropdownOpen = false;
+		inputTextTemp = d;
+		predictedTokenTemp = '';
+		inputText.set(d.trim());
+		selectedExampleIdx.set(i);
+	};
+
+	$: isLoading = $isFetchingModel || $isModelRunning;
+	$: disabled = $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
 </script>
 
-<div class="input-area flex flex-shrink-0 gap-4 p-1.5 px-5">
+<div class="input-area flex flex-shrink-0">
 	<!-- <div class="flex items-center gap-1 whitespace-nowrap"> -->
 	<!-- <Label>Model</Label> -->
 	<!-- <Select
@@ -75,16 +87,23 @@
 		<form class=" flex w-full items-center gap-2">
 			<ButtonGroup class="w-full grow" size="sm">
 				<button
+					type="button"
+					{disabled}
+					class:disabled
 					class="select-button inline-flex items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
 				>
-					Example<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+					Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
 				</button>
-				<Dropdown>
-					{#each inputTextExample as text}
-						<DropdownItem>{text}</DropdownItem>
+				<Dropdown placement="bottom-start" bind:open={dropdownOpen}>
+					{#each inputTextExample as text, index}
+						<DropdownItem
+							on:click={() => {
+								onSelectExample(text, index);
+							}}>{text}</DropdownItem
+						>
 					{/each}
 				</Dropdown>
-				<div class="input-container relative">
+				<div class="input-container relative" class:disabled>
 					<div
 						bind:this={inputRef}
 						contenteditable={!disabled}
@@ -99,11 +118,13 @@
 							>{predictedTokenTemp}</span
 						>
 					</div>
-					{#if disabled}
+					{#if isLoading}
 						<div class="loading"><LoadingDots /></div>
 					{/if}
 					{#if $isFetchingModel}
-						<span class="helper-text">Loading GPT-2 model, please wait a moment...</span>{/if}
+						<span class="helper-text"
+							>Try the examples while GPT-2 model is being downloaded (600MB)</span
+						>{/if}
 				</div>
 			</ButtonGroup>
 			<button
@@ -119,23 +140,31 @@
 			</button>
 		</form>
 	</div>
-	<Temperature />
+	<Temperature disabled={isLoading} />
 </div>
 
 <style lang="scss">
+	.input-area {
+		gap: 1rem;
+		padding-left: 1rem;
+		padding-right: 1.25rem;
+	}
 	.predicted {
 		color: red;
 	}
-	:global(.select-button) {
+	.select-button {
 		flex-shrink: 0;
 		border: 1px solid theme('colors.gray.300');
 		// background-color: theme('colors.gray.50');
 		color: theme('colors.gray.900');
 		&:hover {
-			background-color: theme('colors.gray.200');
+			background-color: theme('colors.gray.100');
 		}
 		&:focus {
 			outline: none;
+		}
+		&.disabled {
+			cursor: not-allowed;
 		}
 	}
 	.input-container {
@@ -162,7 +191,9 @@
 				outline: none;
 			}
 		}
-
+		&.disabled {
+			cursor: not-allowed;
+		}
 		input {
 			width: 100%;
 		}

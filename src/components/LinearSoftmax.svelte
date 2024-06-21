@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Tooltip } from 'flowbite-svelte';
-	import { setContext, getContext } from 'svelte';
+	import { setContext, getContext, onMount } from 'svelte';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick } from 'svelte';
@@ -16,6 +16,7 @@
 		modelData
 	} from '~/store';
 	import ProbabilityBars from './ProbabilityBars.svelte';
+	import Katex from '~/utils/Katex.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -27,6 +28,7 @@
 
 	let isSoftmaxExpanded = false;
 
+	// event handling
 	$: if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
 		isSoftmaxExpanded = false;
 		collapseSoftmax();
@@ -36,33 +38,57 @@
 		if (!isSoftmaxExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandSoftmax();
+		}
+	};
+
+	const onClickSoftmaxTitle = (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		if (!isSoftmaxExpanded) {
+			expandedBlock.set({ id: blockId });
+			expandSoftmax();
 		} else {
 			expandedBlock.set({ id: null });
 			collapseSoftmax();
 		}
 	};
+	let expandableEl: HTMLDivElement;
 
+	function handleOutsideClick(e) {
+		if (isSoftmaxExpanded && !expandableEl.contains(e.target)) {
+			expandedBlock.set({ id: null });
+		}
+	}
+	onMount(() => {
+		document.body.addEventListener('click', handleOutsideClick);
+		return () => {
+			document.body.removeEventListener('click', handleOutsideClick);
+		};
+	});
+
+	// animation
 	let containerState: any;
+
+	let drawBars: () => void;
 
 	const expandSoftmax = async () => {
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = true;
 		await tick();
 
-		const main = document.getElementById('main');
-		main.style.justifyContent = 'end';
-		await tick();
+		gsap.set('.steps', { justifyContent: 'end' });
+		gsap.set('.softmax-detail', { opacity: 0 });
 
 		Flip.from(containerState, {
-			duration: 1,
-			ease: 'power2.inOut'
-			// onStart: () => {
-			// 	drawBars();
-			// }
+			duration: 0.5,
+			ease: 'power2.inOut',
+			onComplete: () => {
+				drawBars?.();
+			}
 		});
 		gsap.to('.softmax-detail', {
 			opacity: 1,
-			duration: 0.5,
+			duration: 0.2,
 			delay: 0.5
 		});
 	};
@@ -74,28 +100,28 @@
 
 		await Flip.from(containerState, {
 			duration: 0.5,
-			ease: 'power2.inOut'
-			// onComplete: () => {
-			// 	drawBars();
-			// }
+			ease: 'power2.inOut',
+			onComplete: () => {
+				drawBars?.();
+			}
 		});
 		gsap.to('.softmax-detail', {
 			opacity: 0,
-			duration: 0.5
+			duration: 0.2
 		});
 
-		await tick();
-		const main = document.getElementById('main');
-		main.style.justifyContent = 'start';
+		gsap.set('.steps', { justifyContent: 'start' });
 	};
 
-	let rowHeight = rootRem * 1.2;
-	let rowGap = 0.4 * rootRem;
+	let rowHeight = rootRem * 1.4;
+	let rowGap = 0.5 * rootRem;
+
 	let hoveredIndex: number | null = null;
 
 	$: data = $modelData?.prediction || [];
 	$: tokenIds = data?.map((d) => d.tokenId);
-	$: logits = data?.map((d) => d.adjustedLogit) || [];
+	// $: logits = data?.map((d) => d.adjustedLogit) || [];
+	$: logits = data?.map((d) => d.logit) || [];
 	$: exponents = data?.map((d) => d.adjustedExp) || [];
 
 	let isHovered = false;
@@ -110,22 +136,24 @@
 </script>
 
 <div
-	class={classNames('softmax', className)}
-	role="button"
+	class={classNames('softmax', className, { expanded: isSoftmaxExpanded })}
+	role="none"
+	bind:this={expandableEl}
 	on:click={onClickSoftmax}
 	on:keydown={onClickSoftmax}
-	tabindex="0"
 >
 	<div
 		class="title expandable"
+		role="none"
+		on:click={onClickSoftmaxTitle}
+		on:keydown={onClickSoftmaxTitle}
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
-		role="group"
 	>
 		<div>Probabilities</div>
 	</div>
 	<div
-		class="content relative"
+		class="content resize-watch relative"
 		style={`--softmax-row-height: ${rowHeight}px;--softmax-row-gap: ${rowGap}px`}
 	>
 		<div class="bounding softmax-bounding" class:active={isHovered && !isSoftmaxExpanded}></div>
@@ -141,17 +169,17 @@
 						class:sample_highlight={$highlightedIndex === idx}
 						class:final_token_highlight={$predictedToken?.rank === idx}
 					>
-						{item.token}
+						<span>{item.token.trim() === '' ? '\u00A0' : item.token}</span>
+						<Tooltip class="popover" placement="left" type="light">
+							Token ID: <span class="number">{tokenIds[idx]}</span>
+						</Tooltip>
 					</div>
-					<Tooltip class="text-xs" placement="left" type="light">
-						Token ID: {tokenIds[idx]}
-					</Tooltip>
 				{/each}
 			</div>
 			<div class="vector vocab opacity-1 w-0"></div>
 		</div>
 
-		<div class="resize-watch second-column flex flex-col">
+		<div class="second-column flex flex-col">
 			{#if isSoftmaxExpanded}
 				<div class="softmax-subtitle softmax-detail flex text-center text-xs opacity-0">
 					<div class="title-box token-string !justify-end">
@@ -159,12 +187,23 @@
 					</div>
 					<div class="title-box logits">
 						<div class="title-text">Logits</div>
+						<Tooltip class="popover tooltip"
+							><Katex math={'\\text{logits} = \\text{hidden state} \\times \\text{LM Head Weights}'}
+							></Katex></Tooltip
+						>
 					</div>
 					<div class="title-box exponents">
 						<div class="title-text">Exponents</div>
+						<Tooltip class="popover tooltip"
+							><Katex math={'e^{logit_i / temperature}'}></Katex></Tooltip
+						>
 					</div>
 					<div class="title-box probability">
-						<div class="title-text">Probability</div>
+						<div class="title-text">Softmax</div>
+						<Tooltip class="popover tooltip">
+							<Katex math={'\\frac{e^{\\text{logit}_i / T}}{\\sum_{j} e^{\\text{logit}_j / T}}'}
+							></Katex>
+						</Tooltip>
 					</div>
 				</div>
 			{/if}
@@ -183,10 +222,11 @@
 										class:sample_highlight={$highlightedIndex === idx}
 										class:final_token_highlight={$predictedToken?.rank === idx}
 									>
-										{logit.toFixed(2)}
+										<span class="number">{logit.toFixed(2)}</span>
 									</div>
-									<Tooltip class="text-xs" placement="left" type="light">
-										{(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)}
+									<Tooltip class="popover" placement="left" type="light">
+										<Katex math={`\\text{logit}_{${tokenIds[idx]}}`}></Katex>
+										<!-- {(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)} -->
 									</Tooltip>
 								{/if}
 							{/each}
@@ -202,7 +242,7 @@
 									class:sample_highlight={$highlightedIndex === idx}
 									class:final_token_highlight={$predictedToken?.rank === idx}
 								>
-									{exponent.toExponential(2)}
+									<span class="number">{exponent.toExponential(2)}</span>
 
 									<!-- {#if exponent > 100000}
 										{exponent.toExponential(2)}
@@ -212,163 +252,162 @@
 										{exponent.toFixed(0)}
 									{/if} -->
 								</div>
-								<Tooltip class="text-xs" placement="left" type="light">
-									exp({logits[idx].toFixed(2)}) = {exponent.toFixed(2)}
+								<Tooltip class="popover" placement="left" type="light">
+									<Katex math={`e^{${logits[idx]?.toFixed(2)} / ${$temperature}}`}></Katex>
+									<!-- exp({logits[idx].toFixed(2)}) = {exponent.toExponential(2)} -->
 								</Tooltip>
 							{/each}
 						</div>
 					{/if}
 				</div>
-				<ProbabilityBars bind:hoveredIndex {rowGap} {rowHeight} />
+				<ProbabilityBars bind:hoveredIndex {rowGap} {rowHeight} bind:drawBars />
 			</div>
-			<!-- <div class="dim"></div> -->
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
-	.content {
-		.softmax-bounding {
-			top: -0.5rem;
-			padding: 0.5rem 0;
-			left: -5rem;
-			width: calc(100% + 3rem);
-			height: 100%;
+	.softmax {
+		&.expanded {
+			.title,
+			.content {
+				z-index: 900;
+			}
 		}
 
-		// height: auto;
-		padding-right: 3rem;
-		display: grid;
-		grid-template-columns: 0 auto;
+		.content {
+			.softmax-bounding {
+				top: -0.5rem;
+				padding: 0.5rem 0;
+				left: -5rem;
+				width: calc(100% + 3rem);
+				height: 100%;
+			}
 
-		.content-box {
-			// position: absolute;
-			flex-shrink: 0;
-			display: flex;
-			flex-direction: column;
-			color: theme('colors.gray.500');
-			gap: var(--softmax-row-gap);
+			// height: auto;
+			padding-right: 3rem;
+			display: grid;
+			grid-template-columns: 0 auto;
 
-			.text-box {
-				text-align: right;
-				font-size: 0.8rem;
-				padding-right: 4px;
+			.content-box {
+				// position: absolute;
+				flex-shrink: 0;
 				display: flex;
-				justify-content: center;
-				align-items: center;
-				width: 100%;
+				flex-direction: column;
+				color: theme('colors.gray.400');
+				gap: var(--softmax-row-gap);
 
-				&.highlight {
-					color: theme('colors.blue.600');
-					cursor: pointer;
-					transition: background-color 0.2s;
+				span.number {
+					font-family: monospace;
+					font-size: 0.8rem;
 				}
 
-				&.sample_highlight {
-					color: white;
-					background-color: theme('colors.blue.300');
-				}
+				.text-box {
+					flex-shrink: 0;
+					text-align: right;
+					font-size: 0.9rem;
+					padding-right: 4px;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					width: 100%;
+					height: var(--softmax-row-height);
 
-				&.final_token_highlight {
-					color: var(--predicted-color);
-					font-weight: 600;
-					// background-color: theme('colors.blue.200');
-					transition: background-color 1s;
+					&.highlight {
+						color: theme('colors.purple.600');
+						cursor: pointer;
+						transition: background-color 0.2s;
+					}
+
+					&.sample_highlight {
+						color: white;
+						background-color: theme('colors.purple.400');
+					}
+
+					&.final_token_highlight {
+						color: var(--predicted-color);
+						font-weight: 600;
+						// background-color: theme('colors.blue.200');
+						transition: background-color 1s;
+					}
+				}
+			}
+
+			.second-column {
+				padding-left: 2px;
+			}
+
+			.content-row {
+				.vector-box {
+					background-color: theme('colors.gray.50');
+					border-right: 1px solid theme('colors.gray.200');
+					border-left: 1px solid theme('colors.gray.200');
+				}
+			}
+
+			.token-string {
+				width: 6rem;
+				z-index: 201;
+
+				.text-box {
+					justify-content: end;
+
+					span {
+					}
+				}
+			}
+			.logits {
+				width: 6rem;
+				// z-index: 200;
+			}
+			.exponents {
+				width: 6rem;
+				// z-index: 200;
+			}
+
+			.current {
+				transform: translateY(0);
+			}
+
+			.softmax-subtitle {
+				gap: 0.5rem;
+				position: absolute;
+				left: -6rem;
+				top: 0;
+				transform: translateY(calc(-100% - 1rem));
+
+				.title-box {
+					flex-shrink: 0;
+					display: flex;
+					justify-content: center;
+					border-radius: 0.5rem;
+					top: 0;
+
+					&:hover {
+						background-color: theme('colors.gray.50');
+					}
+
+					.title-text {
+						display: flex;
+						align-items: end;
+						color: theme('colors.gray.400');
+					}
 				}
 			}
 		}
 
 		.second-column {
-			padding-left: 2px;
-		}
+			position: relative;
 
-		.content-row {
-			.vector-box {
-				background-color: theme('colors.gray.50');
-				border-right: 1px solid theme('colors.gray.200');
-				border-left: 1px solid theme('colors.gray.200');
+			.dim {
+				position: absolute;
+				bottom: 0;
+				width: 100%;
+				height: 50vh;
+				z-index: 300;
+				background-color: white;
+				background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 70%);
 			}
-		}
-
-		.token-string {
-			width: 6rem;
-			z-index: 201;
-
-			.text-box {
-				justify-content: end;
-			}
-		}
-		.logits {
-			width: 6rem;
-			z-index: 200;
-		}
-		.exponents {
-			width: 6rem;
-			z-index: 200;
-		}
-
-		button {
-			&:hover {
-				background-color: #f8fafc;
-			}
-
-			span {
-				// font-size: 12px;
-				font-size: 0.75rem;
-				line-height: 20px;
-			}
-		}
-		.current {
-			transform: translateY(0);
-		}
-
-		.hyperparams {
-			height: 100px;
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
-			gap: 1rem;
-		}
-
-		.softmax-subtitle {
-			gap: 0.5rem;
-			position: absolute;
-			left: -6rem;
-			top: 0;
-			transform: translateY(calc(-100% - 1rem));
-
-			.title-box {
-				flex-shrink: 0;
-				display: flex;
-				justify-content: center;
-				border-radius: 0.5rem;
-				top: 0;
-
-				&:hover {
-					background-color: theme('colors.gray.50');
-				}
-
-				.title-text {
-					display: flex;
-					align-items: end;
-					color: theme('colors.gray.400');
-				}
-			}
-		}
-	}
-
-	.second-column {
-		position: relative;
-
-		.dim {
-			position: absolute;
-			bottom: 0;
-			width: 100%;
-			height: 50vh;
-			z-index: 300;
-			background-color: white;
-			background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 70%);
 		}
 	}
 </style>

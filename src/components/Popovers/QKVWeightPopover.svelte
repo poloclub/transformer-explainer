@@ -1,22 +1,21 @@
 <script lang="ts">
-	import { Card, Popover } from 'flowbite-svelte';
-	import { QuestionCircleSolid, ChevronRightOutline } from 'flowbite-svelte-icons';
-	import { modelMeta, expandedBlock, tokens, inputText, rootRem, vectorHeight } from '~/store';
+	import { Card } from 'flowbite-svelte';
+	import { modelMeta, tokens, rootRem } from '~/store';
 	import * as d3 from 'd3';
-	import { gsap, Flip } from '~/utils/gsap';
+	import { gsap } from '~/utils/gsap';
 	import { fade } from 'svelte/transition';
 	import Matrix from '~/components/Matrix.svelte';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../../tailwind.config';
-	import AnimationControl from '../AnimationControl.svelte';
 	import classNames from 'classnames';
+	import Katex from '~/utils/Katex.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
 	const tokenGap = 6;
-	let timeline = gsap.timeline({});
 
+	// generate data
 	const visibleDimension = 20;
 	$: tokenLen = $tokens.length;
 	$: embeddingData = Array(tokenLen)
@@ -50,10 +49,7 @@
 				.map((d) => Math.random())
 		);
 
-	// onMount(() => {
-	// 	draw();
-	// });
-
+	// color scale
 	const embeddingColorScale = (d, i) => {
 		return d3.interpolate(theme.colors['gray'][100], theme.colors['gray'][400])(d);
 	};
@@ -63,8 +59,30 @@
 		return d3.interpolate(theme.colors[color][100], theme.colors[color][400])(d);
 	};
 
-	const highlightColor = theme.colors['red'][500];
+	let isAnimationActive = false;
+	let progress = 0;
+	let timeline = gsap.timeline();
 
+	onMount(() => {
+		timeline.eventCallback('onUpdate', () => {
+			progress = timeline.progress();
+			if (progress === 1) isAnimationActive = false;
+		});
+
+		setTimeout(() => {
+			isAnimationActive = true;
+			draw();
+		}, 300);
+	});
+
+	onDestroy(() => {
+		if (timeline) {
+			timeline.kill();
+			timeline = null;
+		}
+	});
+
+	// animation
 	const draw = () => {
 		const embeddingRows = d3.selectAll('.weight-popover-content .token-embedding g.g-row').nodes();
 		const weightCols = d3.selectAll('.weight-popover-content .qkv-weights g.g-col').nodes();
@@ -73,23 +91,25 @@
 		const outRows = d3.selectAll('.weight-popover-content .qkv-output g.g-row').nodes();
 
 		// first row detail animation
-		timeline.set(weightBiasCells, { opacity: 0.1 });
+		// timeline.set(weightBiasCells, { opacity: 0.1 });
+		timeline.set('.formula .first-row', { opacity: 1 });
+		timeline.set('.formula .total', { opacity: 0 });
 
 		const firstOutputRowRects = d3.select(outRows[0]).selectAll('rect').nodes();
 		const firstEmbeddingRowRects = d3.select(embeddingRows[0]).selectAll('rect').nodes();
 
 		firstOutputRowRects.forEach((outputRect, outCellIdx) => {
+			const isFirstOutCell = outCellIdx === 0;
 			const firstWeightColRects = d3.select(weightCols[outCellIdx]).selectAll('rect').nodes();
 			timeline.set(firstEmbeddingRowRects, { opacity: 0.1 });
 
 			firstEmbeddingRowRects.forEach((embeddingRect, i) => {
-				const isFirst = i === 0 && outCellIdx === 0;
 				timeline.fromTo(
 					embeddingRect,
 					{ opacity: 0.1 },
 					{
 						opacity: 1,
-						duration: isFirst ? 1 : 0.005
+						duration: isFirstOutCell ? 0.1 : 0.002
 					},
 					`<50%`
 				);
@@ -98,7 +118,7 @@
 					{ opacity: 0.1 },
 					{
 						opacity: 1,
-						duration: isFirst ? 1 : 0.005
+						duration: isFirstOutCell ? 0.1 : 0.002
 					},
 					`<50%`
 				);
@@ -108,18 +128,24 @@
 				weightBiasCells[outCellIdx],
 				{
 					opacity: 1,
-					duration: outCellIdx === 0 ? 1 : 0.005
+					duration: isFirstOutCell ? 1 : 0.002
 				},
-				`<50%`
+				'<'
 			);
 			timeline.from(
 				outputRect,
 				{
 					opacity: 0,
-					duration: outCellIdx === 0 ? 1 : 0.005
+					fill: 'black',
+					duration: isFirstOutCell ? 1 : 0.002
 				},
-				`<50%`
+				'<'
 			);
+
+			if (isFirstOutCell) {
+				timeline.to('.formula .first-row', { opacity: 0, duration: 0.3 });
+				timeline.to('.formula .total', { opacity: 1, duration: 0.3 }, `<`);
+			}
 		});
 
 		// rest row animation
@@ -148,6 +174,7 @@
 					.selectAll('.weight-popover-content .qkv-weights g.g-col rect')
 					.nodes();
 				timeline.set(weightColRects, { opacity: 0.1 });
+				timeline.set(weightBiasCells, { opacity: 0.1 });
 			}
 
 			outputCells.forEach((d, colIdx) => {
@@ -171,6 +198,15 @@
 					},
 					`<50%`
 				);
+				timeline.fromTo(
+					weightBiasCells[colIdx],
+					{ opacity: 0.1 },
+					{
+						opacity: 1,
+						duration: 0.01
+					},
+					'<'
+				);
 			});
 			previousRowIdx = rowIdx;
 		});
@@ -183,73 +219,61 @@
 	params={{ duration: 300 }}
 >
 	<div
-		class="rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
+		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
 	>
-		<h3 class="font-semibold text-gray-900 dark:text-white">Weight Multiplication</h3>
-	</div>
-	<div class="weight-content">
-		<!-- <div class="desc">
-			<p>
-				1. Gather the embedding vectors for each token into a single embedding matrix. This matrix's
-				dimensions are (batch size, sequence length, embedding dimension).
-			</p>
-			<p>
-				2. Creating Query, Key, and Value Weight Matrices: Use one large weight matrix to generate
-				query, key, and value vectors. The size of this weight matrix is (embedding dimension, 3 *
-				embedding dimension). This allows you to compute the query, key, and value vectors in one
-				step.
-			</p>
-			<p>
-				3. Generating Query, Key, and Value Vectors: Multiply the large weight matrix with the
-				embedding matrix to create query, key, and value vectors. The result is a matrix with
-				dimensions (batch size, sequence length, 3 * embedding dimension). Split this matrix into
-				three parts to get the individual query, key, and value vectors.
-			</p>
-			<p>
-				4. Converting to Multi-Head: Split the generated query, key, and value vectors into multiple
-				heads. Each head's dimensions are (batch size, sequence length, number of heads, head
-				dimension). Here, the head dimension is calculated as embedding dimension / number of heads.
-			</p>
-		</div> -->
-
-		<!-- <AnimationControl tl={timeline} slider={false}></AnimationControl> -->
-
-		<button
-			class="play-control"
-			on:click={() => {
-				draw();
-			}}>click</button
-		>
-		<button class="play-control">
-			<!-- {#if timeline && !timeline.isActive()}
-				<svg
-					on:click={() => {
-						timeline.play();
-					}}
-					class="h-5 w-5 text-gray-400"
+		<h3 class="font-semibold text-gray-900">Weight Multiplication</h3>
+		{#if isAnimationActive}
+			<button
+				class="play-control forward"
+				on:click={() => {
+					timeline.progress(1);
+					isAnimationActive = false;
+				}}
+				><svg
+					class="h-5 w-5 text-gray-500"
+					aria-hidden="true"
 					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 -960 960 960"
-					fill="none"
-					><path
-						fill="currentColor"
-						d="M360-320h80v-320h-80v320Zm160 0h80v-320h-80v320ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"
-					/></svg
-				>{:else if timeline && timeline.isActive()}
-				<svg
-					on:click={() => {
-						timeline.pause();
-					}}
-					class="h-5 w-5 text-gray-400"
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 -960 960 960"
-					fill="none"
-					><path
-						fill="currentColor"
-						d="m380-300 280-180-280-180v360ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"
-					/></svg
+					width="24"
+					height="24"
+					fill="currentColor"
+					viewBox="0 0 24 24"
 				>
-			{/if} -->
-		</button>
+					<path
+						fill-rule="evenodd"
+						d="M17 6a1 1 0 1 0-2 0v4L8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8L15 14v4a1 1 0 1 0 2 0V6Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			</button>
+		{:else}
+			<button
+				class="play-control restart"
+				on:click={() => {
+					isAnimationActive = true;
+					timeline.restart();
+				}}
+			>
+				<svg
+					class="h-5 w-5 text-gray-500"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35a7.13 7.13 0 0 0 12.68-3.15M6 20v-4h4"
+					/>
+				</svg></button
+			>
+		{/if}
+	</div>
+	<div class="content">
 		<div class="weight-popover-content flex items-center justify-start">
 			<div class="matrix flex flex-col items-center">
 				<div class="tokens" style={`gap:${tokenGap}px`}>
@@ -270,11 +294,11 @@
 					rowGap={tokenGap}
 					colorScale={embeddingColorScale}
 				/>
-				<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
+				<div class="size">matrix({tokenLen}, {$modelMeta.dimension})</div>
 			</div>
 			<div class="operator"><div class="symbol">&times;</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">QKV Weights</div>
+				<div class="title">Q·K·V Weights</div>
 				<!-- (768,2034) -->
 				<div class="flex gap-0">
 					<Matrix
@@ -289,11 +313,11 @@
 					/>
 				</div>
 
-				<div class="size">({tokenLen},{$modelMeta.dimension * 3})</div>
+				<div class="size">matrix({$modelMeta.dimension}, {$modelMeta.dimension * 3})</div>
 			</div>
 			<div class="operator"><div class="symbol">+</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">Bias</div>
+				<div class="title">bias</div>
 				<!-- (768) -->
 				<Matrix
 					className="qkv-bias"
@@ -305,7 +329,7 @@
 					rowGap={0}
 					colorScale={embeddingColorScale}
 				/>
-				<div class="size">(1, {$modelMeta.dimension * 3})</div>
+				<div class="size">vector({$modelMeta.dimension * 3})</div>
 			</div>
 			<div class="operator"><div class="symbol">=</div></div>
 			<div class="matrix flex flex-col items-center">
@@ -316,7 +340,7 @@
 				</div>
 			</div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">QKV Vectors</div>
+				<div class="title">Q·K·V</div>
 				<!-- (tokenLen, 2034) -->
 				<div class="flex">
 					<Matrix
@@ -329,29 +353,74 @@
 						colorScale={qkvColorScale}
 					/>
 				</div>
-				<div class="size">({tokenLen}, {$modelMeta.dimension * 3})</div>
+				<div class="size">matrix({tokenLen}, {$modelMeta.dimension * 3})</div>
+			</div>
+		</div>
+		<div class="formula">
+			<div class="first-row">
+				<Katex
+					displayMode
+					math={`
+			( E_{1,1} \\cdot W_{1,1} + E_{1,2} \\cdot W_{2,1} + \\cdots + E_{1,768} \\cdot W_{768,1}) + b_1 = QKV_{1,1}`}
+				/>
+			</div>
+			<div class="total">
+				<Katex
+					displayMode
+					math={`
+			\\sum_{d=1}^{768} E_{id} \\cdot W_{dj} + b_j = QKV_{ij} 
+			`}
+				/>
 			</div>
 		</div>
 	</div>
 </Card>
 
 <style lang="scss">
+	.formula {
+		font-size: 0.7rem;
+		position: relative;
+		padding-bottom: 0.5rem;
+		.first-row {
+			opacity: 1;
+			width: 100%;
+			position: absolute;
+		}
+		.total {
+			font-size: 0.6rem;
+			opacity: 0;
+		}
+	}
 	:global(.weight-popover) {
 		width: max-content !important;
 		max-width: 50rem !important;
-		max-height: 20rem !important;
-		overflow: hidden;
+		// max-height: 20rem !important;
 		padding: 0 !important;
+		display: flex;
+		flex-direction: column;
 	}
 
+	.weight-popover-title {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		justify-content: space-between;
+	}
+	.content {
+		width: 100%;
+		overflow-y: scroll;
+		overflow-x: hidden;
+	}
 	.weight-popover-content {
-		padding: 3rem 2rem 3rem 1rem;
+		padding: 3rem 2rem 2.5rem 1rem;
+		width: 100%;
 	}
 	.play-control {
-		position: absolute;
-		right: 1rem;
-		top: 0;
-		height: 2.2rem;
+		// position: absolute;
+		// right: 1rem;
+		// top: 0;
+		// height: 2.2rem;
 	}
 
 	.tokens {

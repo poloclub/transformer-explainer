@@ -19,7 +19,7 @@
 
 	setContext('block-id', 'attention');
 	const blockId = getContext('block-id');
-	let isAttentionExpanded = $expandedBlock.id === blockId;
+	$: isAttentionExpanded = $expandedBlock.id === blockId;
 
 	const queryVectorColor = 'bg-blue-200';
 	const keyVectorColor = 'bg-red-200';
@@ -44,7 +44,7 @@
 	let vectorHoverIdx: number | null = null;
 </script>
 
-<div class={classNames('attention', className)}>
+<div class={classNames('attention', className, { expanded: isAttentionExpanded })}>
 	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
 		<div>Multi-head Self Attention</div>
 	</div>
@@ -60,39 +60,6 @@
 		<!-- <div class="title absolute top-0">First Transformer Block</div> -->
 
 		<div class="column">
-			<!-- QKV vector -->
-			<Tooltip
-				triggeredBy=".attention .qkv-weighted"
-				placement="right"
-				class="popover text-sm font-light">size(1, {$modelMeta.dimension * 3})</Tooltip
-			>
-			<!-- Head1 vector -->
-			<Tooltip
-				triggeredBy=".attention .query .head1"
-				placement="right"
-				class="popover text-sm font-light"
-				>Head1 Query, size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
-			>
-			<Tooltip
-				triggeredBy=".attention .key .head1"
-				placement="right"
-				class="popover text-sm font-light"
-				>Head1 Key, size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
-			>
-			<Tooltip
-				triggeredBy=".attention .value .head1"
-				placement="right"
-				class="popover text-sm font-light"
-				>Head1 Value size(1, {$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
-			>
-			<Tooltip
-				triggeredBy=".attention .out .head1"
-				placement="right"
-				class="popover text-sm font-light"
-				>Head1 Attention Out, size(1, {$modelMeta.dimension /
-					$modelMeta.attention_head_num})</Tooltip
-			>
-
 			{#each $tokens as token, index}
 				<div
 					class="qkv-weighted vector x3 flex flex-col"
@@ -127,6 +94,7 @@
 						</div>
 					</div>
 				</div>
+				<Tooltip placement="right" class="popover">vector({$modelMeta.dimension * 3})</Tooltip>
 			{/each}
 		</div>
 		<div class="heads">
@@ -143,6 +111,10 @@
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
+								<Tooltip placement="right" class="popover"
+									>Query, Head 1, vector({$modelMeta.dimension /
+										$modelMeta.attention_head_num})</Tooltip
+								>
 							{/each}
 						</div>
 						<div class="column key">
@@ -153,6 +125,10 @@
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
+								<Tooltip placement="right" class="popover"
+									>Key, Head 1, vector({$modelMeta.dimension /
+										$modelMeta.attention_head_num})</Tooltip
+								>
 							{/each}
 						</div>
 						<div class="column value">
@@ -162,6 +138,10 @@
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${valHeadVectorColor}`}></div>
 								</div>
+								<Tooltip placement="right" class="popover"
+									>Value, Head 1, vector({$modelMeta.dimension /
+										$modelMeta.attention_head_num})</Tooltip
+								>
 							{/each}
 						</div>
 					</div>
@@ -175,6 +155,10 @@
 								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
 									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
+								<Tooltip placement="right" class="popover"
+									>Attention Out, Head 1, vector({$modelMeta.dimension /
+										$modelMeta.attention_head_num})</Tooltip
+								>
 							{/each}
 						</div>
 					</div>
@@ -189,12 +173,24 @@
 
 <style lang="scss">
 	.attention {
+		&.expanded {
+			.title,
+			:global(.first-head-content) {
+				z-index: 900;
+			}
+			:global(.multi-head .rest.first) {
+				z-index: 810 !important;
+			}
+		}
 		.transformer-bounding {
 			border-radius: 10px 0 0 10px;
 			padding-left: 0.5rem;
 
 			left: -0.5rem;
 			border-right: none;
+		}
+		.bounding-title {
+			margin-left: 1rem;
 		}
 		.attention-bounding {
 			top: -0.5rem;

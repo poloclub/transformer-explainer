@@ -20,7 +20,7 @@
 	{placement}
 	arrow={false}
 	transition={fade}
-	params={{ duration: 100 }}
+	params={{ duration: 0 }}
 >
 	<div class="dropout-content">Drop out is</div></Popover
 >

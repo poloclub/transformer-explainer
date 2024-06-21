@@ -2,7 +2,7 @@
 	import { tokens, expandedBlock, modelMeta } from '~/store';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
-	import { tick, setContext, getContext } from 'svelte';
+	import { tick, setContext, getContext, onMount } from 'svelte';
 	import VectorCanvas from './VectorCanvas.svelte';
 	import * as d3 from 'd3';
 	import OperationGroup from './OperationGroup.svelte';
@@ -21,6 +21,7 @@
 
 	let isEmbeddingExpanded = false;
 
+	// event handling
 	$: if ($expandedBlock.id !== blockId && isEmbeddingExpanded) {
 		isEmbeddingExpanded = false;
 		collapseEmbedding();
@@ -30,12 +31,36 @@
 		if (!isEmbeddingExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandEmbedding();
+		}
+	};
+
+	const onClickEmbeddingTitle = (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		if (!isEmbeddingExpanded) {
+			expandedBlock.set({ id: blockId });
+			expandEmbedding();
 		} else {
 			expandedBlock.set({ id: null });
 			collapseEmbedding();
 		}
 	};
 
+	let expandableEl: HTMLDivElement;
+
+	function handleOutsideClick(e) {
+		if (isEmbeddingExpanded && !expandableEl.contains(e.target)) {
+			expandedBlock.set({ id: null });
+		}
+	}
+	onMount(() => {
+		document.body.addEventListener('click', handleOutsideClick);
+		return () => {
+			document.body.removeEventListener('click', handleOutsideClick);
+		};
+	});
+
+	// animation
 	let containerState: any;
 
 	const expandEmbedding = async () => {
@@ -44,7 +69,7 @@
 		await tick();
 
 		Flip.from(containerState, {
-			duration: 1,
+			duration: 0.5,
 			ease: 'power2.inOut'
 		});
 		gsap.to('.embedding-detail', {
@@ -76,34 +101,20 @@
 	}
 
 	const embeddingVectorColor = 'bg-gray-300';
-
-	// Weight Popover
-
-	let mouseX = 0;
-	let mouseY = 0;
-	let showPopover = false;
-
-	function handleMouseOver() {
-		showPopover = true;
-	}
-
-	function handleMouseMove(event) {
-		mouseX = event.clientX;
-		mouseY = event.clientY;
-	}
-
-	function handleMouseOut() {
-		showPopover = false;
-	}
 </script>
 
-<div class={classNames('embedding', className)}>
+<div
+	class={classNames('embedding', className, { expanded: isEmbeddingExpanded })}
+	bind:this={expandableEl}
+	role="none"
+	on:click={onClickEmbedding}
+	on:keydown={onClickEmbedding}
+>
 	<div
 		class="title expandable"
-		role="button"
-		on:click={onClickEmbedding}
-		on:keydown={onClickEmbedding}
-		tabindex="0"
+		role="none"
+		on:click={onClickEmbeddingTitle}
+		on:keydown={onClickEmbeddingTitle}
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
 	>
@@ -125,15 +136,13 @@
 				></div>
 			</div>
 			{#if isEmbeddingExpanded}
-				<Tooltip
-					triggeredBy=".embedding .vector"
-					placement="right"
-					class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
+				<Tooltip triggeredBy=".embedding .vector" placement="right" class="popover"
+					>vector({$modelMeta.dimension})</Tooltip
 				>
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
-						<span>Token Embedding</span><HelpPopover id="token-embedding"
+						<span>Token<br />Embedding</span><HelpPopover id="token-embedding"
 							>Token Embedding is</HelpPopover
 						>
 					</div>
@@ -141,7 +150,7 @@
 						<div class="token-id flex items-center">
 							<div class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400">
 								<div class="flex flex-col items-center">
-									{#if index === 0}
+									<!-- {#if index === 0}
 										<div class="look-up flex items-center gap-1">
 											<span>look up</span><svg
 												class="h-3 w-3 text-gray-400"
@@ -158,7 +167,7 @@
 												/>
 											</svg>
 										</div>
-									{/if}
+									{/if} -->
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										viewBox="0 0 31 9"
@@ -194,7 +203,7 @@
 				</div>
 				<div class="column embedding-detail position-embedding">
 					<div class="subtitle flex gap-1">
-						<span>Positional Embedding</span><HelpPopover id="position-embedding"
+						<span>Positional<br />Encoding</span><HelpPopover id="position-embedding"
 							>Positional Embedding is</HelpPopover
 						>
 					</div>
@@ -213,14 +222,14 @@
 							</div>
 							<span class="index-val text-xs">
 								{#if index === 0}
-									<span class="label">poition</span><br />
+									<span class="label">position</span><br />
 								{/if}
 								<span class="val">{index}</span>
 							</span>
 						</div>
 					{/each}
 				</div>
-				<div class="column symbol embedding-d etail">
+				<div class="column symbol embedding-detail">
 					{#each $tokens as token, index}
 						<div class="cell">=</div>
 					{/each}
@@ -229,19 +238,19 @@
 			{/if}
 		</div>
 		<div class="vector-column relative flex">
-			<Tooltip triggeredBy=".embedding .vector" placement="right" class="popover text-sm font-light"
-				>size(1, {$modelMeta.dimension})</Tooltip
-			>
 			<div class="column vectors">
 				{#each $tokens as token, index}
 					<div class={`vector ${embeddingVectorColor}`} class:last={index === $tokens.length - 1}>
 						<VectorCanvas active={isHovered || isEmbeddingExpanded} />
 					</div>
+					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				{/each}
 			</div>
-			<OperationGroup type="dropout" id={'embedding-dropout'} />
-			<OperationGroup type="residual-start" id={'residual-first'} />
-			<OperationGroup type="ln" id={'embedding-ln'} />
+			<div class="operations flex">
+				<OperationGroup type="dropout" id={'embedding-dropout'} />
+				<OperationGroup type="residual-start" id={'residual-first'} />
+				<OperationGroup type="ln" id={'embedding-ln'} />
+			</div>
 		</div>
 	</div>
 </div>
@@ -256,6 +265,16 @@
 	}
 
 	.embedding {
+		&.expanded {
+			.title,
+			.content {
+				z-index: 900;
+			}
+			.operations {
+				pointer-events: none;
+				opacity: 0.2;
+			}
+		}
 		.embedding-detail {
 			opacity: 0;
 		}
@@ -266,7 +285,7 @@
 		.content {
 			padding-left: 2rem;
 			display: grid;
-			grid-template-columns: auto repeat(4, minmax(3vw, 1fr));
+			grid-template-columns: auto repeat(4, minmax(var(--min-column-width), 1fr));
 
 			.token-column {
 				// gap: 2rem;
@@ -293,6 +312,7 @@
 			.subtitle {
 				justify-content: center;
 				align-items: end;
+				line-height: 1.3;
 			}
 			.index-val .label {
 				color: theme('colors.gray.400');
@@ -302,7 +322,7 @@
 			.index-val .val {
 				width: 4rem;
 				text-align: left;
-				font-size: 0.8rem;
+				font-size: 0.7rem;
 				color: theme('colors.gray.600');
 				font-family: monospace;
 			}
@@ -322,6 +342,9 @@
 			}
 
 			.position-embedding {
+				.subtitle {
+					margin-left: -1rem;
+				}
 				.cell {
 					justify-content: center;
 					gap: 0.5rem;

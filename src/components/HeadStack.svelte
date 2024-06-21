@@ -28,12 +28,13 @@
 <div class="multi-head flex w-full">
 	{#each Array($modelMeta.attention_head_num + 1).fill(0) as _, index}
 		{#if index === 0}
-			<div class={'w-full'} style={`z-index: 200;`} bind:this={headContent}>
+			<div class={'first-head-content'} bind:this={headContent}>
 				<slot></slot>
 			</div>
 		{:else}
 			<div
 				class={'rest absolute'}
+				class:first={index === 1}
 				style={`transform:translate(${index * headGap.x}px,${index * headGap.y}px) scale(${1 - headGap.scale * index}); 
       z-index: ${$modelMeta.attention_head_num - index};opacity:${Math.max(0.1, 1 - index * opacityOffset)};`}
 			>
@@ -49,6 +50,10 @@
 <style lang="scss">
 	.multi-head {
 		position: relative;
+	}
+	.first-head-content {
+		width: 100%;
+		z-index: 200;
 	}
 	.card {
 		background-color: white;

@@ -7,6 +7,7 @@
 	import ActivationPopover from './Popovers/ActivationPopover.svelte';
 	import * as d3 from 'd3';
 	import ResidualPopover from './Popovers/ResidualPopover.svelte';
+	import gsap from 'gsap';
 
 	export let id: string;
 	export let className: string | undefined = undefined;
@@ -27,6 +28,7 @@
 		endGroup?.classList.add('active');
 	};
 
+	let residualAnimation;
 	const onMouseOut = () => {
 		isHovered = false;
 		const startGroup = document.querySelector(`#${id}-start`);
@@ -34,19 +36,22 @@
 
 		const connector = d3.select(`.residual-connector.${id}`);
 		connector.style('opacity', 0);
+		if (residualAnimation) {
+			residualAnimation.kill();
+			connector.style('stroke-dashoffset', 0);
+		}
 
 		startGroup?.classList.remove('active');
 		endGroup?.classList.remove('active');
 	};
 
 	const connectLine = (path) => {
-		const length = path.node().getTotalLength();
-		path
-			.attr('stroke-dasharray', length + ' ' + length)
-			.attr('stroke-dashoffset', length)
-			.transition()
-			.duration(300)
-			.attr('stroke-dashoffset', 0);
+		residualAnimation = gsap.to(path.node(), {
+			strokeDashoffset: -50,
+			duration: 1,
+			repeat: -1,
+			ease: 'none'
+		});
 	};
 </script>
 
