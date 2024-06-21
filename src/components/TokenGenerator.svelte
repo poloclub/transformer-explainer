@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import { Tooltip, Range, Button } from 'flowbite-svelte';
 	import { writable } from 'svelte/store';
 	import { predictedToken, highlightedIndex, finalTokenIndex } from '~/store';
@@ -46,7 +46,7 @@
 
 				let newInput = $inputText + ' ' + finalToken;
 				// console.log(`Net Input: ${newInput}`);
-				inputText.set(newInput);
+				inputText.set(newInput.trim());
 				return;
 			}
 
@@ -71,13 +71,13 @@
 </script>
 
 <div class="sample-button flex justify-center gap-2">
-	<!-- <div
+	 <div
 		class="sliding-text-container flex w-32 items-center justify-center rounded-md outline outline-1 outline-red-700"
 	>
 		<div class="prediction-text">
 			{$predictedToken}
 		</div>
-	</div> -->
+	</div> 
 	<div class="h-full">
 		<Button
 			type="submit"
@@ -90,4 +90,4 @@
 			}}>Generate</Button
 		>
 	</div>
-</div>
+</div> -->

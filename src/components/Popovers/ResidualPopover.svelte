@@ -14,15 +14,26 @@
 
 <Popover
 	class={classNames('popover residual-popover text-sm', className)}
-	title="Residual"
+	title="Residual Connection"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
 	arrow={false}
 	transition={fade}
-	params={{ duration: 100 }}
+	params={{ duration: 0 }}
 	{reference}
 >
-	<div class="residual-content">Residual out is</div></Popover
+	<div class="residual-content">
+		Adds skip-connections to allow for better gradient flow.
+	</div></Popover
 >
+
+<style lang="scss">
+	:global(.residual-popover) {
+		width: 12rem !important;
+		.residual-content {
+			font-size: 0.8rem;
+		}
+	}
+</style>

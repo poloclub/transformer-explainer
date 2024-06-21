@@ -4,6 +4,7 @@ import tailwindConfig from '../../tailwind.config';
 import resolveConfig from 'tailwindcss/resolveConfig';
 const { theme } = resolveConfig(tailwindConfig);
 
+export const selectedExampleIdx = writable<number>(0);
 export const inputTextExample = [
 	'Data visualization empowers users to',
 	'Artificial Intelligence is transforming the',
@@ -77,4 +78,6 @@ export const isBoundingBoxActive = writable(false);
 
 export const predictedColor = theme.colors.purple[600];
 
+// Interactivity
 export const hoveredPath = writable();
+export const hoveredMatrixCell = writable({ row: null, col: null });

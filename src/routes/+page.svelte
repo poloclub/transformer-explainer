@@ -13,7 +13,8 @@
 		modelData,
 		predictedColor,
 		modelSession,
-		isFetchingModel
+		isFetchingModel,
+		predictedToken
 	} from '~/store';
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
@@ -29,14 +30,8 @@
 	import { adjustTemperature, runModel } from '~/utils/data';
 	import { mergeChunks } from '~/utils/mergeChunk';
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
-
-	// expanded state control
-	let isExpanded = false;
-	$: if ($expandedBlock.id !== null) {
-		isExpanded = true;
-	} else {
-		isExpanded = false;
-	}
+	import { fade } from 'svelte/transition';
+	import { AutoTokenizer } from '@xenova/transformers';
 
 	// run model
 	onMount(async () => {
@@ -64,9 +59,18 @@
 		modelSession.set(session);
 		isFetchingModel.set(false);
 
+		// Initialize tokenizer
+		const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
+
 		// Subscribe input change
 		const unsubscribeInputText = inputText.subscribe((value) => {
-			runModel(value, $temperature);
+			runModel({
+				tokenizer,
+				input: value.trim(),
+				temperature: $temperature,
+				topK: 50,
+				sampleK: 20
+			});
 		});
 
 		let initialRun = true; // prevent redundant initial adjustTemperature
@@ -75,7 +79,13 @@
 				initialRun = false;
 				return;
 			}
-			adjustTemperature($modelData?.prediction, value);
+			adjustTemperature({
+				tokenizer,
+				logits: $modelData.logits,
+				temperature: value,
+				topK: 50,
+				sampleK: 20
+			});
 		});
 
 		return () => {
@@ -104,9 +114,20 @@
 </script>
 
 <div
-	class="main-section h-full"
+	class="main-section h-full w-full"
 	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;--content-height:${vizHeight - titleHeight}px;`}
 >
+	{#if !!$expandedBlock.id}
+		<div class="dim" transition:fade={{ duration: 100 }}></div>
+		<div
+			class={classNames('dim-partial left', `${$expandedBlock.id || ''}`)}
+			transition:fade={{ duration: 100 }}
+		></div>
+		<div
+			class={classNames('dim-partial right', `${$expandedBlock.id || ''}`)}
+			transition:fade={{ duration: 100 }}
+		></div>
+	{/if}
 	<!-- <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
 		<defs>
 			<mask id="reveal-mask">
@@ -134,11 +155,11 @@
 		></path>
 	</svg> -->
 	<!-- <Spinner color={theme.colors['primary'][500]} /> -->
-	<div class="sankey opacity-1">
+	<div class="sankey opacity-1" class:attention={$expandedBlock.id === 'attention'}>
 		<Sankey />
 	</div>
 	<div class="nodes resize-watch">
-		<div class="steps" class:expanded={isExpanded} bind:offsetHeight={vizHeight}>
+		<div class="steps" class:expanded={!!$expandedBlock.id} bind:offsetHeight={vizHeight}>
 			<Embedding className="step" />
 			<Attention className="step" />
 			<Mlp className="step" />
@@ -148,32 +169,17 @@
 
 		<WeightPopovers />
 	</div>
-	<div
-		class={classNames('dim pointer-events-none', `${$expandedBlock.id || ''}`, {
-			active: !!$expandedBlock.id
-		})}
-	></div>
 </div>
 
 <style lang="scss">
-	// :global(.embedding .last),
-	// :global(.attention .last) {
-	// 	opacity: 0;
-	// }
 	.nodes {
 		height: 100%;
 		width: 100%;
 		padding: 1rem 0 3rem 0;
 		position: relative;
 	}
-	.sankey {
-		position: absolute;
-		left: 0;
-		top: 0;
-		width: 100%;
-		height: 100%;
-	}
 	.steps {
+		width: 100%;
 		height: 100%;
 		position: relative;
 		display: grid;
@@ -286,7 +292,7 @@
 		color: theme('colors.gray.700');
 		z-index: 101;
 		display: inline;
-		width: 7rem;
+		max-width: 7rem;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		text-align: right;
@@ -354,38 +360,90 @@
 
 	:global(.popover) {
 		z-index: 999;
-		// overflow: hidden;
 		max-width: 40rem;
 		max-height: 30rem;
-		// position: absolute;
 	}
 
+	:global(.tooltip) {
+		z-index: 999;
+		background-color: white !important;
+		color: theme('colors.gray.600') !important;
+		border: 1px solid theme('colors.gray.200') !important;
+		padding: 0.2rem 0.5rem !important;
+		font-size: 0.8rem !important;
+		white-space: nowrap;
+		font-weight: 300 !important;
+		border-color: theme('colors.gray.200') !important;
+	}
 	.dim {
-		transition: opacity 1s;
-		opacity: 0;
-
-		z-index: 300;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 800;
+		background-color: white;
+		opacity: 0.7;
+		user-select: none;
+	}
+	.dim-partial {
+		z-index: 850;
 		position: absolute;
 		top: 0;
 		height: 100%;
-		background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 80%);
 
-		&.active {
-			opacity: 1;
+		&.right {
+			right: 0;
+			background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 80%);
+		}
+		&.left {
+			left: 0;
+			background: linear-gradient(-90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 80%);
 		}
 
 		&.embedding {
-			right: 0;
-			width: 60vw;
-		}
-		&.softmax {
-			left: 0;
-			width: 50vw;
-			background: linear-gradient(-90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 80%);
+			&.left {
+				display: none;
+			}
+			&.right {
+				width: 60%;
+			}
 		}
 		&.attention {
-			right: 0;
-			width: 30vw;
+			&.left {
+				width: 20%;
+			}
+			&.right {
+				width: 20%;
+			}
+		}
+		&.softmax {
+			&.left {
+				width: 60%;
+			}
+			&.right {
+				display: none;
+			}
+		}
+	}
+	.sankey {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+
+		&.attention {
+			:global(.sankey-top) {
+				z-index: 820 !important;
+				pointer-events: none;
+			}
+			:global(.sankey-top > g) {
+				opacity: 0.3;
+			}
+			:global(.sankey-top > g.attention) {
+				opacity: 1;
+			}
 		}
 	}
 </style>

@@ -61,7 +61,7 @@
 			font-optical-sizing: auto;
 			font-style: normal;
 
-			font-size: 2.2rem;
+			font-size: 2rem;
 			// color: theme('colors.blue.800');
 
 			background: linear-gradient(

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tokens, modelMeta, isBoundingBoxActive } from '~/store';
+	import { tokens, modelMeta, isBoundingBoxActive, expandedBlock } from '~/store';
 	import classNames from 'classnames';
 	import Operation from './Operation.svelte';
 	import { Tooltip } from 'flowbite-svelte';
@@ -9,7 +9,9 @@
 </script>
 
 <div
-	class={classNames('transformer-blocks', className)}
+	class={classNames('transformer-blocks', className, {
+		expanded: $expandedBlock.id !== null
+	})}
 	role="group"
 	on:mouseenter={() => {
 		isBoundingBoxActive.set(true);
@@ -20,11 +22,6 @@
 >
 	<div class="title"></div>
 	<div class="content">
-		<Tooltip
-			triggeredBy=".transformer-blocks .vector"
-			placement="right"
-			class="popover text-sm font-light">size(1, {$modelMeta.dimension})</Tooltip
-		>
 		<div class="column final relative">
 			<div class="guide flex flex-col items-start gap-1">
 				<!-- <svg class="arrow" width="28" height="30" viewBox="0 0 28 30" fill="none">
@@ -35,8 +32,9 @@
 				</svg> -->
 
 				<div class="text" class:active={$isBoundingBoxActive}>
-					{$modelMeta.layer_num - 1} more<br /><span class="highlight">Transformer<br />Blocks</span
-					><br />go here.
+					{$modelMeta.layer_num - 1} more identical<br /><span class="highlight"
+						>Transformer<br />Blocks</span
+					>.
 				</div>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -59,20 +57,26 @@
 					>
 						<VectorCanvas colorScale="blue" />
 					</div>
-					{#if index === $tokens.length - 1}
+					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
+					<!-- {#if index === $tokens.length - 1}
 						<span class="label float">{token}</span>
-					{/if}
+					{/if} -->
 				</div>
 			{/each}
 		</div>
 		<div class="second-column">
-			<!-- <div class="dim"></div> -->
+			<div class="prob-dim" class:expanded={$expandedBlock.id === 'softmax'}></div>
 		</div>
 	</div>
 </div>
 
 <style lang="scss">
 	.transformer-blocks {
+		&.expanded {
+			.guide {
+				opacity: 0.2;
+			}
+		}
 		.guide {
 			white-space: pre;
 			position: absolute;
@@ -84,6 +88,7 @@
 			.text {
 				transition: opacity 0.5s;
 				line-height: 1.2;
+				padding-left: 0.5rem;
 				font-size: 0.85rem;
 				.highlight {
 					font-weight: 600;
@@ -102,7 +107,7 @@
 		}
 		.content {
 			display: grid;
-			grid-template-columns: repeat(4, minmax(3vw, 1fr));
+			grid-template-columns: repeat(4, minmax(var(--min-column-width), 1fr));
 
 			.column.final {
 				grid-column-start: 2;
@@ -119,15 +124,19 @@
 
 	.second-column {
 		grid-column: span 2;
-		position: relative;
-		.dim {
-			position: absolute;
-			bottom: 0;
-			width: 100%;
-			height: 50vh;
-			z-index: 300;
-			background-color: white;
-			background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 70%);
+	}
+	.prob-dim {
+		position: absolute;
+		bottom: -3rem;
+		transform: translateX(-1rem);
+		width: 100%;
+		height: 30%;
+		z-index: 300;
+		background-color: white;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+
+		&.expanded {
+			z-index: 999;
 		}
 	}
 </style>

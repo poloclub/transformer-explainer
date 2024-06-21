@@ -34,13 +34,14 @@ type PredictionItem = {
 	tokenId: number;
 	token: string;
 	logit: number;
-	probability: number;
-	adjustedLogit?: number;
-	adjustedProbability?: number;
-	adjustedExp?: number;
+	adjustedLogit: number;
+	adjustedProbability: number;
+	normalizedProbability: number;
+	adjustedExp: number;
 };
 type Prediction = PredictionItem[];
 type ModelData = {
+	logits: number[];
 	outputs: Record<string, { data: number[][]; dims: number[]; size: number }>;
 	prediction: Prediction;
 	sampled: PredictionItem;

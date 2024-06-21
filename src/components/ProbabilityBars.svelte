@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
-	import { modelData, rootRem, predictedToken, predictedColor } from '~/store';
+	import { modelData, rootRem, predictedToken, predictedColor, temperature } from '~/store';
 
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
@@ -15,20 +15,19 @@
 
 	let svgEl: HTMLOrSVGElement;
 
-	let percentPrecision = 1;
+	let percentPrecision = 2;
 
 	let normalColor = theme.colors.gray[300];
-	let hoverColor = theme.colors.blue[500];
+	let hoverColor = theme.colors.purple[400];
 
-	let drawBars = () => {
+	export let drawBars = () => {
 		const data = $modelData?.prediction;
-		const predicted = $modelData?.sampled;
 
 		const svg = d3.select(svgEl);
 
 		let xScale = d3
 			.scaleLinear()
-			.domain([0, d3.max(data, (d) => d.adjustedProbability)])
+			.domain([0, d3.max(data, (d) => d.normalizedProbability)])
 			.range([0, svgEl?.clientWidth - rootRem * 3]);
 
 		svg
@@ -39,13 +38,13 @@
 			.attr('x', 0)
 			.attr('y', (d, i) => i * rowHeight + i * rowGap + rowHeight / 2 - barHeight / 2)
 			.attr('height', barHeight)
-			.attr('width', (d) => xScale(d.adjustedProbability))
+			.attr('width', (d) => xScale(d.normalizedProbability))
 			.attr('rx', 1)
 			.attr('ry', 1)
 			.attr('fill', (d, i) => {
 				if (i === hoveredIndex) {
 					return hoverColor;
-				} else if (predicted?.rank === i) {
+				} else if ($predictedToken?.rank === i) {
 					return predictedColor;
 				} else {
 					return normalColor;
@@ -59,7 +58,7 @@
 			.transition()
 			.ease(d3.easeCubic)
 			.duration(500)
-			.attr('width', (d) => xScale(d.adjustedProbability));
+			.attr('width', (d) => xScale(d.normalizedProbability));
 
 		//label
 		svg
@@ -67,10 +66,11 @@
 			.selectAll('text')
 			.data(data)
 			.join('text')
+			.attr('class', 'bar-label')
 			.attr('fill', (d, i) => {
 				if (i === hoveredIndex) {
 					return hoverColor;
-				} else if (predicted?.rank === i) {
+				} else if ($predictedToken?.rank === i) {
 					return predictedColor;
 				} else {
 					return normalColor;
@@ -83,18 +83,28 @@
 			.on('mouseleave', () => {
 				hoveredIndex = null;
 			})
-			.attr('x', (d) => 0.4 * rootRem + xScale(d.adjustedProbability))
+			.attr('x', (d) => 0.4 * rootRem + xScale(d.normalizedProbability))
 			.attr('y', (d, i) => i * rowHeight + i * rowGap)
 			.attr('dy', rowHeight / 2 + 3)
 			.attr('text-anchor', 'start')
-			.style('font-size', '0.75rem')
+			.style('font-size', '0.8rem')
+			// .style('font-family', 'monospace')
 			.transition()
 			.duration(500)
 			.tween('text', function (d) {
-				const that = d3.select(this),
-					i = d3.interpolateNumber(that.text().replace('%', ''), d.adjustedProbability * 100);
+				const that = d3.select(this);
+				if (d.normalizedProbability < 0.01) {
+					return () => {
+						that.text(`<0.01%`);
+					};
+				}
+				const i = d3.interpolateNumber(
+					that.text().replace('%', '').replace('<', ''),
+					(d.normalizedProbability * 100).toFixed(percentPrecision)
+				);
 				return function (t) {
-					that.text(i(t).toFixed(percentPrecision) + '%');
+					let text = i(t).toFixed(percentPrecision) + '%';
+					that.text(text);
 				};
 			});
 	};
@@ -109,6 +119,10 @@
 	}
 
 	$: if (hoveredIndex !== undefined) {
+		updateColor();
+	}
+
+	$: if ($predictedToken) {
 		updateColor();
 	}
 

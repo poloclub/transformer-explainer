@@ -1,0 +1,10 @@
+export const ATTENTION_HEAD_BACK = 0.5;
+export const EMBEDDING = 0.8;
+export const ATTENTION_HEAD_1 = 1;
+// export const ATTENTION_HEAD_1 = 0;
+export const ATTENTION_OUT = 0.5;
+// export const ATTENTION_OUT = 0;
+export const MLP = 0.4;
+export const TRANSFORMER_BLOCKS = 0.8;
+export const LOGIT = 0.5;
+// export const LOGIT = 0;

@@ -1,69 +1,70 @@
-import { AutoTokenizer, PreTrainedTokenizer, GPT2Tokenizer } from '@xenova/transformers';
+import { PreTrainedTokenizer } from '@xenova/transformers';
 import * as ort from 'onnxruntime-web';
-import {
-	modelData,
-	tokens,
-	isModelRunning,
-	temperature,
-	predictedToken,
-	modelSession
-} from '~/store';
-import BigNumber from 'bignumber.js';
-import { applyTemperatureToData, sampleToken } from './sampler';
-import { showFlowAnimation, showSamplingAnimation } from './animation';
-import { base } from '$app/paths';
-import externalData from './externalData.json';
+import { modelData, tokens, isModelRunning, predictedToken, modelSession } from '~/store';
 import { get } from 'svelte/store';
 import { reshapeArray } from './array';
+import { showFlowAnimation } from './animation';
 
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
-export const runModel = async (input: string, temperature: number) => {
+export const runModel = async ({
+	tokenizer,
+	input,
+	temperature,
+	topK,
+	sampleK
+}: {
+	tokenizer: PreTrainedTokenizer;
+	input: string;
+	temperature: number;
+	topK: number;
+	sampleK: number;
+}) => {
 	isModelRunning.set(true);
 
-	// setTimeout(() => {
-	// 	showFlowAnimation(tokenLength);
-	// }, 100);
-
-	const { token_ids, input_tokens } = await getTokenization(input);
+	const { token_ids, input_tokens } = await getTokenization(tokenizer, input);
 
 	tokens.set(input_tokens);
 
-	const { outputs, prediction } = await getData(token_ids);
+	const { logits, outputs } = await getData(token_ids);
 
-	const adjustedData = applyTemperatureToData(prediction, temperature);
-	const sampledToken = sampleToken(adjustedData);
+	const prediction = getPrediction({ tokenizer, logits, topK, temperature });
 
-	modelData.set({ outputs, prediction: adjustedData, sampled: sampledToken });
+	const sampledToken = sampleToken(prediction, sampleK);
 
-	await showFlowAnimation(input_tokens.length);
+	modelData.set({ logits, outputs, prediction, sampled: sampledToken });
 
+	// To ensure the animation starts after all elements have been rendered
+	setTimeout(async () => {
+		await showFlowAnimation(input_tokens.length);
+		predictedToken.set(sampledToken);
+		isModelRunning.set(false);
+	}, 0);
+};
+
+export const adjustTemperature = async ({
+	tokenizer,
+	logits,
+	temperature,
+	topK,
+	sampleK
+}: {
+	tokenizer: PreTrainedTokenizer;
+	logits: Prediction;
+	topK: number;
+	temperature: number;
+	sampleK: number;
+}) => {
+	const prediction = getPrediction({ tokenizer, logits, topK, temperature });
+	const sampledToken = sampleToken(prediction, sampleK);
+
+	modelData.update((d) => ({ ...d, prediction, sampled: sampledToken }));
+	//todo
+	// await showSamplingAnimation();
 	predictedToken.set(sampledToken);
-	isModelRunning.set(false);
-
-	// inputText.update((currentText) => currentText + data.predictedToken);
 };
 
-export const adjustTemperature = async (data: Prediction, temperature: number) => {
-	const adjustedData = applyTemperatureToData(data, temperature);
-	const sampledToken = sampleToken(adjustedData);
-
-	modelData.update((d) => ({ ...d, prediction: adjustedData }));
-	await showSamplingAnimation();
-
-	predictedToken.set(sampledToken);
-};
-
-const softmax = (logits: number[]) => {
-	const maxLogit = Math.max(...logits);
-	const expLogits = logits.map((x) => Math.exp(x - maxLogit));
-	const sumExpLogits = expLogits.reduce((a, b) => a + b, 0);
-	return expLogits.map((x) => x / sumExpLogits);
-};
-
-export const getTokenization = async (input: string) => {
-	const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
-
+export const getTokenization = async (tokenizer: PreTrainedTokenizer, input: string) => {
 	const token_ids = tokenizer.encode(input);
 	const input_tokens = token_ids.map((id) => tokenizer.decode([id])).flat();
 
@@ -71,42 +72,6 @@ export const getTokenization = async (input: string) => {
 		token_ids,
 		input_tokens
 	};
-};
-
-// const visibleDimension = 100;
-// const processTensorData = (tensor: any, limit = visibleDimension) => {
-// 	const originalDims = tensor.dims;
-// 	const originalData = tensor.data;
-// 	const newData = [];
-
-// 	for (let i = 0; i < originalDims[1]; i++) {
-// 		const start = i * originalDims[2];
-// 		const end = start + limit;
-// 		newData.push(Array.from(originalData.slice(start, end)));
-// 	}
-
-// 	return {
-// 		data: newData as number[][],
-// 		dims: originalDims,
-// 		size: tensor.size
-// 	};
-// };
-
-const getTopKPrediction = (
-	logits: number[],
-	probabilities: number[],
-	tokenizer: PreTrainedTokenizer,
-	k: number
-): Prediction => {
-	const output = Array.from(logits).map((logit, index) => ({
-		tokenId: index,
-		logit,
-		probability: probabilities[index]
-	}));
-	output.sort((a, b) => b.probability - a.probability);
-	return output
-		.slice(0, k)
-		.map((d, i) => ({ ...d, rank: i, token: tokenizer.decode([d.tokenId]) }));
 };
 
 export const getData = async (token_ids: number[]) => {
@@ -135,24 +100,10 @@ export const getData = async (token_ids: number[]) => {
 		// Extract the logits
 		const logits = results['linear_output'].data;
 
-		// Apply softmax to the logits to get probabilities
-		const probabilities = softmax(logits);
-
-		// Find the index of the highest probability
-		// const maxIndex = probabilities.indexOf(Math.max(...probabilities));
-
-		// Decode the output tokens back to text
-		const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
-		// const outputText = tokenizer.decode([maxIndex]);
-
-		const topK = 100;
-		const prediction = getTopKPrediction(logits, probabilities, tokenizer, topK);
-
 		// Extract the dictionary values
 		const outputs = targetTensors.reduce(
 			(obj, key) => {
 				const out = results[key];
-				console.log(out);
 				const processedData = {
 					...out,
 					data: reshapeArray([...out.cpuData], out.dims)
@@ -163,17 +114,81 @@ export const getData = async (token_ids: number[]) => {
 			{} as ModelData['outputs']
 		);
 
-		console.log('out', outputs);
-
 		return {
-			outputs,
-			prediction
+			logits,
+			outputs
 		};
 	} catch (error) {
 		console.error('Error during inference:', error.message);
 		throw error;
 	}
 };
+
+export const getPrediction = ({
+	tokenizer,
+	logits,
+	topK = 100,
+	temperature = 1
+}: {
+	tokenizer: PreTrainedTokenizer;
+	logits: number[];
+	topK: number;
+	temperature: number;
+}): Prediction => {
+	// adjust temperature
+	const adjustedLogits = logits.map((d) => d / temperature);
+
+	// softmax
+	const maxLogit = Math.max(...adjustedLogits);
+	const adjustedExps = adjustedLogits.map((x) => Math.exp(x - maxLogit));
+	const sumExpLogits = adjustedExps.reduce((a, b) => a + b, 0);
+	const adjustedProb = adjustedExps.map((x) => x / sumExpLogits);
+
+	const output = Array.from(logits)
+		.map((logit, i) => ({
+			tokenId: i,
+			logit,
+			adjustedLogit: adjustedLogits[i],
+			adjustedProbability: adjustedProb[i],
+			adjustedExp: adjustedExps[i]
+		}))
+		.sort((a, b) => b.adjustedProbability - a.adjustedProbability);
+
+	const topKOutput = output.slice(0, topK);
+
+	// normalize top k prob
+	const sumTopKProbabilities = topKOutput.reduce((a, b) => a + b.adjustedProbability, 0);
+
+	const normalizedTopK = topKOutput.map((d, i) => {
+		return {
+			...d,
+			rank: i,
+			token: tokenizer.decode([d.tokenId]),
+			normalizedProbability: d.adjustedProbability / sumTopKProbabilities
+		};
+	});
+
+	return normalizedTopK;
+};
+
+export function sampleToken(topK: Prediction, sampleK: number) {
+	const data = topK.slice(0, sampleK);
+
+	const cumulativeProbabilities = [];
+	data.reduce((sum, d, i) => (cumulativeProbabilities[i] = sum + d.normalizedProbability), 0);
+
+	const randomValue = Math.random(); // 0 ~ 1
+
+	for (let i = 0; i < cumulativeProbabilities.length; i++) {
+		if (randomValue < cumulativeProbabilities[i]) {
+			return data[i];
+		}
+	}
+	// When the temperature is high, all tokens tend to have similarly small probabilities,
+	// making it more likely for random values to be larger.
+	// This ensures random selection - further investigation needed.
+	return data[Math.floor(Math.random() * sampleK)];
+}
 
 const targetTensors = [
 	// 'tok_emb',

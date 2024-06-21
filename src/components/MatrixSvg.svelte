@@ -5,6 +5,7 @@
 	import { afterUpdate, beforeUpdate } from 'svelte';
 	import { color } from 'd3-color';
 	import { Tooltip } from 'flowbite-svelte';
+	import { hoveredMatrixCell } from '~/store';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -139,28 +140,13 @@
 					.attr(transpose ? 'cx' : 'cy', 0)
 					.attr('r', cellWidth / 2)
 					.attr('stroke', (d) => (!Number.isFinite(d) ? 'none' : theme.colors.gray[200]))
-					.on('mouseenter', function (event, d) {
-						if (Number.isFinite(d)) {
-							showTooltip(event, d);
-							const currentColor = d3.select(this).attr('fill');
-							const darkerColor = d3.color(currentColor).darker(1);
-							d3.select(this).attr('stroke', darkerColor);
-						}
-					})
-					.on('mouseleave', function (event, d, i) {
-						hideTooltip();
-						if (Number.isFinite(d)) {
-							d3.select(this).attr('stroke', !Number.isFinite(d) ? 'none' : theme.colors.gray[200]);
-						}
-					})
+					.on('mouseenter', onMouseOverCell)
+					.on('mouseleave', onMouseOutCell)
 					.transition()
 					.duration(100)
 					.attr('fill', function (d, i) {
 						if (!Number.isFinite(d)) return theme.colors.gray[200];
-						const tokenIdx = this.parentNode.classList[1].split('-')[1];
-						return Number(tokenIdx) === highlightedIndex
-							? highlightColorScale(d)
-							: matrixColorScale(d, i);
+						return matrixColorScale(d, i);
 					});
 			}
 		}
@@ -178,37 +164,56 @@
 	function showTooltip(event, d) {
 		tooltipData = d.toFixed(2);
 		tooltipVisible = true;
+
 		const bbox = event.target.getBoundingClientRect();
-		console.log(event.target, bbox.leftOffset);
-		tooltipX = bbox.x + bbox.width / 2;
-		tooltipY = bbox.y;
+		const parentBbox = svgEl.getBoundingClientRect();
+
+		tooltipX = bbox.left + bbox.width / 2 - parentBbox.left;
+		tooltipY = bbox.top - parentBbox.top;
 	}
 
 	function hideTooltip() {
-		// tooltipVisible = false;
+		tooltipVisible = false;
+	}
+
+	function onMouseOverCell(e, d, i) {
+		const rowIdx = this.parentNode.classList[1].split('-')[2];
+		const colIdx = this.classList[1].split('-')[1];
+		hoveredMatrixCell.set({ row: rowIdx, col: colIdx });
+		if (Number.isFinite(d)) {
+			showTooltip(e, d);
+			d3.select(this).attr('stroke', theme.colors.gray[400]);
+		}
+	}
+	function onMouseOutCell(e, d, i) {
+		hoveredMatrixCell.set({ row: null, col: null });
+		hideTooltip();
+		if (Number.isFinite(d)) {
+			d3.select(this).attr('stroke', !Number.isFinite(d) ? 'none' : theme.colors.gray[200]);
+		}
 	}
 </script>
 
 <div class="relative">
 	<svg
-		class="matrix-svg"
+		class="matrix-svg relative"
 		bind:this={svgEl}
 		width={transpose ? svgHeight : svgWidth}
 		height={transpose ? svgWidth : svgHeight}
 	>
 	</svg>
-</div>
-{#if tooltipVisible}
-	<div
-		class="popover tooltip relative divide-gray-200 border border-gray-200 bg-white text-gray-500 shadow-md"
-		style="left: {tooltipX}px; top: {tooltipY}px;"
-	>
-		{tooltipData}
+	{#if tooltipVisible}
 		<div
-			class="arrow pointer-events-none absolute block h-[10px] w-[10px] rotate-45 border-b border-e border-inherit bg-inherit"
-		></div>
-	</div>
-{/if}
+			class="matrix-tooltip divide-gray-200 border border-gray-200 bg-white text-gray-500 shadow-md"
+			style="left: {tooltipX}px; top: {tooltipY}px;"
+		>
+			{tooltipData}
+			<div
+				class="arrow pointer-events-none absolute block h-[10px] w-[10px] rotate-45 border-b border-e border-inherit bg-inherit"
+			></div>
+		</div>
+	{/if}
+</div>
 
 <style lang="scss">
 	:global(.cell-text) {
@@ -217,11 +222,11 @@
 		text-anchor: middle;
 	}
 
-	.tooltip {
-		position: fixed;
-		padding: 5px;
+	.matrix-tooltip {
+		position: absolute;
+		padding: 0.5rem;
 		pointer-events: none;
-		transform: translate(-50%, calc(-100% - 8px));
+		transform: translate(-50%, -100%);
 		font-family: monospace;
 		border-radius: 3px;
 

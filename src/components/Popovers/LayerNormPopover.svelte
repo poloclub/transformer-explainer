@@ -20,7 +20,9 @@
 	{placement}
 	arrow={false}
 	transition={fade}
-	params={{ duration: 100 }}
+	params={{ duration: 0 }}
 >
-	<div class="ln-content">Layer normalization is</div></Popover
+	<div class="ln-content w-[10rem]">
+		Standardizes layer inputs to maintain consistent mean and variance.
+	</div></Popover
 >

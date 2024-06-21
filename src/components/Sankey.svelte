@@ -1,11 +1,20 @@
 <script lang="ts">
-	import { tokens, modelMeta, hoveredPath } from '~/store';
+	import { tokens, modelMeta, hoveredPath, rootRem } from '~/store';
 	import * as d3 from 'd3';
 	import { onMount, tick } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 	import { gsap, Flip } from '~/utils/gsap';
-	import { gradientMap } from '~/utils/gradient';
+	import { gradientMap } from '~/constants/gradient';
+	import {
+		ATTENTION_HEAD_1,
+		ATTENTION_HEAD_BACK,
+		ATTENTION_OUT,
+		EMBEDDING,
+		LOGIT,
+		MLP,
+		TRANSFORMER_BLOCKS
+	} from '~/constants/opacity';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -38,37 +47,38 @@
 				to: '.head-block .query .vector',
 				// fill: theme.colors.blue[defaultGradientBrightness],
 				gradientId: 'blue-blue2',
-				opacity: 0.4
+				opacity: ATTENTION_HEAD_BACK
 			},
 			{
 				from: '.attention .key .head-rest',
 				to: '.head-block .key .vector',
 				// fill: theme.colors.red[defaultGradientBrightness],
 				gradientId: 'red-red2',
-				opacity: 0.4
+				opacity: ATTENTION_HEAD_BACK
 			},
 			{
 				from: '.attention .value .head-rest',
 				to: '.head-block .value .vector',
 				gradientId: 'green-green2',
 				// fill: theme.colors.green[defaultGradientBrightness],
-				opacity: 0.4
+				opacity: ATTENTION_HEAD_BACK
 			},
 			{
 				from: '.attention .head-out .vector',
 				to: '.mlp .initial .vector .head-rest',
 				gradientId: 'transparent-purple',
-				opacity: 0.4
+				opacity: ATTENTION_HEAD_BACK
 			}
 		]
 	};
 	$: pathMap = {
 		embedding: [
 			{
+				hoverable: true,
 				from: '.embedding .vector-column .column.vectors .vector',
 				to: '.attention .vector',
 				gradientId: 'gray-blue',
-				opacity: 0.6,
+				opacity: EMBEDDING,
 				pathGenerator: (source, target, curveOffset: number) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
@@ -92,24 +102,28 @@
 				from: '.attention .query .sub-vector.head1',
 				to: '.head-block .query .vector',
 				// fill: theme.colors.blue[200]
-				gradientId: 'blue-blue'
+				gradientId: 'blue-blue',
+				opacity: ATTENTION_HEAD_1
 			},
 			{
 				from: '.attention .key .sub-vector.head1',
 				to: '.head-block .key .vector',
 				// fill: theme.colors.red[200]
-				gradientId: 'red-red'
+				gradientId: 'red-red',
+				opacity: ATTENTION_HEAD_1
 			},
 			{
 				from: '.attention .value .sub-vector.head1',
 				to: '.head-block .value .vector',
 				// fill: theme.colors.green[200]
-				gradientId: 'green-green'
+				gradientId: 'green-green',
+				opacity: ATTENTION_HEAD_1
 			},
 			{
 				from: '.attention .head-out .vector',
 				to: '.mlp .initial .head1',
-				gradientId: 'purple-purple'
+				gradientId: 'purple-purple',
+				opacity: ATTENTION_HEAD_1
 				// fill: theme.colors.purple[200]
 			},
 			{
@@ -118,6 +132,8 @@
 				id: 'key-to-attention',
 				type: 'stroke',
 				gradientId: 'red-purple',
+				opacity: ATTENTION_HEAD_1,
+				unique: true,
 				curve: 30,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
@@ -140,7 +156,9 @@
 				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} circle`,
 				gradientId: 'blue-purple',
 				id: 'query-to-attention',
+				unique: true,
 				type: 'stroke',
+				opacity: ATTENTION_HEAD_1,
 				curve: 20,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
@@ -162,7 +180,8 @@
 				to: '.attention .head-out',
 				gradientId: 'transparent-purple2',
 				id: 'to-attention-out',
-				opacity: 0.4,
+				unique: true,
+				opacity: ATTENTION_OUT,
 				curve: 20,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
@@ -182,7 +201,8 @@
 				to: '.attention .head-out',
 				gradientId: 'green-purple',
 				id: 'to-attention-out',
-				opacity: 0.4,
+				unique: true,
+				opacity: ATTENTION_OUT,
 				curve: 60,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
@@ -204,12 +224,12 @@
 				to: '.mlp .projections .vector',
 				gradientId: 'purple-indigo',
 				curve: 50,
-				opacity: 0.4,
+				opacity: MLP,
 				pathGenerator: (source, target, curveOffset: number) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
 
-					const rightOffset = 49;
+					const rightOffset = rootRem * 3;
 
 					return `
 					M ${source.right + scrollLeft},${source.top + scrollTop}
@@ -227,12 +247,12 @@
 				to: '.mlp .column.out .vector',
 				gradientId: 'indigo-blue',
 				curve: 50,
-				opacity: 0.4,
+				opacity: MLP,
 				pathGenerator: (source, target, curveOffset: number) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
 
-					const leftOffset = 20;
+					const leftOffset = rootRem * 1.5;
 
 					return `
 					M ${source.right + scrollLeft},${source.top + scrollTop}
@@ -252,7 +272,7 @@
 				from: '.mlp .out .vector',
 				to: '.transformer-blocks .column.final .vector',
 				gradientId: 'blue-white-blue',
-				opacity: 0.6,
+				opacity: TRANSFORMER_BLOCKS,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
@@ -272,7 +292,8 @@
 				from: '.transformer-blocks .final .vector.last-token ',
 				to: '.softmax .content .vector',
 				gradientId: 'blue-gray',
-				opacity: 0.4
+				opacity: LOGIT,
+				unique: true
 			}
 		]
 	};
@@ -314,6 +335,31 @@
 
 	let pathHoverTimeout;
 
+	const onMouseOverPathGroup = (e, d) => {
+		clearTimeout(pathHoverTimeout);
+		hoveredPath.set(d);
+
+		if (pathMap[d]?.[0]?.hoverable) {
+			const paths = d3.select(`g.${d}`).selectAll('path');
+			prevOpacity = paths.nodes()[0].getAttribute('opacity');
+			paths
+				.transition()
+				.duration(200)
+				.style('opacity', Number(prevOpacity) + 0.3);
+		}
+	};
+
+	const onMouseOutPathGroup = (e, d) => {
+		pathHoverTimeout = setTimeout(() => {
+			hoveredPath.set(null);
+		}, 300);
+
+		if (pathMap[d]?.[0]?.hoverable) {
+			const paths = d3.select(`g.${d}`).selectAll('path');
+			paths.transition().duration(200).style('opacity', prevOpacity);
+		}
+	};
+
 	const drawPath = async () => {
 		await tick();
 		const svg = d3.select(svgEl);
@@ -328,23 +374,8 @@
 				.data(Object.keys(dataMap))
 				.join('g')
 				.attr('class', (d) => `path-group ${d}`)
-				.on('mouseenter', (e, d) => {
-					clearTimeout(pathHoverTimeout);
-					hoveredPath.set(d);
-					const paths = d3.select(`g.${d}`).selectAll('path');
-					prevOpacity = paths.nodes()[0].getAttribute('opacity');
-					paths
-						.transition()
-						.duration(300)
-						.style('opacity', Number(prevOpacity) + 0.2);
-				})
-				.on('mouseleave', (e, d) => {
-					pathHoverTimeout = setTimeout(() => {
-						hoveredPath.set(null);
-					}, 300);
-					const paths = d3.select(`g.${d}`).selectAll('path');
-					paths.transition().duration(300).style('opacity', prevOpacity);
-				});
+				.on('mouseenter', onMouseOverPathGroup)
+				.on('mouseleave', onMouseOutPathGroup);
 
 			g.selectAll('path.sankey-path')
 				.data((d) => {
@@ -364,7 +395,7 @@
 							const isLast = targets.length > 1 && i === sources.length - 1;
 							let gradUrl = item.gradientId;
 
-							if (isLast && document.getElementById(item.gradientId + '-last')) {
+							if (isLast && !item.unique && document.getElementById(item.gradientId + '-last')) {
 								gradUrl = item.gradientId + '-last';
 							}
 
@@ -396,7 +427,7 @@
 				.attr('fill', (d) => d.fill)
 				.attr('stroke', (d) => d.stroke)
 				.attr('stroke-width', 2)
-				.attr('opacity', (d) => d.opacity || 1)
+				.attr('opacity', (d) => d.opacity)
 				.attr('d', (d) => d.path);
 		});
 	};
@@ -465,6 +496,7 @@
 			.attr('y2', (d) => d.y2)
 			.attr('stroke', theme.colors.gray[400])
 			.attr('stroke-width', 1)
+			.attr('stroke-dasharray', '8,4')
 			.style('opacity', 0);
 	};
 
@@ -488,7 +520,8 @@
 	id="back"
 	class="sankey-back absolute left-0 top-0 h-full w-full"
 	style={`z-index:${$modelMeta.attention_head_num - 1};`}
-></svg><svg
+></svg>
+<svg
 	bind:this={svgEl}
 	class="sankey-top absolute left-0 top-0 h-full w-full"
 	style={`z-index:${$modelMeta.attention_head_num};`}

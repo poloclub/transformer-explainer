@@ -1,5 +1,4 @@
 export const reshapeArray = (arr, dimensions) => {
-	console.log(arr, dimensions);
 	const filteredDimensions = dimensions.filter((dim) => dim !== 1);
 
 	const createNestedArray = (arr, dims) => {

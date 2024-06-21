@@ -4,10 +4,13 @@
 	import Matrix from '~/components/Matrix.svelte';
 	import { gsap } from '~/utils/gsap';
 	import { maskArray } from '~/utils/array';
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 	import * as d3 from 'd3';
+	import Katex from '~/utils/Katex.svelte';
+	import { Tooltip } from 'flowbite-svelte';
+	import { ATTENTION_OUT } from '~/constants/opacity';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -34,26 +37,49 @@
 
 	const blockId = getContext('block-id');
 
+	// event handling
+
 	$: if ($expandedBlock.id !== blockId && isAttentionExpanded) {
 		isAttentionExpanded = false;
 		collapseAttention();
 	}
 
 	const onClickAttention = () => {
-		isAttentionExpanded = !isAttentionExpanded;
-		if (isAttentionExpanded) {
+		// isAttentionExpanded = !isAttentionExpanded;
+		// if (isAttentionExpanded) {
+		// 	expandedBlock.set({ id: blockId });
+		// 	expandAttention();
+		// }
+		// else {
+		// 	expandedBlock.set({ id: null });
+		// 	collapseAttention();
+		// }
+		if (!isAttentionExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandAttention();
-		} else {
-			expandedBlock.set({ id: null });
-			collapseAttention();
 		}
 	};
 
+	let expandableEl: HTMLDivElement;
+
+	function handleOutsideClick(e) {
+		if (isAttentionExpanded && !expandableEl.contains(e.target)) {
+			expandedBlock.set({ id: null });
+		}
+	}
+	onMount(() => {
+		document.body.addEventListener('click', handleOutsideClick);
+		return () => {
+			document.body.removeEventListener('click', handleOutsideClick);
+		};
+	});
+
+	// animation
 	let expandTl = gsap.timeline();
 	let collapseTl = gsap.timeline();
 
 	const expandAttention = () => {
+		isAttentionExpanded = true;
 		collapseTl.progress(1);
 
 		const keyPaths = document.querySelectorAll('div.sankey g.attention path.key-to-attention');
@@ -176,10 +202,11 @@
 
 		// const grad = document.querySelector('#green-purple');
 		// const stop = grad?.querySelectorAll('stop')[1];
-		expandTl.to(outPaths, { opacity: 0.5 });
+		expandTl.to(outPaths, { opacity: ATTENTION_OUT });
 	};
 
 	const collapseAttention = () => {
+		isAttentionExpanded = false;
 		expandTl.progress(1);
 		collapseTl.to([attentionQK, attentionMask, attentionSoftmax], {
 			opacity: 0,
@@ -199,6 +226,7 @@
 		);
 	};
 
+	// color scale
 	$: qkColorScaleDomain = d3.extent(queryKey.flat());
 	$: qkColorScale = (d, i) => {
 		return d3
@@ -218,13 +246,13 @@
 	class="flex items-center gap-8 px-5"
 	style={`--attention-matrix-width: ${attentionMatrixWidth}px;`}
 >
-	<!-- <WeightPopover triggeredBy={'#key-container'} title={'Key Calculation'} {data} /> -->
+	<!-- QK -->
 	<div
-		role="button"
-		tabindex="0"
-		class={classNames('attention-matrix-container relative flex gap-3 p-3 pb-1', {
+		role="none"
+		class={classNames('attention-matrix-container relative flex', {
 			active: isAttentionExpanded
 		})}
+		bind:this={expandableEl}
 		on:click={onClickAttention}
 		on:keydown={onClickAttention}
 	>
@@ -245,14 +273,17 @@
 				shape={'circle'}
 				colorScale={qkColorScale}
 			/>
-			<div class="matrix-label">QK<sup>T</sup></div>
-
+			<div class="matrix-label">Dot product</div>
+			<Tooltip class="popover tooltip">
+				<Katex math={'Q \\cdot K^T'}></Katex>
+			</Tooltip>
 			<div class="color-scale">
 				<span class="val">{qkColorScaleDomain[0]?.toFixed(1)}</span>
 				<div class="bar"></div>
 				<span class="val">{qkColorScaleDomain[1]?.toFixed(1)}</span>
 			</div>
 		</div>
+		<!-- Scaling · Mask -->
 		<div
 			class="attention-matrix attention-mask flex flex-col items-center"
 			bind:this={attentionMask}
@@ -300,7 +331,9 @@
 				/>
 			</div>
 			<div class="matrix-label">Scaling · Mask</div>
-
+			<Tooltip class="popover tooltip">
+				<Katex math={'\\frac{QK^T}{\\sqrt{d_k}} + M'}></Katex>
+			</Tooltip>
 			<div class="color-scale">
 				<span class="val">-3.0</span>
 				<div class="bar"></div>
@@ -308,6 +341,7 @@
 			</div>
 		</div>
 
+		<!-- Softmax · Dropout -->
 		<div
 			class={classNames('attention-matrix attention-softmax flex flex-col items-center', {
 				'attention-out': isAttentionExpanded
@@ -357,7 +391,9 @@
 			</div>
 
 			<div class="matrix-label">Softmax · Dropout</div>
-
+			<Tooltip class="popover tooltip">
+				<Katex math={'\\text{Dropout}(\\text{softmax}(\\frac{QK^T}{\\sqrt{d_k}} + M))'}></Katex>
+			</Tooltip>
 			<div class="color-scale">
 				<span class="val">-1.0</span>
 				<div class="bar"></div>
@@ -394,10 +430,8 @@
 		cursor: pointer;
 		border-radius: 0.5rem;
 		transition: 0.2s background-color;
-
-		/* &:hover {
-			background-color: #f8fafc;
-		} */
+		gap: 1rem;
+		padding: 1rem;
 	}
 
 	.attention-matrix-container {
@@ -421,14 +455,20 @@
 		}
 		.arrow {
 			position: absolute;
-			left: -0.8rem;
+			left: -1rem;
 			top: calc(var(--attention-matrix-width) / 2 - 0.5rem);
 			width: 1.2rem;
 			height: 1.2rem;
 			color: theme('colors.gray.300');
 		}
+
+		.attention-matrix {
+			position: relative;
+		}
 	}
 	.color-scale {
+		position: absolute;
+		bottom: -1.2rem;
 		height: 1rem;
 		display: flex;
 		justify-content: space-between;
