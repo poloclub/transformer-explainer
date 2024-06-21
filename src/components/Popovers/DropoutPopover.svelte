@@ -19,8 +19,6 @@
 	{trigger}
 	{placement}
 	arrow={false}
-	transition={fade}
-	params={{ duration: 0 }}
 >
-	<div class="dropout-content">Drop out is</div></Popover
+	<div class="dropout-content">Disables randomly selected neurons.</div></Popover
 >

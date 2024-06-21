@@ -22,15 +22,11 @@
 	transition={fade}
 	params={{ duration: 0 }}
 >
-	<div class="activation-content">
-		The GELU (Gaussian Error Linear Unit) activation function combines linear and non-linear
-		behavior by scaling inputs using the Gaussian cumulative distribution function. It retains small
-		negative values for smoother gradients and is effective in models like BERT.
-	</div></Popover
+	<div class="activation-content">Applies activation function to neuron outputs.</div></Popover
 >
 
 <style>
 	.activation-content {
-		width: 20rem;
+		width: 10rem;
 	}
 </style>

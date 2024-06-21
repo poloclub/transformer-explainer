@@ -187,7 +187,7 @@
 					</div>
 					<div class="title-box logits">
 						<div class="title-text">Logits</div>
-						<Tooltip class="popover tooltip"
+						<Tooltip class="popover tooltip text-xs"
 							><Katex math={'\\text{logits} = \\text{hidden state} \\times \\text{LM Head Weights}'}
 							></Katex></Tooltip
 						>

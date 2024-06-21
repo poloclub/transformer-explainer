@@ -25,14 +25,13 @@
 	{reference}
 >
 	<div class="residual-content">
-		A shortcut that facilitates the flow of information by adding the input of a layer to its
-		output, allowing important information to skip the layer and preventing its loss.
+		Adds skip-connections to allow for better gradient flow.
 	</div></Popover
 >
 
 <style lang="scss">
 	:global(.residual-popover) {
-		width: 20rem !important;
+		width: 12rem !important;
 		.residual-content {
 			font-size: 0.8rem;
 		}

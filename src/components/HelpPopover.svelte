@@ -16,10 +16,13 @@
 		/></svg
 	>
 </div>
-<Popover triggeredBy={`#${id}`} {placement} class="help popover"><slot /></Popover>
+<Popover trigger="click" triggeredBy={`#${id}`} {placement} class="help popover"
+	><div class="help-content"><slot /></div></Popover
+>
 
 <style lang="scss">
-	.help {
-		z-index: 400;
+	.help-content {
+		text-align: left !important;
+		white-space: pre;
 	}
 </style>

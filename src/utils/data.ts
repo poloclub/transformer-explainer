@@ -3,10 +3,9 @@ import * as ort from 'onnxruntime-web';
 import { modelData, tokens, isModelRunning, predictedToken, modelSession } from '~/store';
 import { get } from 'svelte/store';
 import { reshapeArray } from './array';
+import { showFlowAnimation } from './animation';
 
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
-
-//todo
 
 export const runModel = async ({
 	tokenizer,
@@ -37,8 +36,7 @@ export const runModel = async ({
 
 	// To ensure the animation starts after all elements have been rendered
 	setTimeout(async () => {
-		//todo
-		// await showFlowAnimation(input_tokens.length);
+		await showFlowAnimation(input_tokens.length);
 		predictedToken.set(sampledToken);
 		isModelRunning.set(false);
 	}, 0);

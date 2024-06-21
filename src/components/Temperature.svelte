@@ -23,7 +23,11 @@
 		<div class="flex w-full shrink-0 items-center justify-between">
 			<div class="temperature-text flex items-center gap-[2px]">
 				<div>Temperature</div>
-				<HelpPopover id="temperature-help" placement="right">This is temperature</HelpPopover>
+				<HelpPopover id="temperature-help" placement="right"
+					><div class="h-5">
+						{`Changes the output \nprobability distribution \nand randomness of next token.`}
+					</div></HelpPopover
+				>
 			</div>
 			<div class="temperature-value">
 				<p>{temperatureTemp}</p>

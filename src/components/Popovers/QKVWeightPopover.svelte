@@ -216,7 +216,7 @@
 <Card
 	class={classNames('weight-popover popover bg-white text-sm font-light text-gray-500')}
 	transition={fade}
-	params={{ duration: 300 }}
+	params={{ duration: 100 }}
 >
 	<div
 		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"

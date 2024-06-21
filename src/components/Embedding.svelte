@@ -143,7 +143,7 @@
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
 						<span>Token<br />Embedding</span><HelpPopover id="token-embedding"
-							>Token Embedding is</HelpPopover
+							>{`Converts tokens into \nsemantically meaningful \nnumerical representations.`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}
@@ -204,7 +204,7 @@
 				<div class="column embedding-detail position-embedding">
 					<div class="subtitle flex gap-1">
 						<span>Positional<br />Encoding</span><HelpPopover id="position-embedding"
-							>Positional Embedding is</HelpPopover
+							>{`Encodes positional information \nof tokens into numerical representations.`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}
