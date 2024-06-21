@@ -1,21 +1,16 @@
-# Transformer Explainer
-
+# Transformer Explainer: Interactive Learning of Text-Generative Models
+Transformer Explainer is an interactive visualization tool designed to help anyone learn how Transformer-based models like GPT work. It runs a live GPT-2 model right in your browser, allowing you to experiment with your own text and observe in real time how internal components and operations of the Transformer work together to predict the next tokens.<br/><br/>
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 
 <!-- [![arxiv badge](https://img.shields.io/badge/arXiv-2305.03509-red)](https://arxiv.org/abs/2305.03509) -->
 
 <table>
 <tr>
-    <td colspan="4"><img src="./preview/teaser.png" style="width: 100%"></img></td>
+    <td colspan="2"><img src="./preview/teaser.png" style="width: 100%"></img></td>
 </tr>
-<tr>
-    <td><a href="http://poloclub.github.io/transformer-explainer">Live Demo</a></td>
-    <td><a href="">Demo Video</a></td>
-    <td>
-    <!-- <a href="/"> -->
-    Research Paper (TBD)
-    <!-- </a> -->
-    </td>
+<tr>    
+    <td>🚀 <a href="http://poloclub.github.io/transformer-explainer">Live Demo</a></td>
+    <td>📺 <a href="">Demo Video</a></td>
 </tr>
 </table>
 
