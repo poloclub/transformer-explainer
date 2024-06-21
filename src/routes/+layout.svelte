@@ -33,13 +33,13 @@
 <style lang="scss">
 	#app {
 		height: 100vh;
-		min-width: var(--min-screen-width);
+		min-width: 900px;
+		overflow: hidden;
 	}
 
 	#landing {
 		height: 100%;
 		width: 100%;
-	}
 
 	header {
 		min-width: var(--min-screen-width);
