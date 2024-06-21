@@ -489,7 +489,7 @@
 				</div>
 
 				<div class="article-section">
-					<h2>How is Transformer Explainer implemented?</h2>
+					<h2>How is Transformer Explainer Implemented?</h2>
 					<p>
 						Transformer Explainer features a live GPT-2 (small) model running directly in the
 						browser. This model is derived from the PyTorch implementation of GPT by Andrej
