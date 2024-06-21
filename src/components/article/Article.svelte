@@ -69,7 +69,7 @@
 		<h1>Transformer Architecture</h1>
 
 		<p>
-			Every text-generative Transformer consists of these three <strong>key components</strong>:
+			Every text-generative Transformer consists of these <strong>three key components</strong>:
 		</p>
 		<ol>
 			<li>
@@ -128,7 +128,7 @@
 					pieces called tokens. These tokens can be a word or a subword. The words <code
 						>"Data"</code
 					>
-					and <code>"vizualization"</code> corresponds to unique tokens, while the word
+					and <code>"vizualization"</code> correspond to unique tokens, while the word
 					<code>"empowers"</code>
 					is split into two tokens. The full vocabulary of tokens is decided before training the model:
 					GPT-2's vocabulary has <code>50,257</code> unique tokens. Now that we split our input text
@@ -140,7 +140,7 @@
 				<p>
 					GPT-2 Small represents each token in the vocabulary as a 768-dimensional vector; the
 					dimension of the vector depends on the model. These embedding vectors are stored in a
-					matrix of shape <code>(50, 257, 768)</code>, containing approximately 39 million
+					matrix of shape <code>(50,257, 768)</code>, containing approximately 39 million
 					parameters! This extensive matrix allows the model to assign semantic meaning to each
 					token.
 				</p>
