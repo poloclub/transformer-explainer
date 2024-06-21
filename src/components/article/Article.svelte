@@ -478,7 +478,14 @@
 
 				<div class="article-section">
 					<h2>Video Tutorial</h2>
-					<span class="attention">FUTURE_LINK_TO_YOUTUBE_TUTORIAL</span>
+					<div class="video-container">
+						<iframe
+							src="https://www.youtube.com/embed/ECR4oAwocjs"
+							frameborder="0"
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+							allowfullscreen>
+						</iframe>
+					</div>
 				</div>
 
 				<div class="article-section">
@@ -525,15 +532,6 @@
 </div>
 
 <style lang="scss">
-	.attention {
-		// color: white;
-		// background-color: theme('colors.red.200');
-	}
-
-	// .fig-numbering {
-	//   background-color: theme('colors.gray.500');
-	//   color: white;
-	// }
 
 	a {
 		color: theme('colors.blue.500');
@@ -576,9 +574,22 @@
 	.architecture-section {
 		padding-top: 1rem;
 	}
-	.article-subsection {
-		// padding-bottom: 1rem;
-	}
+  .video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+    background: #000;
+  }
+
+  .video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 
 	#description {
 		padding-bottom: 3rem;
