@@ -2,26 +2,31 @@ import { writable, derived } from 'svelte/store';
 import * as ort from 'onnxruntime-web';
 import tailwindConfig from '../../tailwind.config';
 import resolveConfig from 'tailwindcss/resolveConfig';
+import { ex0 } from '~/constants/examples';
+
 const { theme } = resolveConfig(tailwindConfig);
-
-export const selectedExampleIdx = writable<number>(0);
-export const inputTextExample = [
-	'Data visualization empowers users to',
-	'Artificial Intelligence is transforming the',
-	'As the ship was approaching the',
-	'On the deserted planet they discovered a',
-	'IEEE VIS conference highlights the'
-];
-
-export const modelSession = writable<ort.InferenceSession>();
-
-// transformer model output
-export const modelData = writable<ModelData>();
-export const tokens = writable<string[]>('Data visualization em powers users to'.split(' '));
 
 // is transformer running?
 export const isModelRunning = writable(false);
 export const isFetchingModel = writable(true);
+export const isLoaded = writable(false);
+
+export const inputTextExample = [
+	'Data visualization empowers users to',
+	'Artificial Intelligence is transforming the',
+	'As the spaceship was approaching the',
+	'On the deserted planet they discovered a',
+	'IEEE VIS conference highlights the'
+];
+
+export const selectedExampleIdx = writable<number>(0);
+
+export const modelSession = writable<ort.InferenceSession>();
+
+// transformer model output
+export const modelData = writable<ModelData>(ex0);
+export const predictedToken = writable<PredictionItem>(ex0?.sampled);
+export const tokens = writable<string[]>(ex0?.tokens);
 
 export const modelMetaMap: Record<string, ModelMetaData> = {
 	gpt2: { layer_num: 12, attention_head_num: 12, dimension: 768 },
@@ -58,9 +63,7 @@ export const modelMeta = derived(selectedModel, ($selectedModel) => modelMetaMap
 export const initialtTemperature = 1.0;
 export const temperature = writable(initialtTemperature);
 
-// Prediction result
-export const initialPredictedToken = '';
-export const predictedToken = writable<PredictionItem>();
+// Prediction visual
 export const highlightedIndex = writable(null);
 export const finalTokenIndex = writable(null);
 

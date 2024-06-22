@@ -384,13 +384,13 @@
 						const targets = d3.selectAll(item.to).nodes() as Element[];
 
 						return sources.map((src, i) => {
-							const source = src.getBoundingClientRect();
-							const target = targets[i].getBoundingClientRect();
+							const source = src?.getBoundingClientRect();
+							const target = targets[i]?.getBoundingClientRect();
 
 							const curveOffset = item.curve || defaultCurveOffset;
 
 							const generator = item.pathGenerator || pathGenerator;
-							const path = generator(source, target, curveOffset);
+							const path = source && target ? generator(source, target, curveOffset) : '';
 
 							const isLast = targets.length > 1 && i === sources.length - 1;
 							let gradUrl = item.gradientId;

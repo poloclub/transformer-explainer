@@ -16,7 +16,7 @@
 		/></svg
 	>
 </div>
-<Popover trigger="click" triggeredBy={`#${id}`} {placement} class="help popover"
+<Popover triggeredBy={`#${id}`} {placement} class="help popover"
 	><div class="help-content"><slot /></div></Popover
 >
 
@@ -24,5 +24,8 @@
 	.help-content {
 		text-align: left !important;
 		white-space: pre;
+		line-height: 1.2;
+		// font-weight: 300;
+		// font-size: 0.9rem;
 	}
 </style>

@@ -28,22 +28,22 @@
 	import * as ort from 'onnxruntime-web';
 
 	import { adjustTemperature, runModel } from '~/utils/data';
-	import { mergeChunks } from '~/utils/mergeChunk';
+	import { fetchAndMergeChunks } from '~/utils/fetchChunks';
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
 	import { fade } from 'svelte/transition';
 	import { AutoTokenizer } from '@xenova/transformers';
+	import { ChevronDoubleRightOutline } from 'flowbite-svelte-icons';
 
 	// run model
 	onMount(async () => {
 		// Fetch model onnx
-		// const modelUrl = `${base}/gpt2-quant.onnx`;
-		// const url = `${base}/gpt2.onnx`;
-		const chunkNum = 63;
+		const chunkNum = 63; //TODO: move to model meta
 		const chunkUrls = Array(chunkNum)
 			.fill(0)
 			.map((d, i) => `${base}/model/gpt2.onnx.part${i}`);
 
-		const mergedArray = await mergeChunks(chunkUrls);
+		// Fetch from cache
+		const mergedArray = await fetchAndMergeChunks(chunkUrls);
 
 		// Create a Blob from the merged array
 		const blob = new Blob([mergedArray], { type: 'application/octet-stream' });
@@ -57,13 +57,20 @@
 		});
 
 		modelSession.set(session);
+
 		isFetchingModel.set(false);
 
 		// Initialize tokenizer
 		const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
 
 		// Subscribe input change
+		let initialRun = true;
 		const unsubscribeInputText = inputText.subscribe((value) => {
+			if ($isFetchingModel || !$modelSession || initialRun) {
+				initialRun = false;
+				return;
+			}
+			// run model when input has changed
 			runModel({
 				tokenizer,
 				input: value.trim(),
@@ -73,10 +80,10 @@
 			});
 		});
 
-		let initialRun = true; // prevent redundant initial adjustTemperature
+		let initialTemperature = true; // prevent initial redundant prediction
 		const unsubscribeTemperature = temperature.subscribe((value) => {
-			if (initialRun) {
-				initialRun = false;
+			if (initialTemperature) {
+				initialTemperature = false;
 				return;
 			}
 			adjustTemperature({
@@ -105,7 +112,7 @@
 			maxVectorHeight
 		);
 		vectorHeight.set(vectorHeightVal);
-		headContentHeight.set($tokens.length * vectorHeightVal * 3 + gaps);
+		headContentHeight.set(Math.max($tokens.length * vectorHeightVal * 3 + gaps, rootRem * 20));
 	};
 
 	$: if (vizHeight || $tokens.length) {
@@ -128,32 +135,6 @@
 			transition:fade={{ duration: 100 }}
 		></div>
 	{/if}
-	<!-- <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
-		<defs>
-			<mask id="reveal-mask">
-				<rect x="0" y="0" width="0" height="800" fill="white">
-					<animate attributeName="width" from="0" to="1200" dur="3s" fill="freeze" />
-				</rect>
-			</mask>
-		</defs>
-		<path
-			class="sankeyy"
-			fill="url(#purple-indigo)"
-			stroke="none"
-			stroke-width="2"
-			opacity="1"
-			d="
-		  M 913.34375,100.28125
-		  C 993.34375,100.28125 995.0078125,722.9140625 1075.0078125,722.9140625
-		  L 1087.0078125,722.9140625
-		  L 1087.0078125,771.828125
-		  L 1075.0078125,771.828125
-		  C 995.0078125,771.828125 993.34375,704.5625 913.34375,704.5625
-		  Z
-		"
-			mask="url(#reveal-mask)"
-		></path>
-	</svg> -->
 	<!-- <Spinner color={theme.colors['primary'][500]} /> -->
 	<div class="sankey opacity-1" class:attention={$expandedBlock.id === 'attention'}>
 		<Sankey />

@@ -18,7 +18,7 @@
 		<div class="cursor"></div>
 		<svg class="main">
 			<!-- <path class="line" d={`M 0 0 L 10 0 L 20 -20`} style={'transform:translateY(50%)'}></path> -->
-			<path class="line line1" d={`M0,0 L0,90%`}></path>
+			<path class="line line1" d={`M0,0 L0,${$vectorHeight * 3.1 - 3}`}></path>
 			<!-- <path class="line line2" d={`M0,0 L0,40%`}></path> -->
 			<circle class="icon" cx="50%" cy="50%" r="3"></circle>
 		</svg>

@@ -2,13 +2,19 @@
 	import '~/styles/app.css';
 	import '~/styles/global.scss';
 	import Topbar from '~/components/Topbar.svelte';
-	import { predictedColor, rootRem } from '~/store';
+	import { isLoaded, predictedColor, rootRem } from '~/store';
 	import Article from '~/components/article/Article.svelte';
+	import { onMount } from 'svelte';
+	import { Spinner } from 'flowbite-svelte';
 
 	let topBarHeight = 0;
 
-	let minScreenWidth = 1400;
+	let minScreenWidth = 1300;
 	let minColumWidth = Math.floor(minScreenWidth / 24) - rootRem * 2;
+
+	onMount(async () => {
+		isLoaded.set(true);
+	});
 </script>
 
 <svelte:head>
@@ -24,7 +30,11 @@
 			<Topbar />
 		</header>
 		<main id="main" style={`padding-top:${topBarHeight}px`}>
-			<slot />
+			{#if $isLoaded}
+				<slot />
+			{:else}
+				<div class="flex h-full w-full items-center justify-center"><Spinner color="purple" /></div>
+			{/if}
 		</main>
 	</div>
 	<div class="article h-auto w-full">
@@ -42,6 +52,7 @@
 	#landing {
 		height: 100%;
 		width: 100%;
+		min-width: var(--min-screen-width);
 	}
 
 	header {

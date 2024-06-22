@@ -7,6 +7,7 @@
 	import DropdownItem from 'flowbite-svelte/DropdownItem.svelte';
 	import Temperature from './Temperature.svelte';
 	import TokenGenerator from './TokenGenerator.svelte';
+	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
 
 	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
 	import {
@@ -19,35 +20,46 @@
 		inputTextExample,
 		isFetchingModel,
 		expandedBlock,
-		selectedExampleIdx
+		selectedExampleIdx,
+		tokens,
+		isLoaded,
+		modelSession
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
 	import classNames from 'classnames';
+	import { tick } from 'svelte';
 
 	let inputRef: HTMLDivElement;
-	let inputTextTemp = $inputText;
+	let predictRef: HTMLDivElement;
+
+	$: inputTextTemp = $inputText;
 
 	$: predictedTokenTemp = $predictedToken?.token || '';
 
+	const wordLimit = 12;
+	$: exceedLimit = inputTextTemp.split(' ').length >= wordLimit;
+
+	// Text input
 	const onFocusInput = (e) => {
+		//if token is <br>
+		if (encodeURIComponent(predictedTokenTemp) === '%0A') {
+			inputTextTemp = inputTextTemp + ' ';
+		} else {
+			inputTextTemp = inputTextTemp + predictedTokenTemp;
+		}
 		// set predicted to empty
 		predictedTokenTemp = '';
-		//add predicted token to inputText
-		inputTextTemp = e.target?.textContent;
+		// set input box text
+		inputRef.innerText = inputTextTemp;
 	};
 
 	const onInput = (e) => {
-		const userInput = e.target?.querySelector('.user-input');
-		inputTextTemp = userInput.innerText;
+		inputTextTemp = inputRef.innerText;
 	};
 
 	const handleSubmit = (e) => {
-		// set predicted to empty
-		predictedTokenTemp = '';
-		// add predicted token to inputText
-		inputTextTemp = inputRef?.textContent?.trim() || '';
-
+		onFocusInput();
 		inputText.set(inputTextTemp);
 	};
 
@@ -57,20 +69,48 @@
 		}
 	};
 
+	// Example select box
 	let dropdownOpen = false;
+	const initialDataMap = [ex0, ex1, ex2, ex3, ex4];
 	const onSelectExample = (d, i) => {
 		dropdownOpen = false;
+
 		inputTextTemp = d;
+		inputRef.innerText = inputTextTemp;
+
 		predictedTokenTemp = '';
-		inputText.set(d.trim());
+		inputText.update((prev) => {
+			if (prev === d.trim()) {
+				return d + ' ';
+			}
+			return d.trim();
+		});
 		selectedExampleIdx.set(i);
+
+		if ($isFetchingModel || !$modelSession) {
+			const initialData = initialDataMap[i];
+			modelData.set(initialData);
+			predictedToken.set(initialData.sampled);
+			tokens.set(initialData.tokens);
+		}
+	};
+
+	const moveCursorToEnd = (element) => {
+		const range = document.createRange();
+		const sel = window.getSelection();
+		range.selectNodeContents(element);
+		range.collapse(false);
+		sel.removeAllRanges();
+		sel.addRange(range);
+		element.focus();
 	};
 
 	$: isLoading = $isFetchingModel || $isModelRunning;
 	$: disabled = $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
+	$: selectDisabled = $isModelRunning || $expandedBlock.id !== null;
 </script>
 
-<div class="input-area flex flex-shrink-0">
+<div class="input-area">
 	<!-- <div class="flex items-center gap-1 whitespace-nowrap"> -->
 	<!-- <Label>Model</Label> -->
 	<!-- <Select
@@ -83,91 +123,105 @@
 			size="sm"
 		/> -->
 	<!-- </div> -->
-	<div class="flex flex-1 items-center gap-1 whitespace-nowrap">
-		<form class=" flex w-full items-center gap-2">
-			<ButtonGroup class="w-full grow" size="sm">
-				<button
-					type="button"
-					{disabled}
-					class:disabled
-					class="select-button inline-flex items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
-				>
-					Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
-				</button>
-				<Dropdown placement="bottom-start" bind:open={dropdownOpen}>
-					{#each inputTextExample as text, index}
-						<DropdownItem
-							on:click={() => {
-								onSelectExample(text, index);
-							}}>{text}</DropdownItem
-						>
-					{/each}
-				</Dropdown>
-				<div class="input-container relative" class:disabled>
+
+	<form class="input-form">
+		<ButtonGroup class="input-btn-group" size="sm">
+			<button
+				type="button"
+				disabled={selectDisabled}
+				class:selectDisabled
+				class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
+			>
+				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+			</button>
+			<Dropdown placement="bottom-start" bind:open={dropdownOpen} class="example-dropdown">
+				{#each inputTextExample as text, index}
+					<DropdownItem
+						class={$selectedExampleIdx === index && 'active'}
+						on:click={() => {
+							onSelectExample(text, index);
+						}}>{text}</DropdownItem
+					>
+				{/each}
+			</Dropdown>
+			<div class="input-container" class:disabled>
+				<div class={`editable ${!$isModelRunning ? 'w-full' : ''}`}>
 					<div
 						bind:this={inputRef}
 						contenteditable={!disabled}
-						class="input-box"
+						class="text-box"
 						placeholder="Test your own input text"
 						on:focus={onFocusInput}
 						on:input={onInput}
 						on:keydown={handleKeyDown}
 						role="input"
 					>
-						<span class="user-input">{inputTextTemp}</span><span class="predicted"
-							>{predictedTokenTemp}</span
-						>
+						{inputTextTemp}
 					</div>
-					{#if isLoading}
-						<div class="loading"><LoadingDots /></div>
-					{/if}
-					{#if $isFetchingModel}
-						<span class="helper-text"
-							>Try the examples while GPT-2 model is being downloaded (600MB)</span
-						>{/if}
+					<div
+						bind:this={predictRef}
+						class="predicted"
+						role="none"
+						on:click={(e) => {
+							onFocusInput(e);
+							inputRef.focus();
+							moveCursorToEnd(inputRef);
+						}}
+					>
+						<span>{predictedTokenTemp}</span>
+					</div>
 				</div>
-			</ButtonGroup>
-			<button
-				{disabled}
-				class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
-					disabled,
-					active: !disabled
-				})}
-				type="submit"
-				on:click={handleSubmit}
-			>
-				Generate
-			</button>
-		</form>
-	</div>
+				{#if $isModelRunning}
+					<div class="loading"><LoadingDots /></div>
+				{/if}
+				{#if $isLoaded && $isFetchingModel}
+					<span class="helper-text"
+						>Try the examples while GPT-2 model is being downloaded (600MB)</span
+					>
+				{:else if exceedLimit}
+					<span class="helper-text">You can enter up to {wordLimit} words.</span>
+				{/if}
+			</div>
+		</ButtonGroup>
+		<button
+			disabled={disabled || exceedLimit || exceedLimit}
+			class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
+				disabled: disabled || exceedLimit,
+				active: !(disabled || exceedLimit)
+			})}
+			type="submit"
+			on:click={handleSubmit}
+		>
+			Generate
+		</button>
+	</form>
 	<Temperature disabled={isLoading} />
 </div>
 
 <style lang="scss">
 	.input-area {
+		width: 100%;
+		flex-shrink: 0;
+		display: flex;
 		gap: 1rem;
 		padding-left: 1rem;
 		padding-right: 1.25rem;
-	}
-	.predicted {
-		color: red;
-	}
-	.select-button {
-		flex-shrink: 0;
-		border: 1px solid theme('colors.gray.300');
-		// background-color: theme('colors.gray.50');
-		color: theme('colors.gray.900');
-		&:hover {
-			background-color: theme('colors.gray.100');
-		}
-		&:focus {
-			outline: none;
-		}
-		&.disabled {
-			cursor: not-allowed;
+
+		.input-form {
+			width: 100%;
+			flex: 1 0 0;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+
+			:global(.input-btn-group) {
+				flex: 1 0 0;
+				display: flex;
+			}
 		}
 	}
 	.input-container {
+		position: relative;
 		display: flex;
 		flex: 1 0 0;
 		align-items: center;
@@ -180,44 +234,81 @@
 		font-size: 0.9rem;
 		line-height: 1rem;
 		padding: 0.5rem;
-		width: 100%;
-
 		white-space: pre-wrap;
 		gap: 0.3rem;
-		.input-box {
-			// flex: 1 0 0;
+
+		width: 10px; // to keep input box width
+
+		.editable {
+			justify-content: end; // to show the last word
+
+			display: flex;
+			align-items: center;
+			overflow-x: hidden;
 			white-space: nowrap;
-			&:focus {
-				outline: none;
+
+			.text-box {
+				white-space: nowrap;
+
+				&:focus {
+					outline: none;
+				}
 			}
+			.predicted {
+				// flex-shrink: 0;
+				flex: 1 0 0;
+				color: var(--predicted-color);
+				font-weight: 600;
+				span {
+					white-space: pre;
+				}
+			}
+		}
+
+		&.disabled {
+			cursor: not-allowed;
+		}
+
+		.loading {
+			flex-shrink: 0;
+		}
+	}
+
+	.select-button {
+		flex-shrink: 0;
+		font-size: 0.8rem;
+		border: 1px solid theme('colors.gray.300');
+		color: theme('colors.gray.900');
+		&:hover {
+			background-color: theme('colors.gray.100');
+		}
+		&:focus {
+			outline: none;
 		}
 		&.disabled {
 			cursor: not-allowed;
 		}
-		input {
-			width: 100%;
-		}
-		.loading {
-			flex-shrink: 0;
-		}
-		.predicted {
-			color: var(--predicted-color);
-			font-weight: 600;
+	}
+	:global(.example-dropdown) {
+		:global(.active) {
+			background-color: theme('colors.gray.100') !important;
 		}
 	}
 	.helper-text {
 		position: absolute;
 		bottom: 0;
 		right: 0;
-		transform: translate(0, calc(100% + 4px));
+		padding: 0.3rem 0;
+		transform: translate(0, 100%);
 		color: theme('colors.gray.400');
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 	}
 	:global(.generate-button) {
 		padding: 0.4rem 0.8rem;
 		border: 1px solid theme('colors.gray.300');
 		color: theme('colors.gray.900');
 		transition: all 0.2s;
+		flex-shrink: 0;
 	}
 	:global(.generate-button.active) {
 		&:hover {

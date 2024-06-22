@@ -37,7 +37,7 @@
 		rowGap,
 		colGap,
 		transpose,
-		showValue,
+		// showValue,
 		groupBy,
 		shape,
 		colorScale

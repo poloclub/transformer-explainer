@@ -9,7 +9,7 @@
 
 	const { theme } = resolveConfig(tailwindConfig);
 
-	let visibleDimension = 100;
+	let visibleDimension = Math.floor($vectorHeight * 3.5) * 4;
 	export let active: boolean = false;
 	export let data: number[] = new Array(visibleDimension).fill(0).map((d) => Math.random());
 	export let colorScale: string | ((t: number, i: number) => string) | undefined = undefined;

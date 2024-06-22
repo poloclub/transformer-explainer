@@ -1,6 +1,8 @@
 <script>
 	import tailwindConfig from '../../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
+	import { base } from '$app/paths';
+
 	// import Youtube from './Youtube.svelte';
 
 	let softmaxEquation = `$$\\text{Softmax}(x_{i}) = \\frac{\\exp(x_i)}{\\sum_j \\exp(x_j)}$$`;
@@ -113,7 +115,7 @@
 				encodings to get the final embedding. Let’s see how each of these steps is done.
 			</p>
 			<div class="figure">
-				<img src="./static/article_assets/embedding.png" width="60%" height="60%" align="middle" />
+				<img src="./article_assets/embedding.png" width="60%" height="60%" align="middle" />
 			</div>
 			<div class="figure-caption">
 				Figure <span class="attention">1</span>. Expanding the Embedding layer view, showing how the
@@ -229,7 +231,7 @@
 					<h4>Step 1: Query, Key, and Value Matrices</h4>
 
 					<div class="figure">
-						<img src="static/article_assets/QKV.png" width="80%" align="middle" />
+						<img src="./article_assets/QKV.png" width="80%" align="middle" />
 					</div>
 					<div class="figure-caption">
 						Figure <span class="attention">2</span>. Computing Query, Key, and Value matrices from
@@ -276,7 +278,7 @@
 					</p>
 
 					<div class="figure">
-						<img src="static/article_assets/attention.png" width="80%" align="middle" />
+						<img src="./article_assets/attention.png" width="80%" align="middle" />
 					</div>
 					<div class="figure-caption">
 						Figure <span class="attention">3</span>. Using Query, Key, and Value matrices to
@@ -320,7 +322,7 @@
 					<h3>MLP: Multi-Layer Perceptron</h3>
 
 					<div class="figure">
-						<img src="static/article_assets/mlp.png" width="70%" align="middle" />
+						<img src="./article_assets/mlp.png" width="70%" align="middle" />
 					</div>
 					<div class="figure-caption">
 						Figure <span class="attention">4</span>. Using MLP layer to project the self-attention
@@ -354,7 +356,7 @@
 					</p>
 
 					<div class="figure">
-						<img src="static/article_assets/softmax.png" width="60%" align="middle" />
+						<img src="./article_assets/softmax.png" width="60%" align="middle" />
 					</div>
 					<div class="figure-caption">
 						Figure <span class="attention">5</span>. Each token in the vocabulary is assigned a
@@ -415,9 +417,9 @@
 							It works by normalizing the inputs across the features, ensuring that the mean and
 							variance of the activations are consistent. This normalization helps mitigate issues
 							related to internal covariate shift, allowing the model to learn more effectively and
-							reducing the sensitivity to the initial weights. Layer Normalization is applied twice in each
-							Transformer block, once before the self-attention mechanism and once before the MLP
-							layer.
+							reducing the sensitivity to the initial weights. Layer Normalization is applied twice
+							in each Transformer block, once before the self-attention mechanism and once before
+							the MLP layer.
 						</p>
 					</div>
 					<div class="article-subsection">
@@ -483,7 +485,8 @@
 							src="https://www.youtube.com/embed/ECR4oAwocjs"
 							frameborder="0"
 							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowfullscreen>
+							allowfullscreen
+						>
 						</iframe>
 					</div>
 				</div>
@@ -532,7 +535,6 @@
 </div>
 
 <style lang="scss">
-
 	a {
 		color: theme('colors.blue.500');
 
@@ -574,22 +576,22 @@
 	.architecture-section {
 		padding-top: 1rem;
 	}
-  .video-container {
-    position: relative;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    height: 0;
-    overflow: hidden;
-    max-width: 100%;
-    background: #000;
-  }
+	.video-container {
+		position: relative;
+		padding-bottom: 56.25%; /* 16:9 aspect ratio */
+		height: 0;
+		overflow: hidden;
+		max-width: 100%;
+		background: #000;
+	}
 
-  .video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
+	.video-container iframe {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
 
 	#description {
 		padding-bottom: 3rem;
@@ -600,7 +602,7 @@
 
 	#description h1 {
 		color: theme('colors.purple.700');
-		font-size: 2.3rem;
+		font-size: 2.2rem;
 		font-weight: 300;
 		padding-top: 1rem;
 	}

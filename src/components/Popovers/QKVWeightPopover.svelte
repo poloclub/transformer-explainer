@@ -271,7 +271,7 @@
 					/>
 				</svg></button
 			>
-		{/if}w
+		{/if}
 	</div>
 	<div class="content">
 		<div class="weight-popover-content flex items-center justify-start">
@@ -372,7 +372,6 @@
 			`}
 				/>
 			</div>
-
 		</div>
 	</div>
 </Card>

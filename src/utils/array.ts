@@ -1,5 +1,6 @@
 export const reshapeArray = (arr, dimensions) => {
-	const filteredDimensions = dimensions.filter((dim) => dim !== 1);
+	// to ignore batch dimension, but ensure to keep the (1,1) attention dimension
+	const filteredDimensions = dimensions.filter((dim, i) => !(i === 0 && dim == 1));
 
 	const createNestedArray = (arr, dims) => {
 		if (dims.length === 1) return arr.splice(0, dims[0]);

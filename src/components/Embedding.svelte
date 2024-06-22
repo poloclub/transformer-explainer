@@ -204,7 +204,7 @@
 				<div class="column embedding-detail position-embedding">
 					<div class="subtitle flex gap-1">
 						<span>Positional<br />Encoding</span><HelpPopover id="position-embedding"
-							>{`Encodes positional information \nof tokens into numerical representations.`}</HelpPopover
+							>{`Encodes positional \ninformation of tokens into \nnumerical representations.`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}
