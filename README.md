@@ -26,7 +26,7 @@ Transformer Explainer is an interactive visualization tool designed to help anyo
 ```bash
 git clone https://github.com/poloclub/transformer-explainer.git
 cd transformer-explainer
-npm run install
+npm install
 npm run dev
 ```
 
