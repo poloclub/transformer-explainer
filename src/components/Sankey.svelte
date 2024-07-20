@@ -22,8 +22,10 @@
 	let svgEl: HTMLOrSVGElement;
 
 	let resizeObserver: ResizeObserver;
+	let screenWidth: number;
 
-	const defaultCurveOffset = 80;
+	$: curveFactor = Math.floor(screenWidth / 1000) || 1;
+	$: defaultCurveOffset = 40 * (curveFactor - 1) + 80;
 
 	type PathMap = Record<
 		string,
@@ -134,7 +136,7 @@
 				gradientId: 'red-purple',
 				opacity: ATTENTION_HEAD_1,
 				unique: true,
-				curve: 30,
+				curve: curveFactor * 30,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
@@ -203,7 +205,7 @@
 				id: 'to-attention-out',
 				unique: true,
 				opacity: ATTENTION_OUT,
-				curve: 60,
+				curve: curveFactor * 30,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
@@ -223,7 +225,7 @@
 				from: '.mlp .column.initial .vector',
 				to: '.mlp .projections .vector',
 				gradientId: 'purple-indigo',
-				curve: 50,
+				curve: 50 + (curveFactor - 1) * 20,
 				opacity: MLP,
 				pathGenerator: (source, target, curveOffset: number) => {
 					const scrollTop = window.scrollY;
@@ -246,7 +248,7 @@
 				from: '.mlp .projections .vector',
 				to: '.mlp .column.out .vector',
 				gradientId: 'indigo-blue',
-				curve: 50,
+				curve: 50 + (curveFactor - 1) * 20,
 				opacity: MLP,
 				pathGenerator: (source, target, curveOffset: number) => {
 					const scrollTop = window.scrollY;
@@ -515,17 +517,21 @@
 	};
 </script>
 
-<svg
-	bind:this={svgBackEl}
-	id="back"
-	class="sankey-back absolute left-0 top-0 h-full w-full"
-	style={`z-index:${$modelMeta.attention_head_num - 1};`}
-></svg>
-<svg
-	bind:this={svgEl}
-	class="sankey-top absolute left-0 top-0 h-full w-full"
-	style={`z-index:${$modelMeta.attention_head_num};`}
-/>
+<svelte:window bind:innerWidth={screenWidth} />
+
+<div bind:clientWidth={screenWidth} class="h-full w-full">
+	<svg
+		bind:this={svgBackEl}
+		id="back"
+		class="sankey-back absolute left-0 top-0 h-full w-full"
+		style={`z-index:${$modelMeta.attention_head_num - 1};`}
+	></svg>
+	<svg
+		bind:this={svgEl}
+		class="sankey-top absolute left-0 top-0 h-full w-full"
+		style={`z-index:${$modelMeta.attention_head_num};`}
+	/>
+</div>
 
 <style lang="scss">
 	.sankey-top,
