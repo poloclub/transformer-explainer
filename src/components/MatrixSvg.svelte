@@ -177,8 +177,8 @@
 	}
 
 	function onMouseOverCell(e, d, i) {
-		const rowIdx = this.parentNode.classList[1].split('-')[2];
-		const colIdx = this.classList[1].split('-')[1];
+		const rowIdx = Number(this.parentNode.classList[1].split('-')[2]);
+		const colIdx = Number(this.classList[1].split('-')[1]);
 		hoveredMatrixCell.set({ row: rowIdx, col: colIdx });
 		if (Number.isFinite(d)) {
 			showTooltip(e, d);

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { expandedBlock, tokens, modelData } from '~/store';
+	import { expandedBlock, tokens, modelData, rootRem } from '~/store';
 	import classNames from 'classnames';
 	import Matrix from '~/components/Matrix.svelte';
 	import { gsap } from '~/utils/gsap';
@@ -21,10 +21,13 @@
 	$: masked = $modelData?.outputs?.block_0_attn_head_0_attn_masked?.data || placeHolderData;
 	$: softmaxed = $modelData?.outputs?.block_0_attn_head_0_attn_dropout?.data || placeHolderData;
 
-	let rem = 16;
-	let maxCellSize = 20;
-	let minCellSize = 10;
-	$: cellSize = Math.min(maxCellSize, Math.max((1 / $tokens.length) * rem * 6, minCellSize));
+	let factor = 1; //todo
+	let maxCellSize = 20 * factor;
+	let minCellSize = 10 * factor;
+	$: cellSize = Math.min(
+		maxCellSize,
+		Math.max((1 / $tokens.length) * rootRem * 6 * factor, minCellSize)
+	);
 
 	let attentionQK: HTMLDivElement;
 	let attentionMask: HTMLDivElement;

@@ -6,7 +6,8 @@
 		isBoundingBoxActive,
 		headContentHeight,
 		expandedBlock,
-		headGap
+		headGap,
+		hoveredMatrixCell
 	} from '~/store';
 	import classNames from 'classnames';
 	import AttentionMatrix from '~/components/AttentionMatrix.svelte';
@@ -107,7 +108,11 @@
 						<div class="column query">
 							<div class="title">Query</div>
 							{#each $tokens as token, index}
-								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
+								<div
+									class="head1 cell x1-12 query text-xs"
+									class:last={index === $tokens.length - 1}
+									class:active={$hoveredMatrixCell.col === index}
+								>
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
@@ -121,7 +126,10 @@
 							<div class="title">Key</div>
 
 							{#each $tokens as token, index}
-								<div class="head1 cell x1-12 text-xs class:last={index === $tokens.length - 1}">
+								<div
+									class="head1 key cell x1-12 text-xs class:last={index === $tokens.length - 1}"
+									class:active={$hoveredMatrixCell.row === index}
+								>
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
@@ -234,7 +242,29 @@
 		}
 		.heads {
 			padding: 0 6rem 0 7rem;
+
+			.head1.cell {
+				.label {
+					height: auto;
+					line-height: 1;
+				}
+				&.active {
+					&.query {
+						.label {
+							background-color: theme('colors.blue.100');
+							color: theme('colors.blue.700');
+						}
+					}
+					&.key {
+						.label {
+							background-color: theme('colors.red.100');
+							color: theme('colors.red.700');
+						}
+					}
+				}
+			}
 		}
+
 		.sub-vector {
 			user-select: none;
 			font-size: 0.8rem;
