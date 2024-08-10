@@ -9,7 +9,7 @@ Transformer Explainer is an interactive visualization tool designed to help anyo
 </tr>
 <tr>    
     <td>🚀 <a href="http://poloclub.github.io/transformer-explainer">Live Demo</a></td>
-    <td>📺 <a href="">Demo Video</a></td>
+    <td>📺 <a href="https://youtu.be/ECR4oAwocjs">Demo Video</a></td>
 </tr>
 </table>
 
