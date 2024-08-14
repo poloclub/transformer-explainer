@@ -130,7 +130,7 @@
 					pieces called tokens. These tokens can be a word or a subword. The words <code
 						>"Data"</code
 					>
-					and <code>"vizualization"</code> correspond to unique tokens, while the word
+					and <code>"visualization"</code> correspond to unique tokens, while the word
 					<code>"empowers"</code>
 					is split into two tokens. The full vocabulary of tokens is decided before training the model:
 					GPT-2's vocabulary has <code>50,257</code> unique tokens. Now that we split our input text
