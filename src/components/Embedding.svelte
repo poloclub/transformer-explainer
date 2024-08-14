@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tokens, expandedBlock, modelMeta } from '~/store';
+	import { tokens, expandedBlock, modelMeta, tokenIds } from '~/store';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick, setContext, getContext, onMount } from 'svelte';
@@ -191,7 +191,7 @@
 									{#if index === 0}
 										<span class="label">id</span><br />
 									{/if}
-									<span class="val">{(Math.random() * 10000).toFixed()}</span>
+									<span class="val">{$tokenIds[index]}</span>
 								</span>
 							</div>
 						</div>

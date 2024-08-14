@@ -1,6 +1,7 @@
 export const ex0 = {
 	prompt: 'Data visualization empowers users to',
 	tokens: ['Data', ' visualization', ' em', 'powers', ' users', ' to'],
+	tokenIds:[6601, 32704, 795, 30132, 2985, 284],
 	logits: [
 		-146.7777862548828, -147.33807373046875, -152.3221435546875, -151.6895294189453,
 		-148.24102783203125, -148.64610290527344, -146.7617645263672, -149.1254119873047,

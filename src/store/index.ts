@@ -27,6 +27,7 @@ export const modelSession = writable<ort.InferenceSession>();
 export const modelData = writable<ModelData>(ex0);
 export const predictedToken = writable<PredictionItem>(ex0?.sampled);
 export const tokens = writable<string[]>(ex0?.tokens);
+export const tokenIds = writable<number[]>(ex0?.tokenIds);
 
 export const modelMetaMap: Record<string, ModelMetaData> = {
 	gpt2: { layer_num: 12, attention_head_num: 12, dimension: 768, chunkTotal: 63 },

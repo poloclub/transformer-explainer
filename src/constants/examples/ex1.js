@@ -1,6 +1,7 @@
 export const ex1 = {
 	prompt: 'Artificial Intelligence is transforming the',
 	tokens: ['Art', 'ificial', ' Intelligence', ' is', ' transforming', ' the'],
+	tokenIds: [8001, 9542, 9345, 318, 25449, 262],
 	logits:[
 		-116.35062408447266,
 		-113.42853546142578,
