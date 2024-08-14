@@ -29,7 +29,7 @@ export const predictedToken = writable<PredictionItem>(ex0?.sampled);
 export const tokens = writable<string[]>(ex0?.tokens);
 
 export const modelMetaMap: Record<string, ModelMetaData> = {
-	gpt2: { layer_num: 12, attention_head_num: 12, dimension: 768 },
+	gpt2: { layer_num: 12, attention_head_num: 12, dimension: 768, chunkTotal: 63 },
 	'gpt2-medium': { layer_num: 24, attention_head_num: 16, dimension: 1024 },
 	'gpt2-large': { layer_num: 36, attention_head_num: 20, dimension: 1280 }
 };

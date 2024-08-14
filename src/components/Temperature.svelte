@@ -23,7 +23,7 @@
 		<div class="flex w-full shrink-0 items-center justify-between">
 			<div class="temperature-text flex items-center gap-[2px]">
 				<div>Temperature</div>
-				<HelpPopover id="temperature-help" placement="right">
+				<HelpPopover id="temperature-help" placement="right" goTo="article-prob">
 					{`Changes the output \nprobability distribution \nand randomness \nof next token.`}
 				</HelpPopover>
 			</div>
@@ -101,20 +101,52 @@
 		background: theme('colors.gray.300');
 		outline: none;
 		opacity: 0.7;
+	}
 
-		&::-webkit-slider-thumb {
-			-webkit-appearance: none; /* Override default look */
-			appearance: none;
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			border: 1px solid theme('colors.gray.400');
-			background: white;
-			cursor: pointer;
-		}
-		&:disabled::-webkit-slider-thumb {
-			background: theme('colors.gray.200');
-			cursor: not-allowed;
-		}
+	/* WebKit-based browsers (Chrome, Safari, etc.) */
+	.slider::-webkit-slider-thumb {
+		-webkit-appearance: none; /* Override default look */
+		appearance: none;
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		border: 1px solid theme('colors.gray.400');
+		background: white;
+		cursor: pointer;
+	}
+
+	/* Disabled state for WebKit-based browsers */
+	.slider:disabled::-webkit-slider-thumb {
+		background: theme('colors.gray.200');
+		cursor: not-allowed;
+	}
+
+	/* Firefox */
+	.slider::-moz-range-thumb {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		border: 1px solid theme('colors.gray.400');
+		background: white;
+		cursor: pointer;
+	}
+
+	/* Disabled state for Firefox */
+	.slider:disabled::-moz-range-thumb {
+		background: theme('colors.gray.200');
+		cursor: not-allowed;
+	}
+
+	/* Firefox track */
+	.slider::-moz-range-track {
+		width: 100%;
+		height: 4px;
+		background: theme('colors.gray.300');
+		border-radius: 0.25rem;
+	}
+
+	/* Firefox progress part */
+	.slider::-moz-range-progress {
+		background: theme('colors.gray.300'); /* 채워진 부분의 색상 */
 	}
 </style>

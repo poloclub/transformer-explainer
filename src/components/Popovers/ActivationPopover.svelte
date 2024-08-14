@@ -1,28 +1,26 @@
 <script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { fade } from 'svelte/transition';
+	import CommonPopover from './CommonPopover.svelte';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
 	export let triggeredBy: PopoverProps['triggeredBy'] = undefined;
-	export let trigger: PopoverProps['trigger'] = 'hover';
-	export let placement: PopoverProps['placement'] = 'right';
+	export let trigger: PopoverProps['trigger'] = undefined;
+	export let placement: PopoverProps['placement'] = undefined;
 </script>
 
-<Popover
-	class={classNames('popover activation-popover text-sm', className)}
+<CommonPopover
+	className="activation-popover"
 	title="GeLu Activation"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
-	arrow={false}
-	transition={fade}
-	params={{ duration: 0 }}
+	goTo="article-activation"
 >
-	<div class="activation-content">Applies activation function to neuron outputs.</div></Popover
+	<div class="activation-content">
+		Applies activation function to neuron outputs.
+	</div></CommonPopover
 >
 
 <style>

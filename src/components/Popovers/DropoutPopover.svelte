@@ -3,22 +3,23 @@
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
 	import { fade } from 'svelte/transition';
+	import CommonPopover from './CommonPopover.svelte';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
 	export let triggeredBy: PopoverProps['triggeredBy'] = undefined;
-	export let trigger: PopoverProps['trigger'] = 'hover';
-	export let placement: PopoverProps['placement'] = 'right';
+	export let trigger: PopoverProps['trigger'] = undefined;
+	export let placement: PopoverProps['placement'] = undefined;
 </script>
 
-<Popover
-	class={classNames('popover dropout-popover text-sm', className)}
-	title="Drop out"
+<CommonPopover
+	className="dropout-popover"
+	title="Dropout"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
-	arrow={false}
+	goTo="article-dropout"
 >
-	<div class="dropout-content">Disables randomly selected neurons.</div></Popover
+	<div class="dropout-content">Disables randomly selected neurons.</div></CommonPopover
 >

@@ -103,7 +103,7 @@
 			</li>
 		</ol>
 
-		<div class="architecture-section">
+		<div class="architecture-section" id="embedding">
 			<h2>Embedding</h2>
 			<p>
 				Let's say you want to generate text using a Transformer model. You add the prompt like this
@@ -137,7 +137,7 @@
 					into tokens with distinct IDs, we can obtain their vector representation from embeddings.
 				</p>
 			</div>
-			<div class="article-subsection">
+			<div class="article-subsection" id="article-token-embedding">
 				<h3>Step 2. Token Embedding</h3>
 				<p>
 					GPT-2 Small represents each token in the vocabulary as a 768-dimensional vector; the
@@ -147,7 +147,7 @@
 					token.
 				</p>
 			</div>
-			<div class="article-subsection">
+			<div class="article-subsection" id="article-positional-embedding">
 				<h3>Step 3. Positional Encoding</h3>
 				<p>
 					The Embedding layer also encodes information about each token's position in the input
@@ -220,7 +220,7 @@
 				higher-order representations of the input.
 			</p>
 
-			<div class="article-subsection">
+			<div class="article-subsection" id="self-attention">
 				<h3>Multi-Head Self-Attention</h3>
 				<p>
 					The self-attention mechanism enables the model to focus on relevant parts of the input
@@ -318,7 +318,7 @@
 					</p>
 				</div>
 
-				<div class="article-subsection">
+				<div class="article-subsection" id="article-activation">
 					<h3>MLP: Multi-Layer Perceptron</h3>
 
 					<div class="figure">
@@ -342,7 +342,7 @@
 					</p>
 				</div>
 
-				<div class="architecture-section">
+				<div class="architecture-section" id="article-prob">
 					<h2>Output Probabilities</h2>
 					<p>
 						After the input has been processed through all Transformer blocks, the output is passed
@@ -364,7 +364,7 @@
 						likelihood of each token being the next word in the sequence.
 					</div>
 
-					<p>
+					<p id="article-temperature">
 						The final step is to generate the next token by sampling from this distribution The <code
 							>temperature</code
 						>
@@ -409,7 +409,7 @@
 						neurons. Residual Connections allows gradients to flow directly through the network and
 						helps to prevent the vanishing gradient problem.
 					</p>
-					<div class="article-subsection">
+					<div class="article-subsection" id="article-ln">
 						<h3>Layer Normalization</h3>
 
 						<p>
@@ -422,7 +422,7 @@
 							the MLP layer.
 						</p>
 					</div>
-					<div class="article-subsection">
+					<div class="article-subsection" id="article-dropout">
 						<h3>Dropout</h3>
 
 						<p>
@@ -434,7 +434,7 @@
 							ensemble of the trained subnetworks, which leads to a better model performance.
 						</p>
 					</div>
-					<div class="article-subsection">
+					<div class="article-subsection" id="article-residual">
 						<h3>Residual Connections</h3>
 
 						<p>

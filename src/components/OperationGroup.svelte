@@ -60,6 +60,7 @@
 		{id}
 		class={classNames('operation-col column activation', className)}
 		role="group"
+		class:active={isHovered}
 		on:mouseenter={() => {
 			isHovered = true;
 		}}
@@ -77,13 +78,14 @@
 				active={isHovered}
 			/>
 		{/each}
-		<ActivationPopover triggeredBy={`#${id}`} offset={1} />
 	</div>
+	<ActivationPopover triggeredBy={`#${id}`} offset={1} />
 {:else if type === 'dropout'}
 	<div
 		{id}
 		class={classNames('operation-col column dropout', className)}
 		role="group"
+		class:active={isHovered}
 		on:mouseenter={() => {
 			isHovered = true;
 		}}
@@ -101,13 +103,14 @@
 				active={isHovered}
 			/>
 		{/each}
-		<DropoutPopover triggeredBy={`#${id}`} offset={1} />
 	</div>
+	<DropoutPopover triggeredBy={`#${id}`} offset={1} />
 {:else if type === 'ln'}
 	<div
 		{id}
 		class={classNames('operation-col column ln', className)}
 		role="group"
+		class:active={isHovered}
 		on:mouseenter={() => {
 			isHovered = true;
 		}}
@@ -125,13 +128,14 @@
 				active={isHovered}
 			/>
 		{/each}
-		<LayerNormPopover triggeredBy={`#${id}`} />
 	</div>
+	<LayerNormPopover triggeredBy={`#${id}`} />
 {:else if type === 'residual-start'}
 	<div
 		id={`${id}-start`}
 		class={classNames('operation-col column residual', className)}
 		role="group"
+		class:active={isHovered}
 		on:mouseenter={onMouseOver}
 		on:mouseleave={onMouseOut}
 	>
@@ -146,13 +150,14 @@
 				active={isHovered}
 			/>
 		{/each}
-		<ResidualPopover reference={`#${id}-start`} triggeredBy={`[id^='${id}-']`} offset={1} />
 	</div>
+	<ResidualPopover reference={`#${id}-start`} triggeredBy={`[id^='${id}-']`} offset={1} />
 {:else if type === 'residual-end'}
 	<div
 		id={`${id}-end`}
 		class={classNames('operation-col column residual', className)}
 		role="group"
+		class:active={isHovered}
 		on:mouseenter={onMouseOver}
 		on:mouseleave={onMouseOut}
 	>
@@ -182,12 +187,24 @@
 				opacity: 1;
 			}
 		}
+
+		&.active {
+			z-index: 310;
+			&::after {
+				content: '';
+				position: absolute;
+				height: 100%;
+				width: 1.3rem;
+				z-index: 998;
+			}
+		}
 	}
 
 	:global(.dropout-popover),
 	:global(.ln-popover),
 	:global(.residual-popover) {
 		width: 10rem;
-		top: 100% !important;
+		z-index: 999;
+		// top: 100% !important;
 	}
 </style>
