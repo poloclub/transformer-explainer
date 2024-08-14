@@ -32,11 +32,11 @@ export const gradientMap = {
 	'red-white': { 0: theme.colors.red[defaultGradientBrightness], 100: theme.colors.white },
 	'green-white': { 0: theme.colors.green[defaultGradientBrightness], 100: theme.colors.white },
 	'red-purple': {
-		0: theme.colors.red[defaultGradientBrightness],
+		90: theme.colors.red[defaultGradientBrightness],
 		100: theme.colors.purple[defaultGradientBrightness]
 	},
 	'blue-purple': {
-		90: theme.colors.blue[defaultGradientBrightness],
+		0: theme.colors.blue[defaultGradientBrightness],
 		100: theme.colors.purple[defaultGradientBrightness]
 	},
 	'green-purple': {

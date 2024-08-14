@@ -105,23 +105,6 @@
 					style={`height:${$headContentHeight}px;`}
 				>
 					<div class="qkv flex h-full flex-col justify-center gap-[5rem] pl-[6rem]">
-						<div class="column query">
-							<div class="title">Query</div>
-							{#each $tokens as token, index}
-								<div
-									class="head1 cell x1-12 query text-xs"
-									class:last={index === $tokens.length - 1}
-									class:active={$hoveredMatrixCell.col === index}
-								>
-									<span class="label float">{token}</span>
-									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
-								</div>
-								<Tooltip placement="right" class="popover"
-									>Query, Head 1, vector({$modelMeta.dimension /
-										$modelMeta.attention_head_num})</Tooltip
-								>
-							{/each}
-						</div>
 						<div class="column key">
 							<div class="title">Key</div>
 
@@ -135,6 +118,23 @@
 								</div>
 								<Tooltip placement="right" class="popover"
 									>Key, Head 1, vector({$modelMeta.dimension /
+										$modelMeta.attention_head_num})</Tooltip
+								>
+							{/each}
+						</div>
+						<div class="column query">
+							<div class="title">Query</div>
+							{#each $tokens as token, index}
+								<div
+									class="head1 cell x1-12 query text-xs"
+									class:last={index === $tokens.length - 1}
+									class:active={$hoveredMatrixCell.col === index}
+								>
+									<span class="label float">{token}</span>
+									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
+								</div>
+								<Tooltip placement="right" class="popover"
+									>Query, Head 1, vector({$modelMeta.dimension /
 										$modelMeta.attention_head_num})</Tooltip
 								>
 							{/each}
