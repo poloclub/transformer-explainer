@@ -33,7 +33,7 @@
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
 
-	$: inputTextTemp = $inputText;
+	$: inputTextTemp = $inputText || '';
 
 	$: predictedTokenTemp = $predictedToken?.token || '';
 
@@ -42,12 +42,10 @@
 
 	// Text input
 	const onFocusInput = (e) => {
-		//if token is <br>
-		if (encodeURIComponent(predictedTokenTemp) === '%0A') {
-			inputTextTemp = inputTextTemp + ' ';
-		} else {
-			inputTextTemp = inputTextTemp + predictedTokenTemp;
-		}
+		let formattedString = (inputTextTemp + predictedTokenTemp).replace(/[\s\n]+/g, ' ');
+
+		inputTextTemp = formattedString;
+
 		// set predicted to empty
 		predictedTokenTemp = '';
 		// set input box text
@@ -65,6 +63,8 @@
 
 	const handleKeyDown = (e) => {
 		if (e.key === 'Enter') {
+			e.preventDefault();
+			if (disabled || exceedLimit) return;
 			handleSubmit(e);
 		}
 	};
@@ -144,7 +144,16 @@
 					>
 				{/each}
 			</Dropdown>
-			<div class="input-container" class:disabled>
+
+			<div
+				class="input-container"
+				class:disabled
+				on:click={(e) => {
+					e.stopPropagation();
+					inputRef.focus();
+					moveCursorToEnd(inputRef);
+				}}
+			>
 				<div class={`editable ${!$isModelRunning ? 'w-full' : ''}`}>
 					<div
 						bind:this={inputRef}
@@ -154,6 +163,9 @@
 						on:focus={onFocusInput}
 						on:input={onInput}
 						on:keydown={handleKeyDown}
+						on:click={(e) => {
+							e.stopPropagation();
+						}}
 						role="input"
 					>
 						{inputTextTemp}
@@ -163,6 +175,7 @@
 						class="predicted"
 						role="none"
 						on:click={(e) => {
+							e.stopPropagation();
 							onFocusInput(e);
 							inputRef.focus();
 							moveCursorToEnd(inputRef);
@@ -240,6 +253,7 @@
 		width: 10px; // to keep input box width
 
 		.editable {
+			overflow-y: hidden;
 			justify-content: end; // to show the last word
 
 			display: flex;
@@ -249,6 +263,9 @@
 
 			.text-box {
 				white-space: nowrap;
+				br {
+					display: none;
+				}
 
 				&:focus {
 					outline: none;
