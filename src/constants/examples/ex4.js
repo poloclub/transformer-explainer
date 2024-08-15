@@ -1,6 +1,7 @@
 export const ex4 = {
 	prompt: 'IEEE VIS conference highlights the',
 	tokens: ['I', 'EEE', ' VIS', ' conference', ' highlights', ' the'],
+	tokenIds: [40, 31909, 50035, 4495, 11330, 262],
 	logits: [
 		-104.49490356445312,
 		-103.0486068725586,

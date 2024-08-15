@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import '~/styles/app.css';
 	import '~/styles/global.scss';
 	import Topbar from '~/components/Topbar.svelte';
@@ -12,9 +12,37 @@
 	let minScreenWidth = 1300;
 	let minColumWidth = Math.floor(minScreenWidth / 24) - rootRem * 2;
 
+	let intersectionObserver: IntersectionObserver;
+	let tobBarActive = false;
+	let target: HTMLElement;
+
 	onMount(async () => {
 		isLoaded.set(true);
+
+		intersectionObserver = new IntersectionObserver(handleIntersection, {
+			root: null,
+			rootMargin: '0px',
+			threshold: 0.2
+		});
+
+		if (target) {
+			intersectionObserver.observe(target);
+		}
+
+		return () => {
+			intersectionObserver.disconnect();
+		};
 	});
+
+	function handleIntersection(entries) {
+		entries.forEach((entry) => {
+			if (entry.isIntersecting) {
+				tobBarActive = true;
+			} else {
+				tobBarActive = false;
+			}
+		});
+	}
 </script>
 
 <svelte:head>
@@ -27,9 +55,9 @@
 >
 	<div id="landing">
 		<header bind:offsetHeight={topBarHeight}>
-			<Topbar />
+			<Topbar isActive={tobBarActive} />
 		</header>
-		<main id="main" style={`padding-top:${topBarHeight}px`}>
+		<main id="main" style={`padding-top:${topBarHeight}px`} bind:this={target}>
 			{#if $isLoaded}
 				<slot />
 			{:else}

@@ -1,13 +1,6 @@
 import { PreTrainedTokenizer } from '@xenova/transformers';
 import * as ort from 'onnxruntime-web';
-import {
-	modelData,
-	tokens,
-	isModelRunning,
-	predictedToken,
-	modelSession,
-	isFetchingModel
-} from '~/store';
+import { modelData, tokens, tokenIds, isModelRunning, predictedToken, modelSession } from '~/store';
 import { get } from 'svelte/store';
 import { reshapeArray } from './array';
 import { showFlowAnimation } from './animation';
@@ -32,6 +25,7 @@ export const runModel = async ({
 	const { token_ids, input_tokens } = await getTokenization(tokenizer, input === '' ? ' ' : input);
 
 	tokens.set(input_tokens);
+	tokenIds.set(token_ids);
 
 	const { logits, outputs } = await getData(token_ids);
 

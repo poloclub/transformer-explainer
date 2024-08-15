@@ -13,7 +13,12 @@ type Flow = {
 
 type MatrixData = number[][];
 
-type ModelMetaData = { layer_num: number; attention_head_num: number; dimension: number };
+type ModelMetaData = {
+	layer_num: number;
+	attention_head_num: number;
+	dimension: number;
+	chunkTotal?: number;
+};
 
 type HighlightedToken = {
 	index: number | string | null;

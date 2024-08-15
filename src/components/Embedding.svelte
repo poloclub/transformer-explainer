@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tokens, expandedBlock, modelMeta } from '~/store';
+	import { tokens, expandedBlock, modelMeta, tokenIds } from '~/store';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick, setContext, getContext, onMount } from 'svelte';
@@ -142,7 +142,9 @@
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
-						<span>Token<br />Embedding</span><HelpPopover id="token-embedding"
+						<span>Token<br />Embedding</span><HelpPopover
+							id="token-embedding"
+							goTo="article-token-embedding"
 							>{`Converts tokens into \nsemantically meaningful \nnumerical representations.`}</HelpPopover
 						>
 					</div>
@@ -189,7 +191,7 @@
 									{#if index === 0}
 										<span class="label">id</span><br />
 									{/if}
-									<span class="val">{(Math.random() * 10000).toFixed()}</span>
+									<span class="val">{$tokenIds[index]}</span>
 								</span>
 							</div>
 						</div>
@@ -203,7 +205,9 @@
 				</div>
 				<div class="column embedding-detail position-embedding">
 					<div class="subtitle flex gap-1">
-						<span>Positional<br />Encoding</span><HelpPopover id="position-embedding"
+						<span>Positional<br />Encoding</span><HelpPopover
+							id="position-embedding"
+							goTo="article-positional-embedding"
 							>{`Encodes positional \ninformation of tokens into \nnumerical representations.`}</HelpPopover
 						>
 					</div>

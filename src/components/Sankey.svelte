@@ -130,12 +130,36 @@
 			},
 			{
 				from: '.head-block .key .vector',
-				to: `.attention-initial .main g.g-row`,
+				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} circle`,
 				id: 'key-to-attention',
 				type: 'stroke',
 				gradientId: 'red-purple',
 				opacity: ATTENTION_HEAD_1,
 				unique: true,
+				curve: 20,
+				pathGenerator: (source, target, curveOffset) => {
+					const scrollTop = window.scrollY;
+					const scrollLeft = window.scrollX;
+
+					const sourceMiddleY = source.top + scrollTop + source.height / 2;
+					const targetMiddleX = target.left + scrollLeft + target.width / 2;
+
+					return `
+			    M ${source.right + scrollLeft},${sourceMiddleY}
+			    L ${targetMiddleX - curveOffset},${sourceMiddleY}
+			    A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
+			    L ${targetMiddleX},${target.bottom + scrollTop}
+			`;
+				}
+			},
+			{
+				from: '.head-block .query .vector',
+				to: `.attention-initial .main g.g-row`,
+				gradientId: 'blue-purple',
+				id: 'query-to-attention',
+				unique: true,
+				type: 'stroke',
+				opacity: ATTENTION_HEAD_1,
 				curve: curveFactor * 30,
 				pathGenerator: (source, target, curveOffset) => {
 					const scrollTop = window.scrollY;
@@ -150,30 +174,6 @@
 			    M ${source.right + scrollLeft},${sourceMiddleY}
 			    C ${controlPoint1X},${sourceMiddleY} ${controlPoint2X},${targetMiddleY} ${target.left + scrollLeft},${targetMiddleY}
 					L ${target.right + scrollLeft},${targetMiddleY}
-			`;
-				}
-			},
-			{
-				from: '.head-block .query .vector',
-				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} circle`,
-				gradientId: 'blue-purple',
-				id: 'query-to-attention',
-				unique: true,
-				type: 'stroke',
-				opacity: ATTENTION_HEAD_1,
-				curve: 20,
-				pathGenerator: (source, target, curveOffset) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
-
-					const sourceMiddleY = source.top + scrollTop + source.height / 2;
-					const targetMiddleX = target.left + scrollLeft + target.width / 2;
-
-					return `
-			    M ${source.right + scrollLeft},${sourceMiddleY}
-			    L ${targetMiddleX - curveOffset},${sourceMiddleY}
-			    A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
-			    L ${targetMiddleX},${target.bottom + scrollTop}
 			`;
 				}
 			},

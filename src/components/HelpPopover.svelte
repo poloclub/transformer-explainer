@@ -3,6 +3,20 @@
 
 	export let id: string;
 	export let placement: string = 'bottom';
+	export let goTo: string | undefined = undefined;
+
+	function scrollToDiv() {
+		if (!goTo) return;
+		const targetDiv = document.getElementById(goTo);
+		if (targetDiv) {
+			const targetPosition = targetDiv.getBoundingClientRect().top + window.scrollY;
+			const offsetPosition = targetPosition - 50;
+			window.scrollTo({
+				top: offsetPosition,
+				behavior: 'smooth'
+			});
+		}
+	}
 </script>
 
 <div {id} class="help">
@@ -17,7 +31,14 @@
 	>
 </div>
 <Popover triggeredBy={`#${id}`} {placement} class="help popover"
-	><div class="help-content"><slot /></div></Popover
+	><div class="help-content">
+		<slot />
+		{#if goTo}
+			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={scrollToDiv}>
+				Read more
+			</div>
+		{/if}
+	</div></Popover
 >
 
 <style lang="scss">
@@ -27,5 +48,8 @@
 		line-height: 1.2;
 		// font-weight: 300;
 		// font-size: 0.9rem;
+	}
+	.more-btn {
+		cursor: pointer;
 	}
 </style>

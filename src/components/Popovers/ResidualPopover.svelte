@@ -1,32 +1,28 @@
 <script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { fade } from 'svelte/transition';
+	import CommonPopover from './CommonPopover.svelte';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
 	export let triggeredBy: PopoverProps['triggeredBy'] = undefined;
-	export let trigger: PopoverProps['trigger'] = 'hover';
-	export let placement: PopoverProps['placement'] = 'right';
+	export let trigger: PopoverProps['trigger'] = undefined;
+	export let placement: PopoverProps['placement'] = undefined;
 	export let reference: PopoverProps['reference'];
 </script>
 
-<Popover
-	class={classNames('popover residual-popover text-sm', className)}
+<CommonPopover
+	className="residual-popover"
 	title="Residual Connection"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
-	arrow={false}
-	transition={fade}
-	params={{ duration: 0 }}
 	{reference}
+	goTo="article-residual"
 >
 	<div class="residual-content">
 		Adds skip-connections to allow for better gradient flow.
-	</div></Popover
+	</div></CommonPopover
 >
 
 <style lang="scss">

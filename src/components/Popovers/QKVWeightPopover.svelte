@@ -221,7 +221,7 @@
 	<div
 		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
 	>
-		<h3 class="font-semibold text-gray-900">Weight Multiplication</h3>
+		<h3 class="font-semibold text-gray-900">QKV Calculation</h3>
 		{#if isAnimationActive}
 			<button
 				class="play-control forward"
@@ -317,7 +317,7 @@
 			</div>
 			<div class="operator"><div class="symbol">+</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">bias</div>
+				<div class="title">Bias</div>
 				<!-- (768) -->
 				<Matrix
 					className="qkv-bias"

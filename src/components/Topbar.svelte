@@ -3,36 +3,56 @@
 	import { fade } from 'svelte/transition';
 	import InputForm from '~/components/InputForm.svelte';
 
-	let scrollY;
+	export let isActive;
 </script>
 
-<svelte:window bind:scrollY />
-<div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3">
+<div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>
 	<div class="logo text-bold text-gray-700">
 		T<span class="small">RANSFORMER</span> E<span class="small">XPLAINER</span>
 	</div>
 	<div class="inputs flex grow items-center">
-		<div class="input-wrapper w-full" class:active={scrollY < 100}>
+		<div class="input-wrapper w-full" class:active={isActive}>
 			<InputForm />
 		</div>
 	</div>
-	<div class="icons flex items-center gap-4">
-		<!-- <svg
-			class="h-6 w-6 text-gray-800 dark:text-white"
-			aria-hidden="true"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="currentColor"
-			viewBox="0 0 24 24"
-		>
-			<path
-				fill-rule="evenodd"
-				d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11.5c.07 0 .14-.007.207-.021.095.014.193.021.293.021h2a2 2 0 0 0 2-2V7a1 1 0 0 0-1-1h-1a1 1 0 1 0 0 2v11h-2V5a2 2 0 0 0-2-2H5Zm7 4a1 1 0 0 1 1-1h.5a1 1 0 1 1 0 2H13a1 1 0 0 1-1-1Zm0 3a1 1 0 0 1 1-1h.5a1 1 0 1 1 0 2H13a1 1 0 0 1-1-1Zm-6 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1Zm0 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1ZM7 6a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H7Zm1 3V8h1v1H8Z"
-				clip-rule="evenodd"
-			/>
-		</svg> -->
-
+	<div class="icons flex items-center gap-3">
+		<!-- arxiv -->
+		<!-- <a href="https://github.com/poloclub/transformer-explainer" target="_blank">
+			<svg
+				class="h-6 w-6 text-gray-800 dark:text-white"
+				aria-hidden="true"
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				fill="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path
+					fill-rule="evenodd"
+					d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11.5c.07 0 .14-.007.207-.021.095.014.193.021.293.021h2a2 2 0 0 0 2-2V7a1 1 0 0 0-1-1h-1a1 1 0 1 0 0 2v11h-2V5a2 2 0 0 0-2-2H5Zm7 4a1 1 0 0 1 1-1h.5a1 1 0 1 1 0 2H13a1 1 0 0 1-1-1Zm0 3a1 1 0 0 1 1-1h.5a1 1 0 1 1 0 2H13a1 1 0 0 1-1-1Zm-6 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1Zm0 3a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1ZM7 6a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H7Zm1 3V8h1v1H8Z"
+					clip-rule="evenodd"
+				/>
+			</svg>
+		</a> -->
+		<!-- video -->
+		<a href="https://www.youtube.com/watch?v=ECR4oAwocjs" target="_blank">
+			<svg
+				class="h-6 w-6 text-gray-800 dark:text-white"
+				aria-hidden="true"
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				fill="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path
+					fill-rule="evenodd"
+					d="M21.7 8.037a4.26 4.26 0 0 0-.789-1.964 2.84 2.84 0 0 0-1.984-.839c-2.767-.2-6.926-.2-6.926-.2s-4.157 0-6.928.2a2.836 2.836 0 0 0-1.983.839 4.225 4.225 0 0 0-.79 1.965 30.146 30.146 0 0 0-.2 3.206v1.5a30.12 30.12 0 0 0 .2 3.206c.094.712.364 1.39.784 1.972.604.536 1.38.837 2.187.848 1.583.151 6.731.2 6.731.2s4.161 0 6.928-.2a2.844 2.844 0 0 0 1.985-.84 4.27 4.27 0 0 0 .787-1.965 30.12 30.12 0 0 0 .2-3.206v-1.516a30.672 30.672 0 0 0-.202-3.206Zm-11.692 6.554v-5.62l5.4 2.819-5.4 2.801Z"
+					clip-rule="evenodd"
+				/>
+			</svg>
+		</a>
+		<!-- repo -->
 		<a href="https://github.com/poloclub/transformer-explainer" target="_blank">
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
@@ -55,12 +75,7 @@
 
 <style lang="scss">
 	.top-bar {
-		// background-color: white;
-		/* 
-		box-shadow:
-			0px 4px 6px -1px rgba(0, 0, 0, 0.05),
-			0px 2px 4px -2px rgba(0, 0, 0, 0.05); */
-
+		background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 100%);
 		.input-wrapper {
 			&.active {
 				opacity: 1;
