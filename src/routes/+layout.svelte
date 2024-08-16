@@ -45,10 +45,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Transformer Explainer</title>
-</svelte:head>
-
 <div
 	id="app"
 	style={`--min-screen-width:${minScreenWidth}px;--min-column-width:${minColumWidth}px;--predicted-color:${predictedColor};`}
