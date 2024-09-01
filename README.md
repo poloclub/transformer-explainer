@@ -60,3 +60,8 @@ The software is available under the [MIT License](https://github.com/poloclub/tr
 ## Contact
 
 If you have any questions, feel free to [open an issue](https://github.com/poloclub/transformer-explainer/issues/new/choose) or contact [Aeree Cho](https://aereeeee.github.io/) or any of the contributors listed above.
+
+## More AI explainers to check out
+* [**Diffusion Explainer**](https://poloclub.github.io/diffusion-explainer) for learning how Stable Diffusion transforms text prompt into image 
+* [**CNN Explainer**](https://poloclub.github.io/cnn-explainer)
+* [**GAN Lab**](https://poloclub.github.io/ganlab) for playing with Generative Adversarial Networks in browser
