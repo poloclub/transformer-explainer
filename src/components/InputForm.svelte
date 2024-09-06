@@ -128,7 +128,7 @@
 				class:selectDisabled
 				class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
 			>
-				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+				示例<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
 			</button>
 			<Dropdown placement="bottom-start" bind:open={dropdownOpen} class="example-dropdown">
 				{#each inputTextExample as text, index}
@@ -185,10 +185,10 @@
 				{/if}
 				{#if $isLoaded && $isFetchingModel}
 					<span class="helper-text"
-						>Try the examples while GPT-2 model is being downloaded (600MB)</span
+						>T在下载 GPT-2 模型时尝试示例（600MB）</span
 					>
 				{:else if exceedLimit}
-					<span class="helper-text">You can enter up to {wordLimit} words.</span>
+					<span class="helper-text">你最多输入 {wordLimit} 个词</span>
 				{/if}
 			</div>
 		</ButtonGroup>
@@ -201,7 +201,7 @@
 			type="submit"
 			on:click={handleSubmit}
 		>
-			Generate
+			生成
 		</button>
 	</form>
 	<Temperature disabled={isLoading} />

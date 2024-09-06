@@ -283,7 +283,7 @@
 				</div>
 			</div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title self-end">Token Embedding</div>
+				<div class="title self-end">Token 嵌入</div>
 				<!-- (tokenLen, 768) -->
 				<Matrix
 					className="token-embedding"
@@ -298,7 +298,7 @@
 			</div>
 			<div class="operator"><div class="symbol">&times;</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">Q·K·V Weights</div>
+				<div class="title">Q·K·V 权重</div>
 				<!-- (768,2034) -->
 				<div class="flex gap-0">
 					<Matrix
@@ -317,7 +317,7 @@
 			</div>
 			<div class="operator"><div class="symbol">+</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">bias</div>
+				<div class="title">偏置</div>
 				<!-- (768) -->
 				<Matrix
 					className="qkv-bias"

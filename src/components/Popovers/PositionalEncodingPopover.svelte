@@ -89,7 +89,7 @@
 				</div>
 			</div>
 			<div class="positions">
-				<div class="subtitle">Position</div>
+				<div class="subtitle">位置</div>
 				<div class="subcontent flex flex-col">
 					{#each $tokens as token, token_idx}
 						<div
@@ -105,7 +105,7 @@
 				</div>
 			</div>
 			<div class="embs">
-				<div class="subtitle">Embedding</div>
+				<div class="subtitle">嵌入</div>
 				<div class="subcontent flex flex-col">
 					{#each $tokens as token, token_idx}
 						<div
@@ -132,7 +132,7 @@
 			</div>
 		</div>
 		<div class="viz-container">
-			<div class="subtitle">Encoding Matrix</div>
+			<div class="subtitle">编码矩阵</div>
 			<div class="subcontent viz-subcontent">
 				<div class="chart-container mx-auto">
 					<div class="embed-dim-axis">

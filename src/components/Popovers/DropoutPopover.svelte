@@ -14,12 +14,12 @@
 
 <CommonPopover
 	className="dropout-popover"
-	title="Dropout"
+	title="Dropout 暂退法"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
 	goTo="article-dropout"
 >
-	<div class="dropout-content">Disables randomly selected neurons.</div></CommonPopover
+	<div class="dropout-content">禁用随机选择的神经元</div></CommonPopover
 >

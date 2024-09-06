@@ -30,7 +30,7 @@
 
 <div class={classNames('mlp', className)}>
 	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
-		MLP
+		多层感知器 MLP
 	</div>
 	<div class="content relative">
 		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>

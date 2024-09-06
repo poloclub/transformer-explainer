@@ -47,11 +47,11 @@
 
 <div class={classNames('attention', className, { expanded: isAttentionExpanded })}>
 	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
-		<div>Multi-head Self Attention</div>
+		<div>多头自注意力</div>
 	</div>
 	<div class="content relative">
 		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}>
-			<div class="bounding-title">Transformer Block 1</div>
+			<div class="bounding-title">Transformer 块 1</div>
 		</div>
 		<div
 			class="bounding attention-bounding"
@@ -158,7 +158,7 @@
 					</div>
 					<div class="head-out mx-[2rem]">
 						<div class="column out">
-							<div class="title">Out</div>
+							<div class="title">输出</div>
 							{#each $tokens as token, index}
 								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
 									<div class={`vector x1-12 ${outputVectorColor}`}></div>

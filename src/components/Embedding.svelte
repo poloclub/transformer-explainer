@@ -118,7 +118,7 @@
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
 	>
-		<div>Embedding</div>
+		<div>嵌入</div>
 	</div>
 	<div class="content relative">
 		<div class="token-column resizable resize-watch flex">
@@ -142,10 +142,10 @@
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
-						<span>Token<br />Embedding</span><HelpPopover
+						<span>Token 嵌入</span><HelpPopover
 							id="token-embedding"
 							goTo="article-token-embedding"
-							>{`Converts tokens into \nsemantically meaningful \nnumerical representations.`}</HelpPopover
+							>{`将 Token 转换为具有语义意义的数字表示`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}
@@ -205,10 +205,10 @@
 				</div>
 				<div class="column embedding-detail position-embedding">
 					<div class="subtitle flex gap-1">
-						<span>Positional<br />Encoding</span><HelpPopover
+						<span>位置编码</span><HelpPopover
 							id="position-embedding"
 							goTo="article-positional-embedding"
-							>{`Encodes positional \ninformation of tokens into \nnumerical representations.`}</HelpPopover
+							>{`将标记的位置信息编码为数字表示`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}

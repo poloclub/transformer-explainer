@@ -42,7 +42,7 @@
 		<slot></slot>
 		{#if goTo}
 			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={scrollToDiv}>
-				Read more
+				阅读更多
 			</div>
 		{/if}
 	</div></Popover

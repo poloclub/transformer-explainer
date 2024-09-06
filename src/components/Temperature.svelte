@@ -22,9 +22,9 @@
 	<div class="slider-container flex w-full flex-col items-end">
 		<div class="flex w-full shrink-0 items-center justify-between">
 			<div class="temperature-text flex items-center gap-[2px]">
-				<div>Temperature</div>
+				<div>Temperature(温度)</div>
 				<HelpPopover id="temperature-help" placement="right" goTo="article-prob">
-					{`Changes the output \nprobability distribution \nand randomness \nof next token.`}
+					{`改变下一个 token 的输出概率分布和随机性.`}
 				</HelpPopover>
 			</div>
 			<div class="temperature-value">

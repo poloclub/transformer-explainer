@@ -221,7 +221,7 @@
 	<div
 		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
 	>
-		<h3 class="font-semibold text-gray-900">QKV Calculation</h3>
+		<h3 class="font-semibold text-gray-900">QKV 计算过程</h3>
 		{#if isAnimationActive}
 			<button
 				class="play-control forward"
@@ -283,7 +283,7 @@
 				</div>
 			</div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title self-end">Embedding</div>
+				<div class="title self-end">嵌入</div>
 				<!-- (tokenLen, 768) -->
 				<Matrix
 					className="token-embedding"
@@ -298,7 +298,7 @@
 			</div>
 			<div class="operator"><div class="symbol">&times;</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">Q·K·V Weights</div>
+				<div class="title">Q·K·V 权重</div>
 				<!-- (768,2034) -->
 				<div class="flex gap-0">
 					<Matrix
@@ -317,7 +317,7 @@
 			</div>
 			<div class="operator"><div class="symbol">+</div></div>
 			<div class="matrix flex flex-col items-center">
-				<div class="title">Bias</div>
+				<div class="title">偏置</div>
 				<!-- (768) -->
 				<Matrix
 					className="qkv-bias"

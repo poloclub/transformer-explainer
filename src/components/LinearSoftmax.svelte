@@ -150,7 +150,7 @@
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
 	>
-		<div>Probabilities</div>
+		<div>概率</div>
 	</div>
 	<div
 		class="content resize-watch relative"
@@ -188,14 +188,14 @@
 					<div class="title-box logits">
 						<div class="title-text">Logits</div>
 						<Tooltip class="popover tooltip text-xs"
-							><Katex math={'\\text{logits} = \\text{hidden state} \\times \\text{LM Head Weights}'}
+							><Katex math={'\\text{logits} = \\text{隐藏状态} \\times \\text{LM 头权重}'}
 							></Katex></Tooltip
 						>
 					</div>
 					<div class="title-box exponents">
-						<div class="title-text">Exponents</div>
+						<div class="title-text">指数</div>
 						<Tooltip class="popover tooltip"
-							><Katex math={'e^{logit_i / temperature}'}></Katex></Tooltip
+							><Katex math={'e^{logit_i / 温度}'}></Katex></Tooltip
 						>
 					</div>
 					<div class="title-box probability">

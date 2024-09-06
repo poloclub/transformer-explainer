@@ -32,9 +32,9 @@
 				</svg> -->
 
 				<div class="text" class:active={$isBoundingBoxActive}>
-					{$modelMeta.layer_num - 1} more identical<br /><span class="highlight"
-						>Transformer<br />Blocks</span
-					>.
+					{$modelMeta.layer_num - 1} 更相同的<br /><span class="highlight"
+						>Transformer 块</span
+					>
 				</div>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

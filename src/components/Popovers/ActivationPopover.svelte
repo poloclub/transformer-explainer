@@ -11,7 +11,7 @@
 
 <CommonPopover
 	className="activation-popover"
-	title="GeLu Activation"
+	title="GeLu 激活"
 	{offset}
 	{triggeredBy}
 	{trigger}
@@ -19,7 +19,7 @@
 	goTo="article-activation"
 >
 	<div class="activation-content">
-		Applies activation function to neuron outputs.
+		将激活函数应用于神经元输出。
 	</div></CommonPopover
 >
 

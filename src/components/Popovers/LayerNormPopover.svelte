@@ -14,7 +14,7 @@
 
 <CommonPopover
 	className="ln-popover"
-	title="Layer Normalization"
+	title="层归一化"
 	{offset}
 	{triggeredBy}
 	{trigger}
@@ -22,6 +22,6 @@
 	goTo="article-ln"
 >
 	<div class="ln-content w-[10rem]">
-		Standardizes layer inputs to maintain consistent mean and variance.
+		标准化层输入以保持一致的平均值和方差
 	</div></CommonPopover
 >

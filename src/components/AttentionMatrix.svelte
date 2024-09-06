@@ -276,7 +276,7 @@
 				shape={'circle'}
 				colorScale={qkColorScale}
 			/>
-			<div class="matrix-label">Dot product</div>
+			<div class="matrix-label">点积</div>
 			<Tooltip class="popover tooltip">
 				<Katex math={'Q \\cdot K^T'}></Katex>
 			</Tooltip>
@@ -333,7 +333,7 @@
 					colorScale={maskedColorScale}
 				/>
 			</div>
-			<div class="matrix-label">Scaling · Mask</div>
+			<div class="matrix-label">缩放 · 掩码</div>
 			<Tooltip class="popover tooltip">
 				<Katex math={'\\frac{QK^T}{\\sqrt{d_k}} + M'}></Katex>
 			</Tooltip>
@@ -393,7 +393,7 @@
 				/>
 			</div>
 
-			<div class="matrix-label">Softmax · Dropout</div>
+			<div class="matrix-label">归一化指数函数 · 暂退</div>
 			<Tooltip class="popover tooltip">
 				<Katex math={'\\text{Dropout}(\\text{softmax}(\\frac{QK^T}{\\sqrt{d_k}} + M))'}></Katex>
 			</Tooltip>
@@ -423,7 +423,7 @@
 				colorScale={softmaxColorScale}
 			/>
 
-			<div class="matrix-label">Attention</div>
+			<div class="matrix-label">注意力</div>
 		</div>
 	</div>
 </div>
