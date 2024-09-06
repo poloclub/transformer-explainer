@@ -55,5 +55,9 @@
 		"katex": "^0.16.10",
 		"onnxruntime-web": "^1.18.0",
 		"svelte-katex": "^0.1.2"
+	},
+	"engines": {
+		"node": ">=20.0.0",
+		"npm": ">=10.0.0"
 	}
 }

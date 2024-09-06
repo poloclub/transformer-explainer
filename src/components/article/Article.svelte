@@ -505,7 +505,7 @@
 						for seamless in-browser execution. The interface is built using JavaScript, with
 						<a href="https://kit.svelte.dev/" title="Svelte" target="_blank">Svelte</a>
 						as a front-end framework and
-						<a href="http://D3.js" title="D3" target="_blank">D3.js</a>
+						<a href="https://d3js.org/" title="D3" target="_blank">D3.js</a>
 						for creating dynamic visualizations. Numerical values are updated live following the user
 						input.
 					</p>

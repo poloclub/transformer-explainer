@@ -80,12 +80,6 @@ export const getData = async (token_ids: number[]) => {
 		// Convert token_ids to tensor
 		const inputTensor = new ort.Tensor('int64', token_ids, [1, token_ids.length]);
 
-		// Load the model
-		// const session = await ort.InferenceSession.create(`${base}/model-quant.onnx`, {
-		// 	logSeverityLevel: 0, // Verbose logging
-		// 	externalData
-		// });
-
 		// Get the session from the store
 		const session = get(modelSession);
 		if (!session) {

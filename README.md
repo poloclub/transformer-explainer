@@ -1,4 +1,5 @@
 # Transformer Explainer: Interactive Learning of Text-Generative Models
+
 Transformer Explainer is an interactive visualization tool designed to help anyone learn how Transformer-based models like GPT work. It runs a live GPT-2 model right in your browser, allowing you to experiment with your own text and observe in real time how internal components and operations of the Transformer work together to predict the next tokens. Try Transformer Explainer at http://poloclub.github.io/transformer-explainer and watch a demo video on YouTube https://youtu.be/ECR4oAwocjs .<br/><br/>
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 [![arxiv badge](https://img.shields.io/badge/arXiv-2408.04619-red)](https://arxiv.org/abs/2408.04619)
@@ -13,18 +14,18 @@ Transformer Explainer is an interactive visualization tool designed to help anyo
 </tr>
 </table>
 
-
 ### Research Paper
+
 [**Transformer Explainer: Interactive Learning of Text-Generative Models**](https://arxiv.org/abs/2408.04619).
 Aeree Cho, Grace C. Kim, Alexander Karpekov, Alec Helbling, Zijie J. Wang, Seongmin Lee, Benjamin Hoover, Duen Horng Chau.
-*Poster, IEEE VIS 2024.*
+_Poster, IEEE VIS 2024._
 
 ## How to run locally
 
 #### Prerequisites
 
-- Node.js 20 or higher
-- NPM
+- Node.js v20 or higher
+- NPM v10 or higher
 
 #### Steps
 
@@ -62,6 +63,7 @@ The software is available under the [MIT License](https://github.com/poloclub/tr
 If you have any questions, feel free to [open an issue](https://github.com/poloclub/transformer-explainer/issues/new/choose) or contact [Aeree Cho](https://aereeeee.github.io/) or any of the contributors listed above.
 
 ## More AI explainers to check out
-* [**Diffusion Explainer**](https://poloclub.github.io/diffusion-explainer) for learning how Stable Diffusion transforms text prompt into image 
-* [**CNN Explainer**](https://poloclub.github.io/cnn-explainer)
-* [**GAN Lab**](https://poloclub.github.io/ganlab) for playing with Generative Adversarial Networks in browser
+
+- [**Diffusion Explainer**](https://poloclub.github.io/diffusion-explainer) for learning how Stable Diffusion transforms text prompt into image
+- [**CNN Explainer**](https://poloclub.github.io/cnn-explainer)
+- [**GAN Lab**](https://poloclub.github.io/ganlab) for playing with Generative Adversarial Networks in browser

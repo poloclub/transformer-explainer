@@ -11,10 +11,8 @@
 		headContentHeight,
 		temperature,
 		modelData,
-		predictedColor,
 		modelSession,
-		isFetchingModel,
-		predictedToken
+		isFetchingModel
 	} from '~/store';
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
@@ -32,7 +30,6 @@
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
 	import { fade } from 'svelte/transition';
 	import { AutoTokenizer } from '@xenova/transformers';
-	import { ChevronDoubleRightOutline } from 'flowbite-svelte-icons';
 
 	// run model
 	onMount(async () => {
