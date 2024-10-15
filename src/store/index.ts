@@ -3,8 +3,11 @@ import * as ort from 'onnxruntime-web';
 import tailwindConfig from '../../tailwind.config';
 import resolveConfig from 'tailwindcss/resolveConfig';
 import { ex0 } from '~/constants/examples';
+import type { PreTrainedTokenizer } from '@xenova/transformers';
 
 const { theme } = resolveConfig(tailwindConfig);
+
+export const isOnAnimation = writable(false);
 
 // is transformer running?
 export const isModelRunning = writable(false);
@@ -25,7 +28,7 @@ export const modelSession = writable<ort.InferenceSession>();
 
 // transformer model output
 export const modelData = writable<ModelData>(ex0);
-export const predictedToken = writable<PredictionItem>(ex0?.sampled);
+export const predictedToken = writable<PredictionItem>();
 export const tokens = writable<string[]>(ex0?.tokens);
 export const tokenIds = writable<number[]>(ex0?.tokenIds);
 

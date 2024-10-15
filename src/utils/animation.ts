@@ -1,21 +1,17 @@
 import { gsap } from 'gsap';
 import resolveConfig from 'tailwindcss/resolveConfig';
 import tailwindConfig from '../../tailwind.config';
-import { tokens } from '~/store';
-import {
-	ATTENTION_HEAD_1,
-	ATTENTION_HEAD_BACK,
-	ATTENTION_OUT,
-	EMBEDDING,
-	LOGIT,
-	MLP,
-	TRANSFORMER_BLOCKS
-} from '~/constants/opacity';
+import { isOnAnimation } from '~/store';
 const { theme } = resolveConfig(tailwindConfig);
 
+const getGradientStops = (className: string, stopIdx = 1) => {
+	return Array.from(document.querySelectorAll(className)).map(
+		(el) => el?.querySelectorAll('stop')[stopIdx]
+	);
+};
 const generateGradientAnimation = (
 	tl,
-	gradStop: undefined | SVGPathElement | (SVGPathElement | undefined)[],
+	gradStop: undefined | SVGStopElement | (SVGStopElement | undefined)[],
 	options: GSAPTweenVars = {}
 ) => {
 	const {
@@ -64,39 +60,51 @@ const generateGradientAnimation = (
 const fadeOutColor = theme.colors.gray[100];
 const nodeFadeOutOpacity = 0.2;
 
-export const showFlowAnimation = async (tokenLength: number) => {
+export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = true) => {
 	return new Promise((resolve) => {
-		const tl = gsap.timeline({ onComplete: resolve });
-
-		const isNextTokenOnly = false;
+		const tl = gsap.timeline({
+			onStart: () => {
+				isOnAnimation.set(true);
+			},
+			onComplete: () => {
+				isOnAnimation.set(false);
+				resolve();
+			}
+		});
 		const duration = 0.02;
 
 		// ============================
 		// add token vector to embedding
 		// ============================
 		const tokenEmbedding = document.querySelectorAll(
-			// isNextTokenOnly ? '.embedding .content .last' : '.embedding .content'
-			'.embedding .content .last'
+			isNextTokenOnly ? '.embedding .content .last' : '.embedding .content'
 		);
-		tl.fromTo(tokenEmbedding, { opacity: 0 }, { opacity: 1, duration });
+		tl.fromTo(
+			tokenEmbedding,
+			{ opacity: 0 },
+			{
+				opacity: 1,
+				duration: isNextTokenOnly ? duration : 0.2
+			}
+		);
 
 		// ============================
-		// draw qkv weight mul path
+		// draw embedding to qkv weight mul path
 		// ============================
-
-		// TODO resolve hard coding
-		const embeddingLastPath = document.querySelectorAll('.sankey .embedding .last');
-		tl.set(embeddingLastPath, { opacity: EMBEDDING });
-
-		const qkvGradLast = document.querySelector('#gray-blue-last')?.querySelectorAll('stop')[1];
-		generateGradientAnimation(tl, qkvGradLast, { duration: duration * 10 });
+		const [embeddingToQKVGrad, embeddingToQKVGradLast] = getGradientStops('.gray-blue');
+		generateGradientAnimation(
+			tl,
+			isNextTokenOnly ? embeddingToQKVGradLast : [embeddingToQKVGrad, embeddingToQKVGradLast],
+			{
+				duration: duration * 10
+			}
+		);
 
 		// ============================
 		// add qkv vector to attention
 		// ============================
 		const qkv = document.querySelectorAll(
-			// isNextTokenOnly ? '.attention .column .vector.last' : '.attention .column .vector'
-			'.attention .column .vector.last'
+			isNextTokenOnly ? '.attention .column .vector.last' : '.attention .column .vector'
 		);
 		tl.fromTo(
 			qkv,
@@ -109,40 +117,49 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// ============================
 		// draw multi-head divided path
 		// ============================
+		const [queryH1Grad, queryH1GradLast] = getGradientStops('.blue-blue');
+		const [keyH1Grad, keyH1GradLast] = getGradientStops('.red-red');
+		const [valueH1Grad, valueH1GradLast] = getGradientStops('.green-green');
 
-		const attentionLastPath = document.querySelectorAll('.sankey-top .attention .last');
-		const attentionLastBackPath = document.querySelectorAll('.sankey-back .attention .last');
-		const attentionOutPath = document.querySelectorAll('.sankey-top .attention .to-attention-out');
+		const [queryGrad, queryGradLast] = getGradientStops('.blue-blue2');
+		const [keyGrad, keyGradLast] = getGradientStops('.red-red2');
+		const [valueGrad, valueGradLast] = getGradientStops('.green-green2');
 
-		tl.set(attentionLastPath, { opacity: ATTENTION_HEAD_1 });
-		tl.set(attentionLastBackPath, { opacity: ATTENTION_HEAD_BACK });
-		tl.set(attentionOutPath, { opacity: ATTENTION_OUT });
-
-		const queryH1Grad = document.querySelector('#blue-blue-last')?.querySelectorAll('stop')[1];
-		const keyH1Grad = document.querySelector('#red-red-last')?.querySelectorAll('stop')[1];
-		const valueH1Grad = document.querySelector('#green-green-last')?.querySelectorAll('stop')[1];
-
-		const queryGrad = document.querySelector('#blue-blue2-last')?.querySelectorAll('stop')[1];
-		const keyGrad = document.querySelector('#red-red2-last')?.querySelectorAll('stop')[1];
-		const valueGrad = document.querySelector('#green-green2-last')?.querySelectorAll('stop')[1];
-
-		generateGradientAnimation(
-			tl,
-			[queryH1Grad, keyH1Grad, valueH1Grad, queryGrad, keyGrad, valueGrad],
-			{
+		if (isNextTokenOnly) {
+			generateGradientAnimation(tl, [queryH1GradLast, keyH1GradLast, valueH1GradLast], {
 				// stagger: 0.2
 				duration: duration * 10
-			}
-		);
+			});
+			generateGradientAnimation(tl, [queryGradLast, keyGradLast, valueGradLast], {
+				// stagger: 0.2,
+				duration: duration * 10
+			});
+		} else {
+			generateGradientAnimation(
+				tl,
+				[queryH1Grad, keyH1Grad, valueH1Grad, queryH1GradLast, keyH1GradLast, valueH1GradLast],
+				{
+					// stagger: 0.2
+					duration: duration * 10
+				}
+			);
+			generateGradientAnimation(
+				tl,
+				[queryGrad, keyGrad, valueGrad, queryGradLast, keyGradLast, valueGradLast],
+				{
+					// stagger: 0.2,
+					duration: duration * 10
+				}
+			);
+		}
 
 		// ============================
 		// add h1 qkv vector
 		// ============================
 		const qkvHead1 = document.querySelectorAll(
-			// isNextTokenOnly
-			// 	? '.attention .head-block .qkv .column .last'
-			// 	: '.attention .head-block .qkv .column '
-			'.attention .head-block .qkv .column .last'
+			isNextTokenOnly
+				? '.attention .head-block .qkv .column .last'
+				: '.attention .head-block .qkv .column'
 		);
 		tl.fromTo(
 			qkvHead1,
@@ -151,10 +168,6 @@ export const showFlowAnimation = async (tokenLength: number) => {
 			},
 			{ opacity: 1, duration }
 		);
-
-		// generateGradientAnimation(tl, [queryGrad, keyGrad, valueGrad], {
-		// 	// stagger: 0.2
-		// });
 
 		// ============================
 		// draw attention matrix mul path
@@ -208,31 +221,28 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// ============================
 		// draw val and attention mul path
 		// ============================
-		const valueMulGrad = document.querySelector('#green-purple')?.querySelectorAll('stop')[1];
+		const valueMulGrad = getGradientStops('.green-purple');
+		const attentionMulrad = getGradientStops('.transparent-purple2');
 
-		const attentionMulrad = document
-			.querySelector('#transparent-purple2')
-			?.querySelectorAll('stop')[1];
-
-		generateGradientAnimation(tl, [attentionMulrad, valueMulGrad], {
-			color: fadeOutColor,
+		generateGradientAnimation(tl, [attentionMulrad, valueMulGrad].flat(), {
+			color: isNextTokenOnly ? fadeOutColor : undefined,
 			position: '<50%'
 		});
 
 		// ============================
 		// add output vector
 		// ============================
-		const outputHead1 = document.querySelectorAll(
-			isNextTokenOnly
-				? '.attention .head-block .head-out .column .last'
-				: '.attention .head-block .head-out .column .cell'
-		);
+		const outputHead1 = document.querySelectorAll('.attention .head-block .head-out .column .cell');
 		const outputTitle = document.querySelector('.attention .head-block .head-out .title');
+
 		tl.fromTo(
 			[outputHead1, outputTitle],
 			{
 				opacity: (i, d) => {
-					return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					if (isNextTokenOnly) {
+						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					}
+					return 0;
 				}
 			},
 			{ opacity: 1, duration }
@@ -241,37 +251,31 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// ============================
 		// draw concat path
 		// ============================
-		const outputH1Grad = document.querySelector('#purple-purple')?.querySelectorAll('stop')[1];
-		const outputGrad = document.querySelector('#transparent-purple')?.querySelectorAll('stop')[1];
-		const outputH1GradLast = document
-			.querySelector('#purple-purple-last')
-			?.querySelectorAll('stop')[1];
-		const outputGradLast = document
-			.querySelector('#transparent-purple-last')
-			?.querySelectorAll('stop')[1];
-
-		tl.set([outputH1Grad, outputH1GradLast], { opacity: ATTENTION_HEAD_1 });
-		tl.set([outputGrad, outputGradLast], { opacity: ATTENTION_HEAD_BACK });
+		const [outputH1Grad, outputH1GradLast] = getGradientStops('.purple-purple');
+		const [outputGrad, outputGradLast] = getGradientStops('.transparent-purple');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, [outputH1GradLast, outputGradLast]);
-		} else {
-			generateGradientAnimation(tl, [outputH1Grad, outputGrad], { color: fadeOutColor });
+			generateGradientAnimation(tl, [outputH1Grad, outputGrad], {
+				color: fadeOutColor
+			});
 			generateGradientAnimation(tl, [outputH1GradLast, outputGradLast], { position: '<' });
+		} else {
+			generateGradientAnimation(tl, [outputH1Grad, outputGrad, outputH1GradLast, outputGradLast]);
 		}
 
 		// ============================
 		// add MLP input vector
 		// ============================
-		const mlpInputs = document.querySelectorAll(
-			isNextTokenOnly ? '.mlp .first-layer .cell.last' : '.mlp .first-layer .cell'
-		);
+		const mlpInputs = document.querySelectorAll('.mlp .first-layer .cell');
 
 		tl.fromTo(
 			mlpInputs,
 			{
 				opacity: (i, d) => {
-					return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					if (isNextTokenOnly) {
+						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					}
+					return 0;
 				}
 			},
 			{ opacity: 1, duration }
@@ -281,40 +285,29 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// draw MLP first layer path
 		// ============================
 
-		const mlpLastPath = document.querySelectorAll('.sankey .mlp .last');
-		tl.set(mlpLastPath, { opacity: MLP });
-
-		const mlpInputPath = document.querySelector('#purple-indigo')?.querySelectorAll('stop')[1];
-		const mlpInputPathLast = document
-			.querySelector('#purple-indigo-last')
-			?.querySelectorAll('stop')[1];
-
-		// generateGradientAnimation(tl, mlpInputPath, { color: theme.colors.gray[200] });
-		// generateGradientAnimation(
-		// 	tl,
-		// 	isNextTokenOnly ? mlpInputPathLast : [mlpInputPath, mlpInputPathLast]
-		// );
+		const [mlpInputPath, mlpInputPathLast] = getGradientStops('.purple-indigo');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, mlpInputPathLast);
-		} else {
-			generateGradientAnimation(tl, mlpInputPath, { color: fadeOutColor });
+			generateGradientAnimation(tl, mlpInputPath, {
+				color: fadeOutColor
+			});
 			generateGradientAnimation(tl, mlpInputPathLast, { position: '<' });
+		} else {
+			generateGradientAnimation(tl, [mlpInputPath, mlpInputPathLast]);
 		}
 
 		// ============================
 		// add MLP first layer output vector
 		// ============================
-		const mlpProjections = document.querySelectorAll(
-			isNextTokenOnly
-				? '.mlp .second-layer .projections .cell.last'
-				: '.mlp .second-layer .projections .cell'
-		);
+		const mlpProjections = document.querySelectorAll('.mlp .second-layer .projections .cell');
 		tl.fromTo(
 			mlpProjections,
 			{
 				opacity: (i, d) => {
-					return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					if (isNextTokenOnly) {
+						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					}
+					return 0;
 				}
 			},
 			{ opacity: 1, duration }
@@ -323,35 +316,29 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// ============================
 		// draw MLP output layer
 		// ============================
-		const mlpSecondPath = document.querySelector('#indigo-blue')?.querySelectorAll('stop')[1];
-		const mlpSecondPathLast = document
-			.querySelector('#indigo-blue-last')
-			?.querySelectorAll('stop')[1];
-
-		// generateGradientAnimation(tl, mlpSecondPath, { color: theme.colors.gray[200] });
-		// generateGradientAnimation(
-		// 	tl,
-		// 	isNextTokenOnly ? mlpSecondPathLast : [mlpSecondPath, mlpSecondPathLast],
-		// );
+		const [mlpSecondPath, mlpSecondPathLast] = getGradientStops('.indigo-blue');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, mlpSecondPathLast);
-		} else {
-			generateGradientAnimation(tl, mlpSecondPath, { color: fadeOutColor });
+			generateGradientAnimation(tl, mlpSecondPath, {
+				color: fadeOutColor
+			});
 			generateGradientAnimation(tl, mlpSecondPathLast, { position: '<' });
+		} else {
+			generateGradientAnimation(tl, [mlpSecondPath, mlpSecondPathLast]);
 		}
 
-		// ============================
+		// ===========================
 		// add MLP output vector
 		// ============================
-		const mlpOutputs = document.querySelectorAll(
-			isNextTokenOnly ? '.mlp .second-layer .ouputs .last' : '.mlp .second-layer .ouputs .cell'
-		);
+		const mlpOutputs = document.querySelectorAll('.mlp .second-layer .ouputs .cell');
 		tl.fromTo(
 			mlpOutputs,
 			{
 				opacity: (i, d) => {
-					return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					if (isNextTokenOnly) {
+						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					}
+					return 0;
 				}
 			},
 			{ opacity: 1, duration }
@@ -360,50 +347,32 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// ============================
 		// show repetition of blocks
 		// ============================
-		const blockPath = document.querySelectorAll('.sankey .transformer-blocks .last');
-		tl.set(blockPath, { opacity: TRANSFORMER_BLOCKS });
-
-		const transformerBlocksStop1 = document
-			.querySelector('#blue-white-blue')
-			?.querySelectorAll('stop')[1];
-		const transformerBlocksStop2 = document
-			.querySelector('#blue-white-blue')
-			?.querySelectorAll('stop')[3];
-		const transformerBlocksStop1Last = document
-			.querySelector('#blue-white-blue-last')
-			?.querySelectorAll('stop')[1];
-		const transformerBlocksStop2Last = document
-			.querySelector('#blue-white-blue-last')
-			?.querySelectorAll('stop')[3];
+		const [transformerBlocksStop1, transformerBlocksStop1Last] =
+			getGradientStops('.blue-white-blue');
+		const [transformerBlocksStop2, transformerBlocksStop2Last] = getGradientStops(
+			'.blue-white-blue',
+			3
+		);
 
 		const blockTl = gsap.timeline({
 			// repeat: 2
 		});
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(blockTl, transformerBlocksStop1Last, {
-				duration: duration * 5,
-				offset: { to: '50%' },
-				ease: 'sine.inOut'
-			});
-			generateGradientAnimation(blockTl, transformerBlocksStop2Last, {
-				duration: duration * 5,
-				offset: { from: '50%' },
-				ease: 'sine.inOut'
-			});
-		} else {
 			generateGradientAnimation(blockTl, transformerBlocksStop1, {
 				color: fadeOutColor,
 				duration: duration * 5,
 				offset: { to: '50%' },
 				ease: 'sine.inOut'
 			});
+
 			generateGradientAnimation(blockTl, transformerBlocksStop1Last, {
 				duration: duration * 5,
 				offset: { to: '50%' },
 				ease: 'sine.inOut',
 				position: '<'
 			});
+
 			generateGradientAnimation(blockTl, transformerBlocksStop2, {
 				duration: duration * 5,
 				color: fadeOutColor,
@@ -416,6 +385,17 @@ export const showFlowAnimation = async (tokenLength: number) => {
 				ease: 'sine.inOut',
 				position: '<'
 			});
+		} else {
+			generateGradientAnimation(blockTl, [transformerBlocksStop1, transformerBlocksStop1Last], {
+				duration: duration * 5,
+				offset: { to: '50%' },
+				ease: 'sine.inOut'
+			});
+			generateGradientAnimation(blockTl, [transformerBlocksStop2, transformerBlocksStop2Last], {
+				duration: duration * 5,
+				offset: { from: '50%' },
+				ease: 'sine.inOut'
+			});
 		}
 
 		tl.add(blockTl);
@@ -423,14 +403,15 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// ============================
 		// add final output vector
 		// ============================
-		const finalOutput = document.querySelectorAll(
-			isNextTokenOnly ? '.transformer-blocks .cell.last' : '.transformer-blocks .cell'
-		);
+		const finalOutput = document.querySelectorAll('.transformer-blocks .cell');
 		tl.fromTo(
 			finalOutput,
 			{
 				opacity: (i, d) => {
-					return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					if (isNextTokenOnly) {
+						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+					}
+					return 0;
 				}
 			},
 			{ opacity: 1, duration }
@@ -440,10 +421,7 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// draw logit path
 		// ============================
 
-		const softmaxPath = document.querySelectorAll('.sankey .linear-softmax .last');
-		tl.set(softmaxPath, { opacity: LOGIT });
-
-		const logitPath = document.querySelector('#blue-gray')?.querySelectorAll('stop')[1];
+		const logitPath = getGradientStops('.blue-gray');
 
 		generateGradientAnimation(tl, logitPath, { offset: { to: `50%` } });
 
@@ -459,5 +437,4 @@ export const showFlowAnimation = async (tokenLength: number) => {
 		// await showSamplingAnimation();
 	});
 };
-
 export const showSamplingAnimation = async () => {};

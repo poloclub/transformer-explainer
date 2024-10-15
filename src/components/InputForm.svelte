@@ -19,7 +19,8 @@
 		selectedExampleIdx,
 		tokens,
 		isLoaded,
-		modelSession
+		modelSession,
+		isOnAnimation
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
@@ -106,8 +107,8 @@
 	};
 
 	$: isLoading = $isFetchingModel || $isModelRunning;
-	$: disabled = $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
-	$: selectDisabled = $isModelRunning || $expandedBlock.id !== null;
+	$: disabled = $isOnAnimation || $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
+	$: selectDisabled = $isOnAnimation || $isModelRunning || $expandedBlock.id !== null;
 </script>
 
 <div class="input-area">
@@ -208,7 +209,7 @@
 			Generate
 		</button>
 	</form>
-	<Temperature disabled={isLoading} />
+	<Temperature disabled={$isOnAnimation} />
 </div>
 
 <style lang="scss">
