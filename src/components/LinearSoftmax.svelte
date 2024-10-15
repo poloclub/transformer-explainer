@@ -17,6 +17,7 @@
 	} from '~/store';
 	import ProbabilityBars from './ProbabilityBars.svelte';
 	import Katex from '~/utils/Katex.svelte';
+	import { ga } from '~/utils/event';
 
 	export let className: string | undefined = undefined;
 
@@ -72,6 +73,10 @@
 	let drawBars: () => void;
 
 	const expandSoftmax = async () => {
+		ga('probability_expand', {
+			event_category: 'expansion'
+		});
+
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = true;
 		await tick();
@@ -94,6 +99,10 @@
 	};
 
 	const collapseSoftmax = async () => {
+		ga('probability_collapse', {
+			event_category: 'expansion'
+		});
+
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = false;
 		await tick();

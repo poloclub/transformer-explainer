@@ -10,6 +10,7 @@
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import { Tooltip } from 'flowbite-svelte';
+	import { ga } from '~/utils/event';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -64,6 +65,10 @@
 	let containerState: any;
 
 	const expandEmbedding = async () => {
+		ga('embedding_expand', {
+			event_category: 'expansion'
+		});
+
 		containerState = Flip.getState('.embedding .token-column');
 		isEmbeddingExpanded = true;
 		await tick();
@@ -80,6 +85,10 @@
 	};
 
 	const collapseEmbedding = async () => {
+		ga('embedding_collapse', {
+			event_category: 'expansion'
+		});
+
 		containerState = Flip.getState('.embedding .token-column');
 		isEmbeddingExpanded = false;
 		await tick();

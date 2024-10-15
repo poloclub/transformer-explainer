@@ -11,6 +11,7 @@
 	import Katex from '~/utils/Katex.svelte';
 	import { Tooltip } from 'flowbite-svelte';
 	import { ATTENTION_OUT } from '~/constants/opacity';
+	import { ga } from '~/utils/event';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -57,6 +58,7 @@
 		// 	expandedBlock.set({ id: null });
 		// 	collapseAttention();
 		// }
+
 		if (!isAttentionExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandAttention();
@@ -82,6 +84,10 @@
 	let collapseTl = gsap.timeline();
 
 	const expandAttention = () => {
+		ga('attention_expand', {
+			event_category: 'expansion'
+		});
+
 		isAttentionExpanded = true;
 		collapseTl.progress(1);
 
@@ -209,6 +215,10 @@
 	};
 
 	const collapseAttention = () => {
+		ga('attention_collapse', {
+			event_category: 'expansion'
+		});
+
 		isAttentionExpanded = false;
 		expandTl.progress(1);
 		collapseTl.to([attentionQK, attentionMask, attentionSoftmax], {

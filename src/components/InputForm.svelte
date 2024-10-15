@@ -25,6 +25,7 @@
 	import LoadingDots from './LoadingDots.svelte';
 	import classNames from 'classnames';
 	import { tick } from 'svelte';
+	import { ga } from '~/utils/event';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
@@ -55,6 +56,11 @@
 	const handleSubmit = (e) => {
 		onFocusInput();
 		inputText.set(inputTextTemp);
+
+		ga('generate_btn_click', {
+			event_category: 'user_input',
+			value: inputTextTemp
+		});
 	};
 
 	const handleKeyDown = (e) => {
@@ -83,12 +89,10 @@
 		});
 		selectedExampleIdx.set(i);
 
-		if ($isFetchingModel || !$modelSession) {
-			const initialData = initialDataMap[i];
-			modelData.set(initialData);
-			predictedToken.set(initialData.sampled);
-			tokens.set(initialData.tokens);
-		}
+		ga('example_dropdown_click', {
+			event_category: 'user_input',
+			value: i
+		});
 	};
 
 	const moveCursorToEnd = (element) => {
