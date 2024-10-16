@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Popover } from 'flowbite-svelte';
+	import { ga } from '~/utils/event';
 
 	export let id: string;
 	export let placement: string = 'bottom';
@@ -16,6 +17,13 @@
 				behavior: 'smooth'
 			});
 		}
+	}
+
+	function onClickReadMore() {
+		scrollToDiv();
+		ga('readmore_btn_click', {
+			value: id
+		});
 	}
 </script>
 
@@ -34,7 +42,7 @@
 	><div class="help-content">
 		<slot />
 		{#if goTo}
-			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={scrollToDiv}>
+			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={onClickReadMore}>
 				Read more
 			</div>
 		{/if}

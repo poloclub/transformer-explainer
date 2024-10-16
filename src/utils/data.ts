@@ -7,6 +7,36 @@ import { showFlowAnimation } from './animation';
 
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
+export const fakeRunWithCachedData = async ({
+	cachedData,
+	tokenizer,
+	temperature,
+	topK,
+	sampleK
+}: {
+	cachedData: any;
+	tokenizer: PreTrainedTokenizer;
+	temperature: number;
+	topK: number;
+	sampleK: number;
+}) => {
+	isModelRunning.set(true);
+
+	modelData.set(cachedData);
+	tokens.set(cachedData.tokens);
+	tokenIds.set(cachedData.tokenIds);
+
+	await showFlowAnimation(cachedData.tokens.length, false);
+	adjustTemperature({
+		tokenizer,
+		logits: cachedData.logits,
+		temperature,
+		topK,
+		sampleK
+	});
+	isModelRunning.set(false);
+};
+
 export const runModel = async ({
 	tokenizer,
 	input,
@@ -24,8 +54,13 @@ export const runModel = async ({
 
 	const { token_ids, input_tokens } = await getTokenization(tokenizer, input === '' ? ' ' : input);
 
+	let isOneTokenAdded: boolean;
 	tokens.set(input_tokens);
-	tokenIds.set(token_ids);
+	tokenIds.update((prev) => {
+		isOneTokenAdded =
+			prev.length === token_ids.length - 1 && prev.every((id, idx) => id === token_ids[idx]);
+		return token_ids;
+	});
 
 	const { logits, outputs } = await getData(token_ids);
 
@@ -37,7 +72,7 @@ export const runModel = async ({
 
 	// To ensure the animation starts after all elements have been rendered
 	setTimeout(async () => {
-		await showFlowAnimation(input_tokens.length);
+		await showFlowAnimation(input_tokens.length, isOneTokenAdded);
 		predictedToken.set(sampledToken);
 		isModelRunning.set(false);
 	}, 0);

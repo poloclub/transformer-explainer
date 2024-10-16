@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import InputForm from '~/components/InputForm.svelte';
+	import { ga } from '~/utils/event';
 
 	export let isActive;
 </script>
@@ -17,7 +18,13 @@
 	</div>
 	<div class="icons flex items-center gap-3">
 		<!-- arxiv -->
-		<a href="https://arxiv.org/abs/2408.04619" target="_blank">
+		<a
+			href="https://arxiv.org/abs/2408.04619"
+			target="_blank"
+			on:click={() => {
+				ga('pdf_btn_click');
+			}}
+		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
 				aria-hidden="true"
@@ -35,7 +42,13 @@
 			</svg>
 		</a>
 		<!-- video -->
-		<a href="https://www.youtube.com/watch?v=ECR4oAwocjs" target="_blank">
+		<a
+			href="https://www.youtube.com/watch?v=ECR4oAwocjs"
+			target="_blank"
+			on:click={() => {
+				ga('ytb_btn_click');
+			}}
+		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
 				aria-hidden="true"
@@ -53,7 +66,13 @@
 			</svg>
 		</a>
 		<!-- repo -->
-		<a href="https://github.com/poloclub/transformer-explainer" target="_blank">
+		<a
+			href="https://github.com/poloclub/transformer-explainer"
+			target="_blank"
+			on:click={() => {
+				ga('github_btn_click');
+			}}
+		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
 				aria-hidden="true"

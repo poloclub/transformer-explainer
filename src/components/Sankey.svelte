@@ -129,8 +129,8 @@
 				// fill: theme.colors.purple[200]
 			},
 			{
-				from: '.head-block .key .vector',
-				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} circle`,
+				from: '.head-block .head1.key .vector',
+				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} rect`,
 				id: 'key-to-attention',
 				type: 'stroke',
 				gradientId: 'red-purple',
@@ -309,6 +309,16 @@
 			const grad = defs
 				.append('linearGradient')
 				.attr('id', key)
+				.attr('class', key)
+				.attr('x1', '0%')
+				.attr('y1', '0%')
+				.attr('x2', '100%')
+				.attr('y2', '0%');
+
+			const gradClone = defs
+				.append('linearGradient')
+				.attr('id', key + '-last')
+				.attr('class', key)
 				.attr('x1', '0%')
 				.attr('y1', '0%')
 				.attr('x2', '100%')
@@ -325,6 +335,12 @@
 				}
 
 				grad
+					.append('stop')
+					.attr('offset', `${stop}%`)
+					.attr('stop-color', color)
+					.attr('stop-opacity', opacity);
+
+				gradClone
 					.append('stop')
 					.attr('offset', `${stop}%`)
 					.attr('stop-color', color)

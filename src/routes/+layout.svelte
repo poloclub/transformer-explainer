@@ -8,6 +8,7 @@
 	import { Spinner } from 'flowbite-svelte';
 
 	let topBarHeight = 0;
+	let scrollLeft = 0;
 
 	let minScreenWidth = 1300;
 	let minColumWidth = Math.floor(minScreenWidth / 24) - rootRem * 2;
@@ -16,7 +17,7 @@
 	let tobBarActive = false;
 	let target: HTMLElement;
 
-	onMount(async () => {
+	onMount(() => {
 		isLoaded.set(true);
 
 		intersectionObserver = new IntersectionObserver(handleIntersection, {
@@ -28,9 +29,11 @@
 		if (target) {
 			intersectionObserver.observe(target);
 		}
+		window.addEventListener('scroll', handleMobileScrollX);
 
 		return () => {
 			intersectionObserver.disconnect();
+			window.removeEventListener('scroll', handleMobileScrollX);
 		};
 	});
 
@@ -43,6 +46,10 @@
 			}
 		});
 	}
+
+	const handleMobileScrollX = () => {
+		scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+	};
 </script>
 
 <div
@@ -50,7 +57,7 @@
 	style={`--min-screen-width:${minScreenWidth}px;--min-column-width:${minColumWidth}px;--predicted-color:${predictedColor};`}
 >
 	<div id="landing">
-		<header bind:offsetHeight={topBarHeight}>
+		<header bind:offsetHeight={topBarHeight} style="transform: translateX({-1 * scrollLeft}px);">
 			<Topbar isActive={tobBarActive} />
 		</header>
 		<main id="main" style={`padding-top:${topBarHeight}px`} bind:this={target}>

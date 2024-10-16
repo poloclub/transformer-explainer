@@ -12,28 +12,42 @@
 		temperature,
 		modelData,
 		modelSession,
-		isFetchingModel
+		isFetchingModel,
+		selectedExampleIdx
 	} from '~/store';
+	import { PreTrainedTokenizer } from '@xenova/transformers';
 	import Sankey from '~/components/Sankey.svelte';
 	import Attention from '~/components/Attention.svelte';
 	import SubsequentBlocks from '~/components/SubsequentBlocks.svelte';
 	import LinearSoftmax from '~/components/LinearSoftmax.svelte';
 	import Embedding from '~/components/Embedding.svelte';
 	import Mlp from '~/components/Mlp.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import classNames from 'classnames';
 	import { base } from '$app/paths';
 	import * as ort from 'onnxruntime-web';
 
-	import { adjustTemperature, runModel } from '~/utils/data';
+	import { adjustTemperature, runModel, fakeRunWithCachedData } from '~/utils/data';
 	import { fetchAndMergeChunks } from '~/utils/fetchChunks';
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
 	import { fade } from 'svelte/transition';
 	import { AutoTokenizer } from '@xenova/transformers';
+	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
 
-	// run model
+	let active = false;
+	// fetch model
 	onMount(async () => {
-		// Fetch model onnx
+		const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
+		active = true;
+
+		const unsubscribe = subscribeInputs(gpt2Tokenizer);
+		await fetchModel();
+
+		return unsubscribe;
+	});
+
+	// Fetch model onnx
+	const fetchModel = async () => {
 		const chunkNum = 63; //TODO: move to model meta
 		const chunkUrls = Array(chunkNum)
 			.fill(0)
@@ -56,15 +70,21 @@
 		modelSession.set(session);
 
 		isFetchingModel.set(false);
+	};
 
-		// Initialize tokenizer
-		const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
-
-		// Subscribe input change
-		let initialRun = true;
+	// Subscribe inputs
+	const cachedDataMap = [ex0, ex1, ex2, ex3, ex4];
+	const subscribeInputs = (tokenizer: PreTrainedTokenizer) => {
 		const unsubscribeInputText = inputText.subscribe((value) => {
-			if ($isFetchingModel || !$modelSession || initialRun) {
-				initialRun = false;
+			if ($isFetchingModel || !$modelSession) {
+				const cachedData = cachedDataMap[$selectedExampleIdx];
+				fakeRunWithCachedData({
+					cachedData,
+					tokenizer,
+					temperature: $temperature,
+					topK: 50,
+					sampleK: 20
+				});
 				return;
 			}
 			// run model when input has changed
@@ -77,7 +97,7 @@
 			});
 		});
 
-		let initialTemperature = true; // prevent initial redundant prediction
+		let initialTemperature = true; // prevent initial redundant rendering
 		const unsubscribeTemperature = temperature.subscribe((value) => {
 			if (initialTemperature) {
 				initialTemperature = false;
@@ -96,7 +116,7 @@
 			unsubscribeInputText();
 			unsubscribeTemperature();
 		};
-	});
+	};
 
 	// visual elements
 	let vizHeight = 0;
@@ -118,6 +138,7 @@
 </script>
 
 <div
+	class:active
 	class="main-section h-full w-full"
 	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;--content-height:${vizHeight - titleHeight}px;`}
 >
@@ -150,6 +171,12 @@
 </div>
 
 <style lang="scss">
+	.main-section {
+		opacity: 0;
+		&.active {
+			opacity: 1;
+		}
+	}
 	.nodes {
 		height: 100%;
 		width: 100%;

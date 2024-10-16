@@ -19,12 +19,14 @@
 		selectedExampleIdx,
 		tokens,
 		isLoaded,
-		modelSession
+		modelSession,
+		isOnAnimation
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
 	import classNames from 'classnames';
 	import { tick } from 'svelte';
+	import { ga } from '~/utils/event';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
@@ -55,6 +57,11 @@
 	const handleSubmit = (e) => {
 		onFocusInput();
 		inputText.set(inputTextTemp);
+
+		ga('generate_btn_click', {
+			event_category: 'user_input',
+			value: inputTextTemp
+		});
 	};
 
 	const handleKeyDown = (e) => {
@@ -83,12 +90,10 @@
 		});
 		selectedExampleIdx.set(i);
 
-		if ($isFetchingModel || !$modelSession) {
-			const initialData = initialDataMap[i];
-			modelData.set(initialData);
-			predictedToken.set(initialData.sampled);
-			tokens.set(initialData.tokens);
-		}
+		ga('example_dropdown_click', {
+			event_category: 'user_input',
+			value: i
+		});
 	};
 
 	const moveCursorToEnd = (element) => {
@@ -102,8 +107,8 @@
 	};
 
 	$: isLoading = $isFetchingModel || $isModelRunning;
-	$: disabled = $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
-	$: selectDisabled = $isModelRunning || $expandedBlock.id !== null;
+	$: disabled = $isOnAnimation || $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
+	$: selectDisabled = $isOnAnimation || $isModelRunning || $expandedBlock.id !== null;
 </script>
 
 <div class="input-area">
@@ -204,7 +209,7 @@
 			Generate
 		</button>
 	</form>
-	<Temperature disabled={isLoading} />
+	<Temperature disabled={$isOnAnimation} />
 </div>
 
 <style lang="scss">

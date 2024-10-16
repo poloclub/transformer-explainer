@@ -10,6 +10,7 @@
 	import tailwindConfig from '../../../tailwind.config';
 	import classNames from 'classnames';
 	import Katex from '~/utils/Katex.svelte';
+	import { ga } from '~/utils/event';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -226,6 +227,7 @@
 			<button
 				class="play-control forward"
 				on:click={() => {
+					ga('matrix_calc_forward_btn_click');
 					timeline.progress(1);
 					isAnimationActive = false;
 				}}
@@ -249,6 +251,7 @@
 			<button
 				class="play-control restart"
 				on:click={() => {
+					ga('matrix_calc_restart_btn_click');
 					isAnimationActive = true;
 					timeline.restart();
 				}}

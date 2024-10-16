@@ -131,6 +131,20 @@
 						? `translate(${cellHeight / 2 + i * cellHeight + i * rowGap},0)`
 						: `translate(0,${cellHeight / 2 + i * cellHeight + i * rowGap})`
 				);
+
+				//To prevent the issue where the qkv path target position is misaligned due to circle scaling in Firefox
+				rows
+					.selectAll('rect.cell')
+					.data((d) => d)
+					.join('rect')
+					.attr('class', 'cell')
+					.attr(transpose ? 'y' : 'x', (d, i) => i * cellWidth + i * colGap)
+					.attr(transpose ? 'x' : 'y', (-1 * cellHeight) / 2)
+					.attr('width', transpose ? cellHeight : cellWidth)
+					.attr('height', transpose ? cellWidth : cellHeight)
+					.attr('fill', 'rgba(0,0,0,0)');
+				//
+
 				const circles = rows
 					.selectAll('circle.cell')
 					.data((d, i) => d)

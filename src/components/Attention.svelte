@@ -110,7 +110,8 @@
 
 							{#each $tokens as token, index}
 								<div
-									class="head1 key cell x1-12 text-xs class:last={index === $tokens.length - 1}"
+									class="head1 key cell x1-12 text-xs"
+									class:last={index === $tokens.length - 1}
 									class:active={$hoveredMatrixCell.col === index}
 								>
 									<span class="label float">{token}</span>

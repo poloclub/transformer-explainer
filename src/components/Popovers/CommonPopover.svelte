@@ -3,6 +3,7 @@
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
 	import { fade } from 'svelte/transition';
+	import { ga } from '~/utils/event';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
@@ -26,6 +27,13 @@
 			});
 		}
 	}
+
+	function onClickReadMore(e) {
+		scrollToDiv(e);
+		ga('readmore_btn_click', {
+			value: title
+		});
+	}
 </script>
 
 <Popover
@@ -41,7 +49,7 @@
 	<div class="content">
 		<slot></slot>
 		{#if goTo}
-			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={scrollToDiv}>
+			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={onClickReadMore}>
 				Read more
 			</div>
 		{/if}
