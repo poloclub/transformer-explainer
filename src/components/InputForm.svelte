@@ -20,7 +20,8 @@
 		tokens,
 		isLoaded,
 		modelSession,
-		isOnAnimation
+		isOnAnimation,
+		isMobile
 	} from '~/store';
 	import { Spinner } from 'flowbite-svelte';
 	import LoadingDots from './LoadingDots.svelte';
@@ -59,8 +60,8 @@
 		inputText.set(inputTextTemp);
 
 		ga('generate_btn_click', {
-			event_category: 'user_input',
-			value: inputTextTemp
+			event_category: 'user_input'
+			// value: inputTextTemp
 		});
 	};
 
@@ -188,7 +189,11 @@
 				{#if $isModelRunning}
 					<div class="loading"><LoadingDots /></div>
 				{/if}
-				{#if $isLoaded && $isFetchingModel}
+				{#if $isMobile}
+					<span class="helper-text"
+						>Try the examples. Please access on a desktop computer to use GPT-2 model.</span
+					>
+				{:else if $isLoaded && $isFetchingModel}
 					<span class="helper-text"
 						>Try the examples while GPT-2 model is being downloaded (600MB)</span
 					>

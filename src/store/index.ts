@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, readable } from 'svelte/store';
 import * as ort from 'onnxruntime-web';
 import tailwindConfig from '../../tailwind.config';
 import resolveConfig from 'tailwindcss/resolveConfig';
@@ -88,3 +88,10 @@ export const predictedColor = theme.colors.purple[600];
 // Interactivity
 export const hoveredPath = writable();
 export const hoveredMatrixCell = writable({ row: null, col: null });
+
+export const isMobile = readable(detectDevice());
+
+function detectDevice() {
+	const userAgent = navigator.userAgent.toLowerCase();
+	return /android|iphone|ipad|ipod/i.test(userAgent);
+}

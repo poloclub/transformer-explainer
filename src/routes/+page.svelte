@@ -13,7 +13,8 @@
 		modelData,
 		modelSession,
 		isFetchingModel,
-		selectedExampleIdx
+		selectedExampleIdx,
+		isMobile
 	} from '~/store';
 	import { PreTrainedTokenizer } from '@xenova/transformers';
 	import Sankey from '~/components/Sankey.svelte';
@@ -35,13 +36,17 @@
 	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
 
 	let active = false;
+
 	// fetch model
 	onMount(async () => {
 		const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
 		active = true;
 
 		const unsubscribe = subscribeInputs(gpt2Tokenizer);
-		await fetchModel();
+
+		if (!$isMobile) {
+			await fetchModel();
+		}
 
 		return unsubscribe;
 	});
