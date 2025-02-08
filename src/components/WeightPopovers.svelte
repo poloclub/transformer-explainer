@@ -17,7 +17,6 @@
 	let mlpDownPos = { left: 0, top: 0 };
 	let attentionPos = { left: 0, top: 0 };
 	let softmaxPos = { left: 0, top: 0 };
-	let softmaxExpandPos = { left: 0, top: 0 };
 
 	let popoverEl: HTMLElement = null;
 
@@ -191,7 +190,7 @@
 
 <style lang="scss">
 	.weight-popover {
-		z-index: 999;
+		z-index: $POPOVER_INDEX;
 		position: absolute;
 		width: max-content !important;
 	}
@@ -208,7 +207,7 @@
 		transform: translateX(calc(-100% + 1rem));
 	}
 	.tooltip-box {
-		z-index: 999;
+		z-index: $POPOVER_INDEX;
 
 		background-color: white;
 		position: fixed;

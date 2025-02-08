@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { tokens, isBoundingBoxActive, modelMeta } from '~/store';
+	import { tokens, modelMeta, blockIdx } from '~/store';
 	import classNames from 'classnames';
 	import { setContext } from 'svelte';
-	import Operation from './Operation.svelte';
 	import OperationGroup from './OperationGroup.svelte';
-	import VectorCanvas from './VectorCanvas.svelte';
+	import VectorCanvas from './common/VectorCanvas.svelte';
 	import { Tooltip } from 'flowbite-svelte';
+	import { onClickReadMore } from '~/utils/event';
 
 	export let className: string | undefined = undefined;
 
@@ -28,14 +28,19 @@
 	let vectorHoverIdx: number | null = null;
 </script>
 
-<div class={classNames('mlp', className)}>
-	<div class="title" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} role="group">
+<div class={classNames('mlp', 'mlpUp', 'mlpDown', className)}>
+	<div
+		class="title"
+		on:mouseenter={handleMouseEnter}
+		on:mouseleave={handleMouseLeave}
+		on:click={(e) => onClickReadMore(e, 'article-activation')}
+		role="group"
+	>
 		MLP
 	</div>
 	<div class="content relative">
-		<div class="bounding transformer-bounding" class:active={$isBoundingBoxActive}></div>
 		<div class="bounding mlp-bounding" class:active={isHovered}></div>
-		<div class="layer first-layer flex">
+		<div class="layer mlpUp first-layer flex">
 			<div class="column initial">
 				{#each $tokens as token, index}
 					<div
@@ -64,21 +69,23 @@
 			<OperationGroup type="ln" id={'mlp-first-ln'} />
 			<OperationGroup type="residual-start" id={'residual-second'} />
 		</div>
-		<div class="layer second-layer flex justify-between">
-			<div class="projections flex">
-				<div class="column">
-					{#each $tokens as token, index}
-						<div
-							class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
-							class:last={index === $tokens.length - 1}
-						>
-							<div class={classNames(`vector x4 ${secondLayerColor} opacity-80`)}>
-								<VectorCanvas colorScale="indigo" />
-							</div>
+		<div class="layer mlpUp mlpDown second-layer flex justify-between">
+			<div class="column mlp-mid-column">
+				{#each $tokens as token, index}
+					<div
+						class={classNames('cell x4', { small: index !== 0 && index !== $tokens.length - 1 })}
+						class:last={index === $tokens.length - 1}
+					>
+						<div class={classNames(`vector x4 ${secondLayerColor} opacity-80`)}>
+							<VectorCanvas colorScale="indigo" />
 						</div>
-						<Tooltip placement="right" class="popover">vector({$modelMeta.dimension * 4})</Tooltip>
-					{/each}
-				</div>
+					</div>
+					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension * 4})</Tooltip>
+				{/each}
+			</div>
+		</div>
+		<div class="layer mlpDown out-layer relative flex justify-between">
+			<div class="activation">
 				<OperationGroup type="activation" id={'mlp-activation'} className="x4" />
 			</div>
 			<div class="ouputs flex">
@@ -91,7 +98,10 @@
 				</div>
 				<OperationGroup type="residual-end" id={'residual-second'} />
 				<OperationGroup type="ln" id={'mlp-second-ln'} />
-				<div class="column out">
+				<div
+					class="column out mlp-out-column"
+					class:last-block={$blockIdx === $modelMeta.layer_num - 1}
+				>
 					{#each $tokens as token, index}
 						<div class="cell" class:last={index === $tokens.length - 1}>
 							<div class={`vector ${outputColor}`}>
@@ -108,6 +118,9 @@
 
 <style lang="scss">
 	.mlp {
+		.title {
+			cursor: help;
+		}
 		.mlp-bounding {
 			top: -0.5rem;
 			padding: 0.5rem 0;
@@ -115,26 +128,20 @@
 			width: calc(100% + 0.2rem);
 			height: 100%;
 		}
-		.transformer-bounding {
-			border-radius: 0 10px 10px 0;
-			padding-right: 0.5rem;
-			right: -0.5rem;
-			border-left: none;
-		}
 		.content {
 			display: grid;
 			grid-template-columns: repeat(4, minmax(var(--min-column-width), 1fr));
 
-			.layer {
+			.first-layer {
 				grid-column: span 2;
 			}
-			.tokens.initial .token {
-				/* gap: 0.6rem; */
-			}
 
-			.column.activation {
+			.activation {
+				position: relative;
+				left: calc(-100% + 0.8rem);
 			}
 		}
+
 		.column.out-label {
 			.label {
 				opacity: 0;
@@ -143,25 +150,11 @@
 				opacity: 1;
 			}
 		}
+		.last-block {
+			pointer-events: none;
+			.vector {
+				width: 0;
+			}
+		}
 	}
-	// .layer {
-	// 	height: 500px;
-	// 	display: flex;
-	// 	align-items: center;
-	// }
-	// :global(.transformer-blocks .final) {
-	// 	height: 500px !important;
-	// 	display: flex !important;
-	// 	align-items: center !important;
-	// 	justify-content: center;
-	// }
-	// .projections {
-	// 	.small {
-	// 		height: 2px !important;
-
-	// 		.vector {
-	// 			height: 2px !important;
-	// 		}
-	// 	}
-	// }
 </style>

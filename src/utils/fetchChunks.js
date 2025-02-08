@@ -1,6 +1,9 @@
-const CACHE_NAME = 'onnx-model-cache-v1';
+const CACHE_PREFIX = 'onnx-model-cache';
+const CACHE_NAME = `${CACHE_PREFIX}-v2`;
 
 async function fetchModelChunks(chunkUrls) {
+	await clearOldCaches();
+
 	const cache = await caches.open(CACHE_NAME);
 	const cachedResponses = await Promise.all(chunkUrls.map((url) => cache.match(url)));
 
@@ -36,4 +39,16 @@ export async function fetchAndMergeChunks(urls) {
 		offset += chunk.byteLength;
 	}
 	return mergedArray.buffer;
+}
+
+async function clearOldCaches() {
+	const cacheNames = await caches.keys();
+	await Promise.all(
+		cacheNames.map((name) => {
+			if (name !== CACHE_NAME && name.includes(CACHE_PREFIX)) {
+				console.log(`Deleting old cache: ${name}`);
+				return caches.delete(name);
+			}
+		})
+	);
 }

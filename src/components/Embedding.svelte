@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { tokens, expandedBlock, modelMeta, tokenIds } from '~/store';
+	import { tokens, expandedBlock, modelMeta, tokenIds, blockIdx } from '~/store';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick, setContext, getContext, onMount } from 'svelte';
-	import VectorCanvas from './VectorCanvas.svelte';
+	import VectorCanvas from './common/VectorCanvas.svelte';
 	import * as d3 from 'd3';
-	import OperationGroup from './OperationGroup.svelte';
-	import HelpPopover from './HelpPopover.svelte';
+	import HelpPopover from './common/HelpPopover.svelte';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { Tooltip } from 'flowbite-svelte';
 	import { ga } from '~/utils/event';
+	import { Tooltip } from 'flowbite-svelte';
+	import { ZoomInOutline } from 'flowbite-svelte-icons';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -55,9 +55,9 @@
 		}
 	}
 	onMount(() => {
-		document.body.addEventListener('click', handleOutsideClick);
+		document.querySelector('.main-section').addEventListener('click', handleOutsideClick);
 		return () => {
-			document.body.removeEventListener('click', handleOutsideClick);
+			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
 		};
 	});
 
@@ -127,7 +127,7 @@
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
 	>
-		<div>Embedding</div>
+		<div class="flex items-center gap-1">Embedding <ZoomInOutline></ZoomInOutline></div>
 	</div>
 	<div class="content relative">
 		<div class="token-column resizable resize-watch flex">
@@ -154,31 +154,13 @@
 						<span>Token<br />Embedding</span><HelpPopover
 							id="token-embedding"
 							goTo="article-token-embedding"
-							>{`Converts tokens into \nsemantically meaningful \nnumerical representations.`}</HelpPopover
+							>{`Converts tokens into numerical \nrepresentations using embeddings \nderived from predefined vocabulary, \ncapturing their semantic meaning.`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}
 						<div class="token-id flex items-center">
 							<div class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400">
 								<div class="flex flex-col items-center">
-									<!-- {#if index === 0}
-										<div class="look-up flex items-center gap-1">
-											<span>look up</span><svg
-												class="h-3 w-3 text-gray-400"
-												aria-hidden="true"
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke="currentColor"
-													stroke-linecap="round"
-													stroke-width="2"
-													d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-												/>
-											</svg>
-										</div>
-									{/if} -->
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										viewBox="0 0 31 9"
@@ -217,7 +199,7 @@
 						<span>Positional<br />Encoding</span><HelpPopover
 							id="position-embedding"
 							goTo="article-positional-embedding"
-							>{`Encodes positional \ninformation of tokens into \nnumerical representations.`}</HelpPopover
+							>{`Converts token positions into \nnumerical representations that \ncapture their order in the sequence.`}</HelpPopover
 						>
 					</div>
 					{#each $tokens as token, index}
@@ -250,19 +232,15 @@
 				<!-- <PositionalEncodingPopover triggeredBy=".position-embedding" /> -->
 			{/if}
 		</div>
-		<div class="vector-column relative flex">
-			<div class="column vectors">
+
+		<div class="vector-column block-start-column relative flex">
+			<div class="column vectors embedding-column">
 				{#each $tokens as token, index}
 					<div class={`vector ${embeddingVectorColor}`} class:last={index === $tokens.length - 1}>
-						<VectorCanvas active={isHovered || isEmbeddingExpanded} />
+						<VectorCanvas active={$blockIdx === 0 && (isHovered || isEmbeddingExpanded)} />
 					</div>
 					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				{/each}
-			</div>
-			<div class="operations flex">
-				<OperationGroup type="dropout" id={'embedding-dropout'} />
-				<OperationGroup type="residual-start" id={'residual-first'} />
-				<OperationGroup type="ln" id={'embedding-ln'} />
 			</div>
 		</div>
 	</div>
@@ -276,12 +254,11 @@
 		width: calc(100% + 0.8rem);
 		height: 100%;
 	}
-
 	.embedding {
 		&.expanded {
 			.title,
 			.content {
-				z-index: 900;
+				z-index: $EXPANDED_CONTENT_INDEX;
 			}
 			.operations {
 				pointer-events: none;
@@ -297,11 +274,9 @@
 		}
 		.content {
 			padding-left: 2rem;
-			display: grid;
-			grid-template-columns: auto repeat(4, minmax(var(--min-column-width), 1fr));
+			display: flex;
 
 			.token-column {
-				// gap: 2rem;
 				.column {
 					padding: 0 1rem;
 
@@ -366,9 +341,6 @@
 					width: 2rem;
 					justify-content: start;
 				}
-				// &:hover {
-				// 	background-color: theme('colors.gray.100');
-				// }
 			}
 		}
 	}

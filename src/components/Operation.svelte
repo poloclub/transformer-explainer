@@ -94,7 +94,7 @@
 		position: relative;
 		width: 1.2rem;
 		flex-shrink: 0;
-		z-index: 101;
+		z-index: $OPERATION_INDEX;
 		// height: var(--vector-height);
 
 		.cursor {

@@ -1,7 +1,15 @@
 <script lang="ts">
-	import { expandedBlock, tokens, modelData, rootRem } from '~/store';
+	import {
+		expandedBlock,
+		tokens,
+		modelData,
+		rootRem,
+		attentionHeadIdx,
+		hoveredMatrixCell,
+		blockIdx
+	} from '~/store';
 	import classNames from 'classnames';
-	import Matrix from '~/components/Matrix.svelte';
+	import Matrix from '~/components/common/Matrix.svelte';
 	import { gsap } from '~/utils/gsap';
 	import { maskArray } from '~/utils/array';
 	import { getContext, onMount } from 'svelte';
@@ -12,15 +20,22 @@
 	import { Tooltip } from 'flowbite-svelte';
 	import { ATTENTION_OUT } from '~/constants/opacity';
 	import { ga } from '~/utils/event';
+	import { ZoomInOutline } from 'flowbite-svelte-icons';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
 	$: placeHolderData = Array($tokens.length)
 		.fill(0)
 		.map((col) => Array($tokens.length).fill(-Infinity));
-	$: queryKey = $modelData?.outputs?.block_0_attn_head_0_attn?.data || placeHolderData;
-	$: masked = $modelData?.outputs?.block_0_attn_head_0_attn_masked?.data || placeHolderData;
-	$: softmaxed = $modelData?.outputs?.block_0_attn_head_0_attn_dropout?.data || placeHolderData;
+	$: queryKey =
+		$modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn`]?.data ||
+		placeHolderData;
+	$: masked =
+		$modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn_masked`]?.data ||
+		placeHolderData;
+	$: softmaxed =
+		$modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn_dropout`]?.data ||
+		placeHolderData;
 
 	let factor = 1; //todo
 	let maxCellSize = 20 * factor;
@@ -49,16 +64,6 @@
 	}
 
 	const onClickAttention = () => {
-		// isAttentionExpanded = !isAttentionExpanded;
-		// if (isAttentionExpanded) {
-		// 	expandedBlock.set({ id: blockId });
-		// 	expandAttention();
-		// }
-		// else {
-		// 	expandedBlock.set({ id: null });
-		// 	collapseAttention();
-		// }
-
 		if (!isAttentionExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandAttention();
@@ -73,9 +78,9 @@
 		}
 	}
 	onMount(() => {
-		document.body.addEventListener('click', handleOutsideClick);
+		document.querySelector('.main-section').addEventListener('click', handleOutsideClick);
 		return () => {
-			document.body.removeEventListener('click', handleOutsideClick);
+			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
 		};
 	});
 
@@ -209,8 +214,6 @@
 				'<'
 			);
 
-		// const grad = document.querySelector('#green-purple');
-		// const stop = grad?.querySelectorAll('stop')[1];
 		expandTl.to(outPaths, { opacity: ATTENTION_OUT });
 	};
 
@@ -253,6 +256,26 @@
 	const softmaxColorScale = (d, i) => {
 		return d3.interpolate('white', theme.colors['purple'][700])(d);
 	};
+
+	const onMouseOverCell = (e, d, el) => {
+		const rowIdx = d.rowIndex;
+		const colIdx = d.colIndex;
+		hoveredMatrixCell.set({ row: rowIdx, col: colIdx });
+		if (Number.isFinite(d.cell)) {
+			d3.select(el).attr('stroke', theme.colors.gray[400]);
+		}
+	};
+	const onMouseOutCell = (e, d, el) => {
+		hoveredMatrixCell.set({ row: null, col: null });
+		if (Number.isFinite(d.cell)) {
+			d3.select(el).attr('stroke', !Number.isFinite(d.cell) ? 'none' : theme.colors.gray[200]);
+		}
+	};
+
+	const showTooltip = (e, d) => {
+		if (!Number.isFinite(d)) return;
+		return d.toFixed(2);
+	};
 </script>
 
 <div
@@ -285,6 +308,9 @@
 				colGap={3}
 				shape={'circle'}
 				colorScale={qkColorScale}
+				{onMouseOverCell}
+				{onMouseOutCell}
+				{showTooltip}
 			/>
 			<div class="matrix-label">Dot product</div>
 			<Tooltip class="popover tooltip">
@@ -330,6 +356,9 @@
 					colGap={3}
 					shape={'circle'}
 					colorScale={qkColorScale}
+					{onMouseOverCell}
+					{onMouseOutCell}
+					{showTooltip}
 				/>
 				<Matrix
 					className="main opacity-0"
@@ -341,6 +370,9 @@
 					colGap={3}
 					shape={'circle'}
 					colorScale={maskedColorScale}
+					{onMouseOverCell}
+					{onMouseOutCell}
+					{showTooltip}
 				/>
 			</div>
 			<div class="matrix-label">Scaling · Mask</div>
@@ -389,6 +421,9 @@
 					colGap={3}
 					shape={'circle'}
 					colorScale={maskedColorScale}
+					{onMouseOverCell}
+					{onMouseOutCell}
+					{showTooltip}
 				/>
 				<Matrix
 					className="main opacity-0"
@@ -400,6 +435,9 @@
 					colGap={3}
 					shape={'circle'}
 					colorScale={softmaxColorScale}
+					{onMouseOverCell}
+					{onMouseOutCell}
+					{showTooltip}
 				/>
 			</div>
 
@@ -431,9 +469,14 @@
 				colGap={3}
 				shape={'circle'}
 				colorScale={softmaxColorScale}
+				{onMouseOverCell}
+				{onMouseOutCell}
+				{showTooltip}
 			/>
 
-			<div class="matrix-label">Attention</div>
+			<div class="matrix-label flex items-center gap-1">
+				Attention <ZoomInOutline></ZoomInOutline>
+			</div>
 		</div>
 	</div>
 </div>

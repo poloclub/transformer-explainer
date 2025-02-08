@@ -1,13 +1,14 @@
 <script lang="ts">
 	import classNames from 'classnames';
 	import Operation from './Operation.svelte';
-	import DropoutPopover from './Popovers/DropoutPopover.svelte';
+	import DropoutPopover from './popovers/DropoutPopover.svelte';
 	import { tokens } from '~/store';
-	import LayerNormPopover from './Popovers/LayerNormPopover.svelte';
-	import ActivationPopover from './Popovers/ActivationPopover.svelte';
+	import LayerNormPopover from './popovers/LayerNormPopover.svelte';
+	import ActivationPopover from './popovers/ActivationPopover.svelte';
 	import * as d3 from 'd3';
-	import ResidualPopover from './Popovers/ResidualPopover.svelte';
+	import ResidualPopover from './popovers/ResidualPopover.svelte';
 	import gsap from 'gsap';
+	import { onClickReadMore } from '~/utils/event';
 
 	export let id: string;
 	export let className: string | undefined = undefined;
@@ -67,6 +68,9 @@
 		on:mouseleave={() => {
 			isHovered = false;
 		}}
+		on:click={(e) => {
+			onClickReadMore(e, 'article-activation', { value: type });
+		}}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -91,6 +95,9 @@
 		}}
 		on:mouseleave={() => {
 			isHovered = false;
+		}}
+		on:click={(e) => {
+			onClickReadMore(e, 'article-dropout', { value: type });
 		}}
 	>
 		{#each $tokens as token, index}
@@ -117,6 +124,9 @@
 		on:mouseleave={() => {
 			isHovered = false;
 		}}
+		on:click={(e) => {
+			onClickReadMore(e, 'article-ln', { value: type });
+		}}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -138,6 +148,9 @@
 		class:active={isHovered}
 		on:mouseenter={onMouseOver}
 		on:mouseleave={onMouseOut}
+		on:click={(e) => {
+			onClickReadMore(e, 'article-residual', { value: type });
+		}}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -160,6 +173,9 @@
 		class:active={isHovered}
 		on:mouseenter={onMouseOver}
 		on:mouseleave={onMouseOut}
+		on:click={(e) => {
+			onClickReadMore(e, 'article-residual', { value: type });
+		}}
 	>
 		{#each $tokens as token, index}
 			<Operation
@@ -177,7 +193,8 @@
 
 <style lang="scss">
 	.column.operation-col {
-		z-index: 300;
+		cursor: help;
+		z-index: $ABOVE_COLUMN;
 		height: fit-content;
 
 		&.residual {
@@ -189,13 +206,13 @@
 		}
 
 		&.active {
-			z-index: 310;
+			z-index: $ABOVE_COLUMN;
 			&::after {
 				content: '';
 				position: absolute;
 				height: 100%;
 				width: 1.3rem;
-				z-index: 998;
+				z-index: $POPOVER_INDEX;
 			}
 		}
 	}
@@ -204,7 +221,6 @@
 	:global(.ln-popover),
 	:global(.residual-popover) {
 		width: 10rem;
-		z-index: 999;
-		// top: 100% !important;
+		z-index: $POPOVER_INDEX;
 	}
 </style>
