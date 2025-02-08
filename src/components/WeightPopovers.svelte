@@ -63,10 +63,6 @@
 				left: softmaxRect.left + scrollLeft,
 				top: softmaxRect.top - topbarHeight
 			};
-			softmaxExpandPos = {
-				left: softmaxRect.left + scrollLeft,
-				top: softmaxRect.top - topbarHeight
-			};
 		};
 
 		setPosition();
