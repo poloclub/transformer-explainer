@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { scaleLinear } from 'd3-scale';
-	import { interpolateCool } from 'd3-scale-chromatic';
 	import * as d3 from 'd3';
-	import tailwindConfig from '../../tailwind.config';
+	import tailwindConfig from '../../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { highlightedToken, vectorHeight } from '~/store';
+	import { vectorHeight } from '~/store';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -18,8 +16,8 @@
 
 	const lineHeight = 1;
 
-	const colorKey = typeof colorScale === 'string' ? colorScale : 'gray';
-	const color =
+	$: colorKey = typeof colorScale === 'string' ? colorScale : 'gray';
+	$: color =
 		typeof colorScale === 'function'
 			? colorScale
 			: d3.interpolate(theme.colors[colorKey][100], theme.colors[colorKey][400]);
@@ -53,7 +51,7 @@
 		};
 	});
 
-	$: if (data && canvas) {
+	$: if (data && canvas && color) {
 		drawCanvas();
 	}
 </script>

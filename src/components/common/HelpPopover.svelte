@@ -1,30 +1,10 @@
 <script lang="ts">
 	import { Popover } from 'flowbite-svelte';
-	import { ga } from '~/utils/event';
+	import { onClickReadMore } from '~/utils/event';
 
 	export let id: string;
 	export let placement: string = 'bottom';
 	export let goTo: string | undefined = undefined;
-
-	function scrollToDiv() {
-		if (!goTo) return;
-		const targetDiv = document.getElementById(goTo);
-		if (targetDiv) {
-			const targetPosition = targetDiv.getBoundingClientRect().top + window.scrollY;
-			const offsetPosition = targetPosition - 50;
-			window.scrollTo({
-				top: offsetPosition,
-				behavior: 'smooth'
-			});
-		}
-	}
-
-	function onClickReadMore() {
-		scrollToDiv();
-		ga('readmore_btn_click', {
-			value: id
-		});
-	}
 </script>
 
 <div {id} class="help">
@@ -42,7 +22,10 @@
 	><div class="help-content">
 		<slot />
 		{#if goTo}
-			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={onClickReadMore}>
+			<div
+				class="more-btn mt-1 text-blue-600 hover:underline"
+				on:click={(e) => onClickReadMore(e, goTo, { value: id })}
+			>
 				Read more
 			</div>
 		{/if}
@@ -54,8 +37,8 @@
 		text-align: left !important;
 		white-space: pre;
 		line-height: 1.2;
-		// font-weight: 300;
-		// font-size: 0.9rem;
+		font-weight: 400;
+		font-size: 0.8rem;
 	}
 	.more-btn {
 		cursor: pointer;

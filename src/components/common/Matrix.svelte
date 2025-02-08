@@ -9,7 +9,7 @@
 	export let rowGap: number = 2;
 	export let colGap: number = 0;
 	export let cellGap: number = 0;
-	export let showValue: boolean = false;
+
 	export let groupBy: 'row' | 'col' = 'row';
 	export let shape: 'circle' | 'rect' = 'rect';
 	export let colorScale: string | ((t: number) => any) | undefined = undefined;
@@ -19,6 +19,30 @@
 	export let titlePos: 't' | 'b' | undefined = 't';
 
 	export let transpose: boolean = false;
+
+	export let onMouseOverCell: (
+		event: Event,
+		data: any,
+		el?: SVGRectElement | d3.BaseType
+	) => void | undefined;
+	export let onMouseOutCell: (
+		event: Event,
+		data: any,
+		el?: SVGRectElement | d3.BaseType
+	) => void | undefined;
+	export let onMouseOutSvg: (
+		event: Event,
+		data: any,
+		el?: SVGRectElement | d3.BaseType
+	) => void | undefined;
+	export let showTooltip: (
+		event: Event,
+		data: any,
+		el: SVGRectElement | d3.BaseType
+	) => string | undefined;
+
+	export let highlightRow: number | undefined;
+	export let highlightCol: number | undefined;
 
 	let rowLen: number = 0;
 	let dimension: number = 0;
@@ -40,7 +64,13 @@
 		// showValue,
 		groupBy,
 		shape,
-		colorScale
+		colorScale,
+		onMouseOverCell,
+		onMouseOutCell,
+		onMouseOutSvg,
+		showTooltip,
+		highlightRow,
+		highlightCol
 	};
 
 	$: isDataReady = data.length > 0;

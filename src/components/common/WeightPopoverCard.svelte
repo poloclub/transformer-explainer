@@ -1,0 +1,183 @@
+<script lang="ts">
+	import { Card } from 'flowbite-svelte';
+	import { CloseOutline } from 'flowbite-svelte-icons';
+	import { fade } from 'svelte/transition';
+	import { weightPopover } from '~/store';
+	import { ga } from '~/utils/event';
+
+	export let title;
+	export let className;
+	export let isAnimationActive: boolean = false;
+	export let timeline;
+	export let isOpen: boolean = true;
+</script>
+
+<Card
+	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 ${className}`}
+	transition={fade}
+	params={{ duration: 100 }}
+	on:click={(e) => {
+		e.stopPropagation();
+	}}
+>
+	<div
+		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
+	>
+		<h3 class="font-semibold text-gray-900">{title}</h3>
+		<div class="controls">
+			{#if isAnimationActive}
+				<button
+					class="play-control forward"
+					on:click={(e) => {
+						e.stopPropagation();
+						ga('matrix_calc_forward_btn_click');
+						timeline.progress(1);
+						isAnimationActive = false;
+					}}
+					><svg
+						class="h-5 w-5 text-gray-500"
+						aria-hidden="true"
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						fill="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							fill-rule="evenodd"
+							d="M17 6a1 1 0 1 0-2 0v4L8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8L15 14v4a1 1 0 1 0 2 0V6Z"
+							clip-rule="evenodd"
+						/>
+					</svg>
+				</button>
+			{:else}
+				<button
+					class="play-control restart"
+					on:click={(e) => {
+						e.stopPropagation();
+						ga('matrix_calc_restart_btn_click');
+						isAnimationActive = true;
+						timeline.restart();
+					}}
+				>
+					<svg
+						class="h-5 w-5 text-gray-500"
+						aria-hidden="true"
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke="currentColor"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35a7.13 7.13 0 0 0 12.68-3.15M6 20v-4h4"
+						/>
+					</svg></button
+				>
+			{/if}
+			<button
+				class="close"
+				on:click={(e) => {
+					e.stopPropagation();
+					weightPopover.set(null);
+					isOpen = false;
+				}}><CloseOutline class="h-5 w-5 text-gray-500" /></button
+			>
+		</div>
+	</div>
+	<div class="content">
+		<slot />
+	</div>
+</Card>
+
+<style lang="scss">
+	:global(.weight-popover-card) {
+		width: max-content !important;
+		max-width: none !important;
+		padding: 0 !important;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.weight-popover-title {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		justify-content: space-between;
+	}
+	.content {
+		width: 100%;
+
+		:global(.formula) {
+			position: relative;
+
+			:global(.first-row) {
+				opacity: 1;
+				width: 100%;
+				position: absolute;
+			}
+			:global(.total) {
+				opacity: 0;
+			}
+			:global(.katex-html) {
+				font-size: 0.9rem;
+			}
+		}
+	}
+	.controls {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	:global(.weight-popover-content) {
+		padding: 3rem 2rem 3rem 1rem;
+		width: 100%;
+
+		:global(.tokens) {
+			padding-right: 0.3rem;
+			display: flex;
+			flex-direction: column;
+		}
+
+		:global(.token-label) {
+			font-size: 0.8rem;
+			line-height: 1;
+			text-align: right;
+			color: theme('colors.gray.500');
+		}
+
+		:global(.matrix) {
+			height: 100%;
+			position: relative;
+			justify-content: space-around;
+
+			:global(.title),
+			:global(.size) {
+				color: theme('colors.gray.900');
+				font-size: 0.7rem;
+				white-space: nowrap;
+				position: absolute;
+			}
+			:global(.size) {
+				bottom: -1.5rem;
+			}
+
+			:global(.title) {
+				line-height: 1.2;
+				text-align: center;
+				bottom: calc(100% + 1rem);
+			}
+		}
+		:global(.operator) {
+			padding: 0 0.5rem;
+			font-size: 1.2rem;
+			color: black;
+			opacity: 0.8;
+		}
+	}
+</style>
