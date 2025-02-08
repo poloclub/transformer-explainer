@@ -3,6 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import InputForm from '~/components/InputForm.svelte';
 	import { ga } from '~/utils/event';
+	import Sampling from '~/components/Sampling.svelte';
 
 	export let isActive;
 </script>

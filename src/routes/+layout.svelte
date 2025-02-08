@@ -81,7 +81,7 @@
 	}
 
 	#landing {
-		height: 100%;
+		height: 90%;
 		width: 100%;
 		min-width: var(--min-screen-width);
 	}
@@ -90,7 +90,7 @@
 		min-width: var(--min-screen-width);
 		width: 100%;
 		position: fixed;
-		z-index: 999;
+		z-index: $TOP_BAR_INDEX;
 	}
 	main {
 		position: relative;
@@ -99,5 +99,8 @@
 		display: flex;
 		justify-content: start;
 		overflow: hidden;
+	}
+	.article {
+		padding-top: 2rem;
 	}
 </style>

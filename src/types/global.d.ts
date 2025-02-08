@@ -34,20 +34,25 @@ type HighlightedHead = {
 
 type ExpandedBlock = { id: number | string | null };
 
-type PredictionItem = {
+type Probability = {
 	rank: number;
 	tokenId: number;
 	token: string;
 	logit: number;
-	adjustedLogit: number;
-	adjustedProbability: number;
-	normalizedProbability: number;
-	adjustedExp: number;
+	scaledLogit: number;
+	expLogit: number;
+	probability: number;
+	topKLogit?: number;
+	topPProbability?: number;
+	cumulativeProbability?: number;
+	cutoffIndex?: number;
 };
-type Prediction = PredictionItem[];
+type Probabilities = Probability[];
 type ModelData = {
 	logits: number[];
 	outputs: Record<string, { data: number[][]; dims: number[]; size: number }>;
-	prediction: Prediction;
-	sampled: PredictionItem;
+	probabilities: Probabilities;
+	sampled: Probability;
 };
+
+type Sampling = { type: 'top-k' | 'top-p'; value: number };

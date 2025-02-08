@@ -1,33 +1,25 @@
 <script lang="ts">
-	import ButtonGroup from 'flowbite-svelte/ButtonGroup.svelte';
-	import Dropdown from 'flowbite-svelte/Dropdown.svelte';
-	import DropdownItem from 'flowbite-svelte/DropdownItem.svelte';
+	import { Dropdown, DropdownItem, ButtonGroup } from 'flowbite-svelte';
 	import Temperature from './Temperature.svelte';
-	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
 
-	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
+	import { ChevronDownOutline } from 'flowbite-svelte-icons';
 	import {
 		inputText,
-		selectedModel,
-		modelData,
 		isModelRunning,
-		temperature,
 		predictedToken,
 		inputTextExample,
 		isFetchingModel,
 		expandedBlock,
 		selectedExampleIdx,
-		tokens,
 		isLoaded,
-		modelSession,
 		isOnAnimation,
-		isMobile
+		isMobile,
+		weightPopover
 	} from '~/store';
-	import { Spinner } from 'flowbite-svelte';
-	import LoadingDots from './LoadingDots.svelte';
+	import LoadingDots from './common/LoadingDots.svelte';
 	import classNames from 'classnames';
-	import { tick } from 'svelte';
 	import { ga } from '~/utils/event';
+	import Sampling from './Sampling.svelte';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
@@ -75,7 +67,6 @@
 
 	// Example select box
 	let dropdownOpen = false;
-	const initialDataMap = [ex0, ex1, ex2, ex3, ex4];
 	const onSelectExample = (d, i) => {
 		dropdownOpen = false;
 
@@ -108,24 +99,18 @@
 	};
 
 	$: isLoading = $isFetchingModel || $isModelRunning;
-	$: disabled = $isOnAnimation || $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
-	$: selectDisabled = $isOnAnimation || $isModelRunning || $expandedBlock.id !== null;
+	$: disabled =
+		$isOnAnimation ||
+		$isFetchingModel ||
+		$isModelRunning ||
+		$expandedBlock.id !== null ||
+		!!$weightPopover;
+	$: selectDisabled =
+		$isOnAnimation || $isModelRunning || $expandedBlock.id !== null || !!$weightPopover;
+	$: parameterDisabled = $isOnAnimation || !!$weightPopover;
 </script>
 
 <div class="input-area">
-	<!-- <div class="flex items-center gap-1 whitespace-nowrap"> -->
-	<!-- <Label>Model</Label> -->
-	<!-- <Select
-			items={[
-				{ value: 'gpt2-sm', name: 'gpt2-sm' },
-				{ value: 'gpt2-md', name: 'gpt2-md' },
-				{ value: 'gpt2', name: 'gpt2' }
-			]}
-			bind:value={$selectedModel}
-			size="sm"
-		/> -->
-	<!-- </div> -->
-
 	<form class="input-form">
 		<ButtonGroup class="input-btn-group" size="sm">
 			<button
@@ -150,6 +135,12 @@
 			<div
 				class="input-container"
 				class:disabled
+				role="none"
+				on:keydown={(e) => {
+					e.stopPropagation();
+					inputRef.focus();
+					moveCursorToEnd(inputRef);
+				}}
 				on:click={(e) => {
 					e.stopPropagation();
 					inputRef.focus();
@@ -214,10 +205,17 @@
 			Generate
 		</button>
 	</form>
-	<Temperature disabled={$isOnAnimation} />
+	<div class="parameters">
+		<Temperature disabled={parameterDisabled} />
+		<Sampling disabled={parameterDisabled} />
+	</div>
 </div>
 
 <style lang="scss">
+	.parameters {
+		display: flex;
+		gap: 1rem;
+	}
 	.input-area {
 		width: 100%;
 		flex-shrink: 0;
@@ -278,7 +276,6 @@
 				}
 			}
 			.predicted {
-				// flex-shrink: 0;
 				flex: 1 0 0;
 				color: var(--predicted-color);
 				font-weight: 600;
