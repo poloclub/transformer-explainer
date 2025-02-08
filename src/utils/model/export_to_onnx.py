@@ -22,11 +22,25 @@ class wrapper(torch.nn.Module):
     def __init__(self, model):
         super(wrapper, self).__init__()
         self.model = model
+        self.layer_num = self.model.config.n_layer  
+        self.head_num = self.model.config.n_head   
 
     def forward(self, input):
         outputs = self.model(input)
         # extract values from dictionary and return them as separate outputs
-        return (
+        extracted_outputs = []
+        for i in range(self.layer_num):
+            for j in range(self.head_num):
+                extracted_outputs.extend([
+                    outputs["block"][f"block_{i}"]["attn"][f"head_{j}"]["attn"],
+                    outputs["block"][f"block_{i}"]["attn"][f"head_{j}"]["attn_scaled"],
+                    outputs["block"][f"block_{i}"]["attn"][f"head_{j}"]["attn_masked"],
+                    outputs["block"][f"block_{i}"]["attn"][f"head_{j}"]["attn_softmax"],
+                    outputs["block"][f"block_{i}"]["attn"][f"head_{j}"]["attn_dropout"]
+                ])
+        extracted_outputs.append(outputs["linear"]["output"])
+        return tuple(extracted_outputs)
+        # return (
             # outputs["embedding"]["tok_emb"],
             # outputs["embedding"]["transformer.wpe.weight"],
             # outputs["embedding"]["pos_emb"],
@@ -50,11 +64,11 @@ class wrapper(torch.nn.Module):
             # outputs["block"]["block_0"]["attn"]["head_0"]["q_transposed"],
             # outputs["block"]["block_0"]["attn"]["head_0"]["k_transposed"],
             # outputs["block"]["block_0"]["attn"]["head_0"]["v_transposed"],
-            outputs["block"]["block_0"]["attn"]["head_0"]["attn"],
-            outputs["block"]["block_0"]["attn"]["head_0"]["attn_scaled"],
-            outputs["block"]["block_0"]["attn"]["head_0"]["attn_masked"],
-            outputs["block"]["block_0"]["attn"]["head_0"]["attn_softmax"],
-            outputs["block"]["block_0"]["attn"]["head_0"]["attn_dropout"],
+            # outputs["block"]["block_0"]["attn"]["head_0"]["attn"],
+            # outputs["block"]["block_0"]["attn"]["head_0"]["attn_scaled"],
+            # outputs["block"]["block_0"]["attn"]["head_0"]["attn_masked"],
+            # outputs["block"]["block_0"]["attn"]["head_0"]["attn_softmax"],
+            # outputs["block"]["block_0"]["attn"]["head_0"]["attn_dropout"],
             # outputs["block"]["block_0"]["attn"]["head_0"]["v_output"],
             # outputs["block"]["block_0"]["attn"]["v_output_combined"],
             # outputs["block"]["block_0"]["attn"]["proj_weights"],
@@ -83,8 +97,8 @@ class wrapper(torch.nn.Module):
             # outputs["ln_f"]["bias"],
             # outputs["ln_f"]["output"],
             # outputs["linear"]["weight"],
-            outputs["linear"]["output"],
-        )
+            # outputs["linear"]["output"],
+        # )
 
 # initialize model
 model = GPT.from_pretrained(modelname)
@@ -102,6 +116,15 @@ dummy_input = torch.tensor([[6601, 32704, 795, 30132, 2985, 284]])
 # export model to ONNX
 onnx_model_path = "src/utils/model/params_output/"+ modelname +".onnx"
 
+# generate output names dynamically
+output_names = [
+    f"block_{i}_attn_head_{j}_{suffix}"
+    for i in range(model.config.n_layer) 
+    for j in range(model.config.n_head) 
+    for suffix in ["attn", "attn_scaled", "attn_masked", "attn_softmax", "attn_dropout"]
+]
+output_names.append("linear_output")
+
 torch.onnx.export(
     wrapped_model,
     dummy_input,
@@ -111,6 +134,15 @@ torch.onnx.export(
     opset_version=11,
     do_constant_folding=True,
     input_names=["input"],
+    output_names=output_names,
+    dynamic_axes={
+        'input': {0: '0', 1: '1'},
+        **{
+            name: {0: '0', 1: '1', 2: '2'}
+            for name in output_names if name != "linear_output"
+        },
+        'linear_output': {0: '0', 1: '1', 2: '2'}
+    }
     # output_names=[
     #     "tok_emb", "transformer_wpe_weight", "pos_emb", "input_emb", "input_emb_dropout",
     #     "block_0_ln_1_input_mean", "block_0_ln_1_input_var", "block_0_ln_1_input_normalized", "block_0_ln_1_weight", "block_0_ln_1_bias", "block_0_ln_1_output",
@@ -126,12 +158,8 @@ torch.onnx.export(
     #     "linear_weight", 
     #     "linear_output"
     # ],
-        output_names=[
-"block_0_attn_head_0_attn", "block_0_attn_head_0_attn_scaled", "block_0_attn_head_0_attn_masked", "block_0_attn_head_0_attn_softmax", "block_0_attn_head_0_attn_dropout",
-        "linear_output"
-    ],
-    dynamic_axes={
-        'input': {0: '0', 1: '1'},
+    # dynamic_axes={
+        # 'input': {0: '0', 1: '1'},
         # 'tok_emb': {0: '0', 1: '1'},
         # 'transformer_wpe_weight': {0: '0'},
         # 'pos_emb': {0: '0'},
@@ -155,11 +183,11 @@ torch.onnx.export(
         # 'block_0_attn_head_0_q_transposed': {0: '0', 1: '1', 2: '2'},
         # 'block_0_attn_head_0_k_transposed': {0: '0', 1: '1', 2: '2'},
         # 'block_0_attn_head_0_v_transposed': {0: '0', 1: '1', 2: '2'},
-        'block_0_attn_head_0_attn': {0: '0', 1: '1', 2: '2'},
-        'block_0_attn_head_0_attn_scaled': {0: '0', 1: '1', 2: '2'},
-        'block_0_attn_head_0_attn_masked': {0: '0', 1: '1', 2: '2'},
-        'block_0_attn_head_0_attn_softmax': {0: '0', 1: '1', 2: '2'},
-        'block_0_attn_head_0_attn_dropout': {0: '0', 1: '1', 2: '2'},
+        # 'block_0_attn_head_0_attn': {0: '0', 1: '1', 2: '2'},
+        # 'block_0_attn_head_0_attn_scaled': {0: '0', 1: '1', 2: '2'},
+        # 'block_0_attn_head_0_attn_masked': {0: '0', 1: '1', 2: '2'},
+        # 'block_0_attn_head_0_attn_softmax': {0: '0', 1: '1', 2: '2'},
+        # 'block_0_attn_head_0_attn_dropout': {0: '0', 1: '1', 2: '2'},
         # 'block_0_attn_head_0_v_output': {0: '0', 1: '1', 2: '2'},
         # 'block_0_attn_v_output_combined': {0: '0', 1: '1', 2: '2'},
         # 'block_0_attn_proj_weights': {0: '0', 1: '1'},
@@ -188,8 +216,8 @@ torch.onnx.export(
         # 'ln_f_bias': {0: '0'},
         # 'ln_f_output': {0: '0', 1: '1'},
         # 'linear_weight': {0: '0', 1: '2'},
-        'linear_output': {0: '0', 1: '1', 2: '2'}
-    }
+        # 'linear_output': {0: '0', 1: '1', 2: '2'}
+    # }
 )
 
 print("Model has been successfully exported to ONNX format.")
