@@ -1,16 +1,7 @@
 <script>
 	import tailwindConfig from '../../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { base } from '$app/paths';
-
-	// import Youtube from './Youtube.svelte';
-
-	let softmaxEquation = `$$\\text{Softmax}(x_{i}) = \\frac{\\exp(x_i)}{\\sum_j \\exp(x_j)}$$`;
-	let reluEquation = `$$\\text{ReLU}(x) = \\max(0,x)$$`;
-
-	let currentPlayer;
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import Katex from '~/utils/Katex.svelte';
 </script>
 
 <div id="description">
@@ -115,7 +106,7 @@
 				encodings to get the final embedding. Let’s see how each of these steps is done.
 			</p>
 			<div class="figure">
-				<img src="./article_assets/embedding.png" width="60%" height="60%" align="middle" />
+				<img src="./article_assets/embedding.png" width="65%" />
 			</div>
 			<div class="figure-caption">
 				Figure <span class="attention">1</span>. Expanding the Embedding layer view, showing how the
@@ -140,7 +131,7 @@
 			<div class="article-subsection" id="article-token-embedding">
 				<h3>Step 2. Token Embedding</h3>
 				<p>
-					GPT-2 Small represents each token in the vocabulary as a 768-dimensional vector; the
+					GPT-2 (small) represents each token in the vocabulary as a 768-dimensional vector; the
 					dimension of the vector depends on the model. These embedding vectors are stored in a
 					matrix of shape <code>(50,257, 768)</code>, containing approximately 39 million
 					parameters! This extensive matrix allows the model to assign semantic meaning to each
@@ -215,9 +206,10 @@
 				The core of the Transformer's processing lies in the Transformer block, which comprises
 				multi-head self-attention and a Multi-Layer Perceptron layer. Most models consist of
 				multiple such blocks that are stacked sequentially one after the other. The token
-				representations evolve through layers, from the first block to the 12th one, allowing the
+				representations evolve through layers, from the first block to the last one, allowing the
 				model to build up an intricate understanding of each token. This layered approach leads to
-				higher-order representations of the input.
+				higher-order representations of the input. The GPT-2 (small) model we are examining consists
+				of <code>12</code> such blocks.
 			</p>
 
 			<div class="article-subsection" id="self-attention">
@@ -230,8 +222,16 @@
 				<div class="article-subsection-l2">
 					<h4>Step 1: Query, Key, and Value Matrices</h4>
 
-					<div class="figure">
-						<img src="./article_assets/QKV.png" width="80%" align="middle" />
+					<div class="figure pt-10">
+						<img src="./article_assets/QKV.png" width="80%" />
+						<div class="text-xs">
+							<Katex
+								displayMode
+								math={`
+			QKV_{ij} = ( \\sum_{d=1}^{768} \\text{Embedding}_{i,d} \\cdot \\text{Weights}_{d,j}) + \\text{Bias}_j
+			`}
+							/>
+						</div>
 					</div>
 					<div class="figure-caption">
 						Figure <span class="attention">2</span>. Computing Query, Key, and Value matrices from
@@ -271,10 +271,22 @@
 					</p>
 				</div>
 				<div class="article-subsection-l2">
-					<h4>Step 2: Masked Self-Attention</h4>
+					<h4>Step 2: Multi-Head Splitting</h4>
 					<p>
-						Masked self-attention allows the model to generate sequences by focusing on relevant
-						parts of the input while preventing access to future tokens.
+						<span class="q-color">Query</span>, <span class="k-color">key</span>, and
+						<span class="v-color">Value</span>
+						vectors are split into multiple heads—in GPT-2 (small)'s case, into
+						<code>12</code> heads. Each head processes a segment of the embeddings independently, capturing
+						different syntactic and semantic relationships. This design facilitates parallel learning
+						of diverse linguistic features, enhancing the model's representational power.
+					</p>
+				</div>
+				<div class="article-subsection-l2">
+					<h4>Step 3: Masked Self-Attention</h4>
+					<p>
+						In each head, we perform masked self-attention calculations. This mechanism allows the
+						model to generate sequences by focusing on relevant parts of the input while preventing
+						access to future tokens.
 					</p>
 
 					<div class="figure">
@@ -307,7 +319,7 @@
 					</ul>
 				</div>
 				<div class="article-subsection-l2">
-					<h4>Step 3: Output</h4>
+					<h4>Step 4: Output and Concatenation</h4>
 					<p>
 						The model uses the masked self-attention scores and multiplies them with the
 						<span class="v-color">Value</span> matrix to get the
@@ -355,8 +367,8 @@
 						will allow us to sample the next token based on its likelihood.
 					</p>
 
-					<div class="figure">
-						<img src="./article_assets/softmax.png" width="60%" align="middle" />
+					<div class="figure py-5">
+						<img src="./article_assets/softmax.png" width="70%" />
 					</div>
 					<div class="figure-caption">
 						Figure <span class="attention">5</span>. Each token in the vocabulary is assigned a
@@ -390,9 +402,26 @@
 						</li>
 					</ul>
 
+					<p id="article-sampling">
+						In addition, the sampling process can be further refined using <code>top-k</code>
+						and
+						<code>top-p</code> parameters:
+					</p>
+					<ul>
+						<li>
+							<code>top-k sampling</code>: Limits the candidate tokens to the top k tokens with the
+							highest probabilities, filtering out less likely options.
+						</li>
+						<li>
+							<code>top-p sampling</code>: Considers the smallest set of tokens whose cumulative
+							probability exceeds a threshold p, ensuring that only the most likely tokens
+							contribute while still allowing for diversity.
+						</li>
+					</ul>
 					<p>
-						Adjust the temperature and see how you can balance between deterministic and diverse
-						outputs!
+						By tuning <code>temperature</code>, <code>top-k</code>, and <code>top-p</code>, you can
+						balance between deterministic and diverse outputs, tailoring the model's behavior to
+						your specific needs.
 					</p>
 				</div>
 
@@ -466,9 +495,14 @@
 							output probabilities are calculated.
 						</li>
 						<li>
-							<strong>Use the temperature slider</strong> to control the randomness of the model’s predictions.
+							<strong>Use temperature slider</strong> to control the randomness of the model’s predictions.
 							Explore how you can make the model output more deterministic or more creative by changing
 							the temperature value.
+						</li>
+						<li>
+							<strong>Select top-k and top-p sampling methods</strong> to adjust sampling behavior during
+							inference. Experiment with different values and see how the probability distribution changes
+							and influences the model's predictions.
 						</li>
 						<li>
 							<strong>Interact with attention maps</strong> to see how the model focuses on different
@@ -657,8 +691,6 @@
 	#description div,
 	#description li {
 		color: theme('colors.gray.600');
-		// font-size: 17px;
-		// font-size: 15px;
 		line-height: 1.6;
 	}
 
