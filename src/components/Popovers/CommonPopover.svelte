@@ -2,8 +2,7 @@
 	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { fade } from 'svelte/transition';
-	import { ga } from '~/utils/event';
+	import { onClickReadMore } from '~/utils/event';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
@@ -13,27 +12,6 @@
 	export let title: PopoverProps['title'] = undefined;
 	export let goTo: string | undefined = undefined;
 	export let reference: PopoverProps['reference'] | undefined = undefined;
-
-	function scrollToDiv(e) {
-		e.stopPropagation();
-		if (!goTo) return;
-		const targetDiv = document.getElementById(goTo);
-		if (targetDiv) {
-			const targetPosition = targetDiv.getBoundingClientRect().top + window.scrollY;
-			const offsetPosition = targetPosition - 50;
-			window.scrollTo({
-				top: offsetPosition,
-				behavior: 'smooth'
-			});
-		}
-	}
-
-	function onClickReadMore(e) {
-		scrollToDiv(e);
-		ga('readmore_btn_click', {
-			value: title
-		});
-	}
 </script>
 
 <Popover
@@ -49,7 +27,13 @@
 	<div class="content">
 		<slot></slot>
 		{#if goTo}
-			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={onClickReadMore}>
+			<div
+				class="more-btn mt-1 text-blue-600 hover:underline"
+				on:click={(e) =>
+					onClickReadMore(e, goTo, {
+						value: title
+					})}
+			>
 				Read more
 			</div>
 		{/if}

@@ -1,23 +1,20 @@
 <script lang="ts">
-	import { Card } from 'flowbite-svelte';
 	import { modelMeta, tokens, rootRem } from '~/store';
 	import * as d3 from 'd3';
 	import { gsap } from '~/utils/gsap';
-	import { fade } from 'svelte/transition';
-	import Matrix from '~/components/Matrix.svelte';
+	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../../tailwind.config';
-	import classNames from 'classnames';
-	import Katex from '~/utils/Katex.svelte';
-	import { ga } from '~/utils/event';
+	import HelpPopover from '../common/HelpPopover.svelte';
+	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
 	const tokenGap = 6;
 
 	// generate data
-	const visibleDimension = 20;
+	const visibleDimension = 18;
 	$: tokenLen = $tokens.length;
 	$: embeddingData = Array(tokenLen)
 		.fill(0)
@@ -56,10 +53,11 @@
 	};
 
 	const qkvColorScale = (d, i) => {
-		let color = i < 20 ? 'blue' : i < 40 ? 'red' : 'green';
+		let color = i < visibleDimension ? 'blue' : i < visibleDimension * 2 ? 'red' : 'green';
 		return d3.interpolate(theme.colors[color][100], theme.colors[color][400])(d);
 	};
 
+	// animation
 	let isAnimationActive = false;
 	let progress = 0;
 	let timeline = gsap.timeline();
@@ -83,7 +81,6 @@
 		}
 	});
 
-	// animation
 	const draw = () => {
 		const embeddingRows = d3.selectAll('.weight-popover-content .token-embedding g.g-row').nodes();
 		const weightCols = d3.selectAll('.weight-popover-content .qkv-weights g.g-col').nodes();
@@ -91,8 +88,14 @@
 
 		const outRows = d3.selectAll('.weight-popover-content .qkv-output g.g-row').nodes();
 
+		const mulSymbol = d3.select('.weight-popover-content .symbol.mul').node();
+		const plusSymbol = d3.select('.weight-popover-content .symbol.plus').node();
+		const equalSymbol = d3.select('.weight-popover-content .symbol.equal').node();
+
+		const highlight = '#94a3b8';
+
 		// first row detail animation
-		// timeline.set(weightBiasCells, { opacity: 0.1 });
+		timeline.set(weightBiasCells, { opacity: 0.1 });
 		timeline.set('.formula .first-row', { opacity: 1 });
 		timeline.set('.formula .total', { opacity: 0 });
 
@@ -105,46 +108,119 @@
 			timeline.set(firstEmbeddingRowRects, { opacity: 0.1 });
 
 			firstEmbeddingRowRects.forEach((embeddingRect, i) => {
-				timeline.fromTo(
-					embeddingRect,
-					{ opacity: 0.1 },
-					{
-						opacity: 1,
-						duration: isFirstOutCell ? 0.1 : 0.002
-					},
-					`<50%`
-				);
-				timeline.fromTo(
-					firstWeightColRects[i],
-					{ opacity: 0.1 },
-					{
-						opacity: 1,
-						duration: isFirstOutCell ? 0.1 : 0.002
-					},
-					`<50%`
-				);
+				//embedding
+				timeline
+					.fromTo(
+						embeddingRect,
+						{ opacity: 0.1, strokeWidth: 0 },
+						{
+							opacity: 1,
+							duration: isFirstOutCell ? 0.1 : 0.002,
+							strokeWidth: 10,
+							stroke: highlight
+						}
+					)
+					.to(
+						embeddingRect,
+						{
+							strokeWidth: 0,
+							duration: isFirstOutCell ? 0.1 : 0.002
+						},
+						'<50%'
+					);
+
+				//weights
+				timeline
+					.fromTo(
+						firstWeightColRects[i],
+						{ opacity: 0.1, strokeWidth: 0 },
+						{
+							opacity: 1,
+							duration: isFirstOutCell ? 0.1 : 0.002,
+							strokeWidth: 10,
+							stroke: highlight
+						},
+						'<-50%'
+					)
+					.to(
+						firstWeightColRects[i],
+						{
+							strokeWidth: 0,
+							duration: isFirstOutCell ? 0.1 : 0.002
+						},
+						'<50%'
+					);
 			});
 
-			timeline.to(
-				weightBiasCells[outCellIdx],
-				{
-					opacity: 1,
-					duration: isFirstOutCell ? 1 : 0.002
-				},
-				'<'
-			);
-			timeline.from(
-				outputRect,
-				{
-					opacity: 0,
-					fill: 'black',
-					duration: isFirstOutCell ? 1 : 0.002
-				},
-				'<'
-			);
+			//symbol
+			if (isFirstOutCell) {
+				timeline.from(
+					[mulSymbol, equalSymbol, '.formula .first-row .part1'],
+					{
+						duration: 0.05,
+						opacity: 1
+					},
+					'<50%'
+				);
+
+				timeline.from(
+					[plusSymbol, equalSymbol, '.formula .first-row .part2'],
+					{
+						duration: 0.5,
+						opacity: 0.1
+					},
+					'<'
+				);
+			}
+			//bias
+			timeline
+				.fromTo(
+					weightBiasCells[outCellIdx],
+
+					{ opacity: 0.1, strokeWidth: 0 },
+					{
+						opacity: 1,
+						duration: isFirstOutCell ? 0.4 : 0.002,
+						strokeWidth: 10,
+						stroke: highlight
+					},
+					'<'
+				)
+				.to(
+					weightBiasCells[outCellIdx],
+
+					{
+						strokeWidth: 0,
+						duration: isFirstOutCell ? 0.4 : 0.002
+					},
+					'<50%'
+				);
+
+			//out
+			timeline
+				.fromTo(
+					outputRect,
+					{ opacity: 0, strokeWidth: 0 },
+					{
+						opacity: 1,
+						duration: isFirstOutCell ? 0.4 : 0.002,
+						strokeWidth: 10,
+						stroke: highlight
+					},
+					'<-50%'
+				)
+				.to(
+					outputRect,
+
+					{
+						strokeWidth: 0,
+						duration: isFirstOutCell ? 0.4 : 0.002
+					},
+					'<50%'
+				);
 
 			if (isFirstOutCell) {
-				timeline.to('.formula .first-row', { opacity: 0, duration: 0.3 });
+				timeline.to('.formula .first-row', { opacity: 0, duration: 0.3 }, '>+1');
 				timeline.to('.formula .total', { opacity: 1, duration: 0.3 }, `<`);
 			}
 		});
@@ -168,7 +244,7 @@
 						opacity: 1,
 						duration: 0.01
 					},
-					`<50%`
+					'<'
 				);
 
 				const weightColRects = d3
@@ -212,252 +288,149 @@
 			previousRowIdx = rowIdx;
 		});
 	};
+
+	// event
+	let highlightCol: number | undefined = undefined;
+	let highlightRow: number | undefined = undefined;
+
+	const onMouseOverCell = (e, d) => {
+		if (isAnimationActive) return;
+		highlightRow = d.rowIndex;
+		highlightCol = d.colIndex;
+	};
+	const onMouseOutSvg = () => {
+		highlightCol = undefined;
+		highlightRow = undefined;
+	};
+
+	// const showTooltip = (e, d) => {
+	// return `(${highlightRow},${highlightCol})`;
+	// return `(i,j)`;
+	// };
 </script>
 
-<Card
-	class={classNames('weight-popover popover bg-white text-sm font-light text-gray-500')}
-	transition={fade}
-	params={{ duration: 100 }}
->
-	<div
-		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
-	>
-		<h3 class="font-semibold text-gray-900">QKV Calculation</h3>
-		{#if isAnimationActive}
-			<button
-				class="play-control forward"
-				on:click={() => {
-					ga('matrix_calc_forward_btn_click');
-					timeline.progress(1);
-					isAnimationActive = false;
-				}}
-				><svg
-					class="h-5 w-5 text-gray-500"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						fill-rule="evenodd"
-						d="M17 6a1 1 0 1 0-2 0v4L8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8L15 14v4a1 1 0 1 0 2 0V6Z"
-						clip-rule="evenodd"
-					/>
-				</svg>
-			</button>
-		{:else}
-			<button
-				class="play-control restart"
-				on:click={() => {
-					ga('matrix_calc_restart_btn_click');
-					isAnimationActive = true;
-					timeline.restart();
-				}}
-			>
-				<svg
-					class="h-5 w-5 text-gray-500"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35a7.13 7.13 0 0 0 12.68-3.15M6 20v-4h4"
-					/>
-				</svg></button
-			>
-		{/if}
-	</div>
-	<div class="content">
-		<div class="weight-popover-content flex items-center justify-start">
-			<div class="matrix flex flex-col items-center">
-				<div class="tokens" style={`gap:${tokenGap}px`}>
-					{#each $tokens as token, index}
-						<div class="token-label"><span>{token}</span></div>
-					{/each}
-				</div>
+<WeightPopoverCard title={'Query Key Value'} bind:isAnimationActive {timeline}>
+	<div class="weight-popover-content flex items-center justify-start">
+		<div class="matrix flex flex-col items-center">
+			<div class="tokens" style={`gap:${tokenGap}px`}>
+				{#each $tokens as token, index}
+					<div class="token-label"><span>{token}</span></div>
+				{/each}
 			</div>
-			<div class="matrix flex flex-col items-center">
-				<div class="title self-end">Embedding</div>
-				<!-- (tokenLen, 768) -->
+		</div>
+		<div class="matrix flex flex-col items-center">
+			<div class="title flex items-center gap-1 self-end">
+				Embeddings<HelpPopover id="qkv-emgeddings" placement="top"
+					>{`Embeddings originate from tokens \nbut evolve through blocks, becoming \nabstract representations.`}</HelpPopover
+				>
+			</div>
+			<!-- (tokenLen, 768) -->
+			<Matrix
+				className="token-embedding"
+				data={embeddingData}
+				showSize={false}
+				cellHeight={rootRem * 0.8}
+				cellWidth={2}
+				rowGap={tokenGap}
+				colorScale={embeddingColorScale}
+				{highlightRow}
+			/>
+			<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
+		</div>
+		<div class="operator"><div class="symbol mul">&times;</div></div>
+		<div class="matrix flex flex-col items-center">
+			<div class="title flex items-center gap-1">
+				Q·K·V Weights<HelpPopover id="qkv-weights" placement="top"
+					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters tha learned in training, fixed in prediction.`}</HelpPopover
+				>
+			</div>
+			<div class="flex gap-0">
 				<Matrix
-					className="token-embedding"
-					data={embeddingData}
+					className="qkv-weights"
+					data={qkvWeightData}
+					showSize={false}
+					groupBy={'col'}
+					cellHeight={3}
+					cellWidth={3}
+					rowGap={0}
+					colorScale={qkvColorScale}
+					{highlightCol}
+				/>
+			</div>
+
+			<div class="size">({$modelMeta.dimension}, {$modelMeta.dimension * 3})</div>
+		</div>
+		<div class="operator"><div class="symbol plus">+</div></div>
+		<div class="matrix flex flex-col items-center">
+			<div class="title flex items-center gap-1">
+				Q·K·V Bias<HelpPopover id="qkv-bias" placement="top"
+					>{`Offsets added after transformation. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
+				>
+			</div>
+			<Matrix
+				className="qkv-bias"
+				data={qkvBiasData}
+				showSize={false}
+				groupBy={'col'}
+				cellHeight={2}
+				cellWidth={8}
+				rowGap={0}
+				colorScale={embeddingColorScale}
+				highlightRow={highlightCol}
+			/>
+			<div class="size">({$modelMeta.dimension * 3})</div>
+		</div>
+		<div class="operator"><div class="symbol equal">=</div></div>
+		<div class="matrix flex flex-col items-center">
+			<div class="tokens" style={`gap:${tokenGap}px`}>
+				{#each $tokens as token, index}
+					<div class="token-label"><span>{token}</span></div>
+				{/each}
+			</div>
+		</div>
+		<div class="matrix flex flex-col items-center">
+			<div class="title">Q·K·V</div>
+			<div class="flex">
+				<Matrix
+					className="qkv-output"
+					data={qkvOutData}
 					showSize={false}
 					cellHeight={rootRem * 0.8}
 					cellWidth={2}
 					rowGap={tokenGap}
-					colorScale={embeddingColorScale}
-				/>
-				<div class="size">matrix({tokenLen}, {$modelMeta.dimension})</div>
-			</div>
-			<div class="operator"><div class="symbol">&times;</div></div>
-			<div class="matrix flex flex-col items-center">
-				<div class="title">Q·K·V Weights</div>
-				<!-- (768,2034) -->
-				<div class="flex gap-0">
-					<Matrix
-						className="qkv-weights"
-						data={qkvWeightData}
-						showSize={false}
-						groupBy={'col'}
-						cellHeight={3}
-						cellWidth={3}
-						rowGap={0}
-						colorScale={qkvColorScale}
-					/>
-				</div>
-
-				<div class="size">matrix({$modelMeta.dimension}, {$modelMeta.dimension * 3})</div>
-			</div>
-			<div class="operator"><div class="symbol">+</div></div>
-			<div class="matrix flex flex-col items-center">
-				<div class="title">Bias</div>
-				<!-- (768) -->
-				<Matrix
-					className="qkv-bias"
-					data={qkvBiasData}
-					showSize={false}
-					groupBy={'col'}
-					cellHeight={2}
-					cellWidth={8}
-					rowGap={0}
-					colorScale={embeddingColorScale}
-				/>
-				<div class="size">vector({$modelMeta.dimension * 3})</div>
-			</div>
-			<div class="operator"><div class="symbol">=</div></div>
-			<div class="matrix flex flex-col items-center">
-				<div class="tokens" style={`gap:${tokenGap}px`}>
-					{#each $tokens as token, index}
-						<div class="token-label"><span>{token}</span></div>
-					{/each}
-				</div>
-			</div>
-			<div class="matrix flex flex-col items-center">
-				<div class="title">Q·K·V</div>
-				<!-- (tokenLen, 2034) -->
-				<div class="flex">
-					<Matrix
-						className="qkv-output"
-						data={qkvOutData}
-						showSize={false}
-						cellHeight={rootRem * 0.8}
-						cellWidth={2}
-						rowGap={tokenGap}
-						colorScale={qkvColorScale}
-					/>
-				</div>
-				<div class="size">matrix({tokenLen}, {$modelMeta.dimension * 3})</div>
-			</div>
-		</div>
-		<div class="formula">
-			<div class="first-row">
-				<Katex
-					displayMode
-					math={`
-			( E_{1,1} \\cdot W_{1,1} + E_{1,2} \\cdot W_{2,1} + \\cdots + E_{1,768} \\cdot W_{768,1}) + b_1 = QKV_{1,1}`}
+					colorScale={qkvColorScale}
+					{onMouseOverCell}
+					{onMouseOutSvg}
+					{highlightCol}
+					{highlightRow}
 				/>
 			</div>
-			<div class="total">
-				<Katex
-					displayMode
-					math={`
-			\\sum_{d=1}^{768} E_{id} \\cdot W_{dj} + b_j = QKV_{ij} 
-			`}
-				/>
-			</div>
+			<div class="size">({tokenLen}, {$modelMeta.dimension * 3})</div>
 		</div>
 	</div>
-</Card>
+	<!-- <div class="formula">
+		<div class="first-row flex items-center justify-center gap-1">
+			<span class="part1">
+				<Katex
+					displayMode
+					math={`
+	(Embedding_{1,1} \\cdot Weights_{1,1} + \\cdots + Embedding_{1,768} \\cdot Weights_{768,1})`}
+				/>
+			</span>
+			<span class="part2">
+				<Katex displayMode math={`+ Bias_1 = QKV_{1,1}`} />
+			</span>
+		</div>
+		<div class="total">
+			<Katex
+				displayMode
+				math={`
+	\\sum_{d=1}^{768} Embedding_{id} \\cdot Weights_{dj} + Bias_j = QKV_{ij} 
+	`}
+			/>
+		</div>
+	</div> -->
+</WeightPopoverCard>
 
 <style lang="scss">
-	.formula {
-		font-size: 0.7rem;
-		position: relative;
-		padding-bottom: 0.5rem;
-		.first-row {
-			opacity: 1;
-			width: 100%;
-			position: absolute;
-		}
-		.total {
-			font-size: 0.6rem;
-			opacity: 0;
-		}
-	}
-	:global(.weight-popover) {
-		width: max-content !important;
-		max-width: 50rem !important;
-		// max-height: 20rem !important;
-		padding: 0 !important;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.weight-popover-title {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		justify-content: space-between;
-	}
-	.content {
-		width: 100%;
-		overflow-y: scroll;
-		overflow-x: hidden;
-	}
-	.weight-popover-content {
-		padding: 3rem 2rem 2.5rem 1rem;
-		width: 100%;
-	}
-	.play-control {
-		// position: absolute;
-		// right: 1rem;
-		// top: 0;
-		// height: 2.2rem;
-	}
-
-	.tokens {
-		padding-right: 0.3rem;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.token-label {
-		font-size: 0.8rem;
-		line-height: 1;
-		text-align: right;
-		color: theme('colors.gray.500');
-	}
-
-	.matrix {
-		height: 100%;
-		position: relative;
-		justify-content: space-around;
-		.title,
-		.size {
-			color: theme('colors.gray.900');
-			font-size: 0.7rem;
-			white-space: nowrap;
-			position: absolute;
-			top: -2rem;
-		}
-		.size {
-			top: inherit;
-			bottom: -1.5rem;
-		}
-	}
-	.operator {
-		padding: 0 0.5rem;
-		font-size: 1.2rem;
-	}
 </style>

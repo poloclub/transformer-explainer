@@ -17,23 +17,8 @@
 	const visibleDimension = 15;
 
 	$: tokenLen = $tokens.length;
-	$: embeddingData = Array(tokenLen)
-		.fill(0)
-		.map((col) =>
-			Array(visibleDimension)
-				.fill(0)
-				.map((d) => Math.random())
-		);
 
-	const mlpUpWeightData = Array(visibleDimension * 4)
-		.fill(0)
-		.map((col) =>
-			Array(visibleDimension)
-				.fill(0)
-				.map((d) => Math.random())
-		);
-
-	const mlpUpBiasData = Array(1)
+	const mlpDownWeightData = Array(visibleDimension)
 		.fill(0)
 		.map((col) =>
 			Array(visibleDimension * 4)
@@ -41,6 +26,13 @@
 				.map((d) => Math.random())
 		);
 
+	const mlpDownBiasData = Array(1)
+		.fill(0)
+		.map((col) =>
+			Array(visibleDimension)
+				.fill(0)
+				.map((d) => Math.random())
+		);
 	$: mlpUpOutData = Array(tokenLen)
 		.fill(0)
 		.map((col) =>
@@ -48,11 +40,14 @@
 				.fill(0)
 				.map((d) => Math.random())
 		);
-
+	$: mlpDownOutData = Array(tokenLen)
+		.fill(0)
+		.map((col) =>
+			Array(visibleDimension)
+				.fill(0)
+				.map((d) => Math.random())
+		);
 	// color scale
-	const embeddingColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['purple'][100], theme.colors['purple'][400])(d);
-	};
 	const weightColorScale = (d, i) => {
 		return d3.interpolate(theme.colors['gray'][100], theme.colors['gray'][400])(d);
 	};
@@ -90,14 +85,14 @@
 	const draw = () => {
 		// upscale --------------------------------
 		const embeddingRows = d3.selectAll('.weight-popover-content .embedding-matrix g.g-row').nodes();
-		const weightCols = d3.selectAll('.weight-popover-content .mlp-weights g.g-col').nodes();
-		const weightBiasCells = d3.selectAll('.weight-popover-content .mlp-bias rect').nodes();
+		const weightCols = d3.selectAll('.weight-popover-content .mlp-down-weights g.g-col').nodes();
+		const weightBiasCells = d3.selectAll('.weight-popover-content .mlp-down-bias rect').nodes();
 
-		const outRows = d3.selectAll('.weight-popover-content .mlp-out g.g-row').nodes();
+		const outRows = d3.selectAll('.weight-popover-content .mlp-down-out g.g-row').nodes();
 
-		const [mulSymbol1] = d3.selectAll('.weight-popover-content .symbol.mul').nodes();
 		const [plusSymbol1] = d3.selectAll('.weight-popover-content .symbol.plus').nodes();
 		const [equalSymbol1] = d3.selectAll('.weight-popover-content .symbol.equal').nodes();
+
 		const highlight = '#94a3b8';
 
 		// first row detail animation
@@ -294,7 +289,7 @@
 	};
 </script>
 
-<WeightPopoverCard title={'MLP Expansion'} bind:isAnimationActive {timeline}>
+<WeightPopoverCard title={'MLP Compression'} bind:isAnimationActive {timeline}>
 	<div class="mlp-weight-popover weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="tokens" style={`gap:${tokenGap}px`}>
@@ -305,33 +300,38 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Embeddings<HelpPopover id="mlp-emgeddings" placement="top"
-					>{`Embeddings transformed through attention mechanism.`}</HelpPopover
+				Expanded Embeddings <HelpPopover id="mlp-down-emgeddings" placement="top"
+					>{`Expanded latent vectors through MLP expansion layer.`}</HelpPopover
 				>
 			</div>
-			<Matrix
-				className="embedding-matrix"
-				data={embeddingData}
-				showSize={false}
-				cellHeight={rootRem * 0.8}
-				cellWidth={2}
-				rowGap={tokenGap}
-				colorScale={embeddingColorScale}
-				{highlightRow}
-			/>
-			<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
+			<div class="flex">
+				<Matrix
+					className="embedding-matrix"
+					data={mlpUpOutData}
+					showSize={false}
+					cellHeight={rootRem * 0.8}
+					cellWidth={2}
+					rowGap={tokenGap}
+					colorScale={out1ColorScale}
+					{highlightRow}
+				/>
+			</div>
+			<div class="size">({tokenLen}, {$modelMeta.dimension * 4})</div>
 		</div>
-		<div class="operator"><div class="symbol mul">&times;</div></div>
+
+		<div class="operator">
+			<div class="symbol mul">&times;</div>
+		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Weights<HelpPopover id="mlp-weights" placement="top"
-					>{`Projects embedding vectors to expanded latent space. \nParameters tha learned in training, fixed in prediction.`}</HelpPopover
+				Compression Weights <HelpPopover id="mlp-down-weights" placement="top"
+					>{`Projects expanded latent vectors back to original space. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
 				<Matrix
-					className="mlp-weights"
-					data={mlpUpWeightData}
+					className="mlp-down-weights"
+					data={mlpDownWeightData}
 					showSize={false}
 					groupBy={'col'}
 					cellHeight={3}
@@ -342,18 +342,18 @@
 				/>
 			</div>
 
-			<div class="size">({$modelMeta.dimension}, {$modelMeta.dimension * 4})</div>
+			<div class="size">({$modelMeta.dimension * 4}, {$modelMeta.dimension})</div>
 		</div>
-		<div class="operator"><div class="symbol plus">+</div></div>
+		<div class="operator"><div class="symbol plus px-3">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Bias <HelpPopover id="mlp-bias" placement="top"
-					>{`Offsets added after expansion. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
+				Compression Bias <HelpPopover id="mlp-down-bias" placement="top"
+					>{`Offsets added after compression. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<Matrix
-				className="mlp-bias"
-				data={mlpUpBiasData}
+				className="mlp-down-bias"
+				data={mlpDownBiasData}
 				showSize={false}
 				groupBy={'col'}
 				cellHeight={2}
@@ -362,46 +362,39 @@
 				colorScale={weightColorScale}
 				highlightRow={highlightCol}
 			/>
-			<div class="size">({$modelMeta.dimension * 4})</div>
+			<div class="size">({$modelMeta.dimension})</div>
 		</div>
 		<div class="operator">
-			<div class="symbol equal px-2">=</div>
-			<!-- <div class="symbol arrow absolute top-0">&rArr;</div> -->
+			<div class="symbol equal px-4">=</div>
 		</div>
-		<!-- <div class="matrix flex flex-col items-center">
-			<div class="tokens" style={`gap:${tokenGap - 2}px`}>
-				{#each $tokens as token, index}
-					<div class="token-label"><span>{token}</span></div>
-				{/each}
-			</div>
-		</div> -->
 		<div class="matrix flex flex-col items-center">
-			<div class="title">Expanded <br />Embeddings</div>
+			<div class="title">Compressed <br />Embeddings</div>
 			<div class="flex">
 				<Matrix
-					className="mlp-out"
-					data={mlpUpOutData}
+					className="mlp-down-out"
+					data={mlpDownOutData}
 					showSize={false}
 					cellHeight={rootRem * 0.8}
 					cellWidth={2}
 					rowGap={tokenGap}
-					colorScale={out1ColorScale}
+					colorScale={out2ColorScale}
 					{onMouseOverCell}
 					{onMouseOutSvg}
 					{highlightCol}
 					{highlightRow}
 				/>
 			</div>
-			<div class="size">({tokenLen}, {$modelMeta.dimension * 4})</div>
+			<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
 		</div>
-	</div></WeightPopoverCard
->
+	</div>
+</WeightPopoverCard>
 
 <style lang="scss">
 	.weight-popover-content {
-		padding: 3rem 3rem 3rem 1rem;
-		gap: 0.2rem;
+		padding: 3rem 4rem 3rem 1rem;
+		gap: 0.6rem;
 	}
+
 	.operator {
 		position: relative;
 	}
@@ -409,11 +402,8 @@
 		font-size: 0.8rem;
 		font-weight: 500;
 	}
+
 	.matrix {
-		.title {
-			line-height: 1.1;
-			text-align: center;
-		}
 	}
 	.formula {
 		padding: 0.8rem;

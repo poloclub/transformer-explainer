@@ -1,8 +1,5 @@
 <script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { fade } from 'svelte/transition';
 	import CommonPopover from './CommonPopover.svelte';
 
 	export let offset: PopoverProps['offset'] = undefined;
@@ -21,5 +18,13 @@
 	{placement}
 	goTo="article-dropout"
 >
-	<div class="dropout-content">Disables randomly selected neurons.</div></CommonPopover
+	<div class="dropout-content">
+		Disables randomly selected neurons. Used only during training.
+	</div></CommonPopover
 >
+
+<style lang="scss">
+	.dropout-content {
+		width: 12rem;
+	}
+</style>
