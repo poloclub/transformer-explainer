@@ -89,9 +89,11 @@ export const predictedColor = theme.colors.purple[600];
 export const hoveredPath = writable();
 export const hoveredMatrixCell = writable({ row: null, col: null });
 
-export const isMobile = readable(detectDevice());
-
-function detectDevice() {
-	const userAgent = navigator.userAgent.toLowerCase();
-	return /android|iphone|ipad|ipod/i.test(userAgent);
-}
+export const isMobile = readable(false, (set) => {
+	if (typeof window !== 'undefined') {
+		// Only run in browser environment
+		const userAgent = navigator.userAgent.toLowerCase();
+		set(/android|iphone|ipad|ipod/i.test(userAgent));
+	}
+	return () => {}; // Cleanup function
+});
