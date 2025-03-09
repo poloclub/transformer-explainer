@@ -9,7 +9,7 @@
 </script>
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>
-	<div class="logo text-bold text-gray-700">
+	<div class="logo text-bold text-gray-700" data-click="logo">
 		T<span class="small">RANSFORMER</span> E<span class="small">XPLAINER</span>
 	</div>
 	<div class="inputs flex grow items-center">
@@ -19,13 +19,7 @@
 	</div>
 	<div class="icons flex items-center gap-3">
 		<!-- arxiv -->
-		<a
-			href="https://arxiv.org/abs/2408.04619"
-			target="_blank"
-			on:click={() => {
-				ga('pdf_btn_click');
-			}}
-		>
+		<a href="https://arxiv.org/abs/2408.04619" target="_blank" data-click="pdf-btn">
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
 				aria-hidden="true"
@@ -43,13 +37,7 @@
 			</svg>
 		</a>
 		<!-- video -->
-		<a
-			href="https://www.youtube.com/watch?v=ECR4oAwocjs"
-			target="_blank"
-			on:click={() => {
-				ga('ytb_btn_click');
-			}}
-		>
+		<a href="https://www.youtube.com/watch?v=ECR4oAwocjs" target="_blank" data-click="ytb-btn">
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
 				aria-hidden="true"
@@ -70,9 +58,7 @@
 		<a
 			href="https://github.com/poloclub/transformer-explainer"
 			target="_blank"
-			on:click={() => {
-				ga('github_btn_click');
-			}}
+			data-click="github_btn"
 		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"

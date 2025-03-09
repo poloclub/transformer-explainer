@@ -309,7 +309,7 @@
 	// };
 </script>
 
-<WeightPopoverCard title={'Query Key Value'} bind:isAnimationActive {timeline}>
+<WeightPopoverCard id="qkv" title={'Query Key Value'} bind:isAnimationActive {timeline}>
 	<div class="weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="tokens" style={`gap:${tokenGap}px`}>

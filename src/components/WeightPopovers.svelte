@@ -98,13 +98,15 @@
 				d3.selectAll('div.step > div').style('opacity', 1);
 				d3.selectAll('div.step.mlp .layer').style('opacity', 1);
 				d3.selectAll('.steps').style('pointer-events', 'auto');
-			} else {
-				d3.selectAll(`svg g.path-group`).style('opacity', 0.3);
-				d3.selectAll(`svg g.path-group.${value}`).style('opacity', 1);
-				d3.selectAll('div.step > div').style('opacity', 0.3);
-				d3.selectAll(`div.step.${value} > div`).style('opacity', 1);
-				d3.selectAll('.steps').style('pointer-events', 'none');
+				return;
 			}
+
+			d3.selectAll(`svg g.path-group`).style('opacity', 0.3);
+			d3.selectAll(`svg g.path-group.${value}`).style('opacity', 1);
+			d3.selectAll('div.step > div').style('opacity', 0.3);
+			d3.selectAll(`div.step.${value} > div`).style('opacity', 1);
+			d3.selectAll('.steps').style('pointer-events', 'none');
+
 			if (value === 'mlpUp' || value === 'mlpDown') {
 				d3.selectAll(`div.step.${value} .layer`).style('opacity', 0.3);
 				d3.selectAll(`div.step.${value} .layer.${value}`).style('opacity', 1);

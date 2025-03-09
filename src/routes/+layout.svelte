@@ -6,6 +6,7 @@
 	import Article from '~/components/article/Article.svelte';
 	import { onMount } from 'svelte';
 	import { Spinner } from 'flowbite-svelte';
+	import Alert from '~/components/Alert.svelte';
 
 	let topBarHeight = 0;
 	let scrollLeft = 0;
@@ -71,10 +72,19 @@
 	<div class="article h-auto w-full">
 		<Article></Article>
 	</div>
-	<!-- <footer></footer> -->
 </div>
 
+<!-- <div class="alert">
+	<Alert />
+</div> -->
+
 <style lang="scss">
+	.alert {
+		position: fixed;
+		bottom: 1rem;
+		right: 1rem;
+	}
+
 	#app {
 		height: 100vh;
 		min-width: 900px;

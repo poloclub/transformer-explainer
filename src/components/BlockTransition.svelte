@@ -137,10 +137,22 @@
 	const onClickNext = (e) => {
 		e.stopPropagation();
 		$blockIdxTemp = $blockIdxTemp < $modelMeta.layer_num - 1 ? $blockIdxTemp + 1 : 0;
+
+		window.dataLayer.push({
+			event: `pagination-transformer-block-next`,
+			page_num: $blockIdxTemp,
+			pagination_name: 'transformer-block'
+		});
 	};
 	const onClickPrev = (e) => {
 		e.stopPropagation();
 		$blockIdxTemp = $blockIdxTemp > 0 ? $blockIdxTemp - 1 : $modelMeta.layer_num - 1;
+
+		window.dataLayer.push({
+			event: `pagination-transformer-block-prev`,
+			page_num: $blockIdxTemp,
+			pagination_name: 'transformer-block'
+		});
 	};
 </script>
 
@@ -151,6 +163,7 @@
 ></div>
 <div
 	class="transformer-bounding-title"
+	data-click="transformer-bounding-title"
 	class:deactive={!!$weightPopover}
 	class:hide={!!$expandedBlock.id}
 	on:mouseenter={() => {
@@ -164,11 +177,13 @@
 >
 	<span class="title-text">Transformer Block {$blockIdxTemp + 1}</span>
 	<button
+		data-click="transformer-block-prev-btn"
 		on:click={onClickPrev}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === 0}
 		><AngleLeftOutline size="sm" /></button
 	>
 	<button
+		data-click="transformer-block-next-btn"
 		on:click={onClickNext}
 		disabled={$isOnAnimation || $isOnBlockTransition || $blockIdxTemp === $modelMeta.layer_num - 1}
 		><AngleRightOutline size="sm" /></button

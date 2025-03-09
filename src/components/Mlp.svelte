@@ -28,15 +28,15 @@
 	let vectorHoverIdx: number | null = null;
 </script>
 
-<div class={classNames('mlp', 'mlpUp', 'mlpDown', className)}>
+<div class={classNames('mlp', 'mlpUp', 'mlpDown', className)} data-click="mlp-step">
 	<div
 		class="title"
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
-		on:click={(e) => onClickReadMore(e, 'article-activation')}
 		role="group"
+		data-click="mlp-step-title"
 	>
-		MLP
+		<div class="w-max" on:click={(e) => onClickReadMore(e, 'article-activation')}>MLP</div>
 	</div>
 	<div class="content relative">
 		<div class="bounding mlp-bounding" class:active={isHovered}></div>
@@ -65,9 +65,9 @@
 				{/each}
 			</div>
 			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
-			<OperationGroup type="residual-end" id={'residual-first'} />
+			<OperationGroup type="residual-end" id={'embedding-residual'} />
 			<OperationGroup type="ln" id={'mlp-first-ln'} />
-			<OperationGroup type="residual-start" id={'residual-second'} />
+			<OperationGroup type="residual-start" id={'mlp-residual'} />
 		</div>
 		<div class="layer mlpUp mlpDown second-layer flex justify-between">
 			<div class="column mlp-mid-column">
@@ -96,7 +96,7 @@
 						</div>
 					{/each}
 				</div>
-				<OperationGroup type="residual-end" id={'residual-second'} />
+				<OperationGroup type="residual-end" id={'mlp-residual'} />
 				<OperationGroup type="ln" id={'mlp-second-ln'} />
 				<div
 					class="column out mlp-out-column"
@@ -118,7 +118,7 @@
 
 <style lang="scss">
 	.mlp {
-		.title {
+		.title > div {
 			cursor: help;
 		}
 		.mlp-bounding {

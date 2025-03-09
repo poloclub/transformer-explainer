@@ -59,6 +59,7 @@
 {#if type === 'activation'}
 	<div
 		{id}
+		data-click="activation"
 		class={classNames('operation-col column activation', className)}
 		role="group"
 		class:active={isHovered}
@@ -87,6 +88,7 @@
 {:else if type === 'dropout'}
 	<div
 		{id}
+		data-click="dropout"
 		class={classNames('operation-col column dropout', className)}
 		role="group"
 		class:active={isHovered}
@@ -115,6 +117,7 @@
 {:else if type === 'ln'}
 	<div
 		{id}
+		data-click="layernorm"
 		class={classNames('operation-col column ln', className)}
 		role="group"
 		class:active={isHovered}
@@ -142,6 +145,7 @@
 	<LayerNormPopover triggeredBy={`#${id}`} />
 {:else if type === 'residual-start'}
 	<div
+		data-click="residual-start"
 		id={`${id}-start`}
 		class={classNames('operation-col column residual', className)}
 		role="group"
@@ -168,6 +172,7 @@
 {:else if type === 'residual-end'}
 	<div
 		id={`${id}-end`}
+		data-click="residual-end"
 		class={classNames('operation-col column residual', className)}
 		role="group"
 		class:active={isHovered}

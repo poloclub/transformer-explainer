@@ -309,7 +309,7 @@
 	};
 </script>
 
-<WeightPopoverCard title={'Logits'} bind:isAnimationActive {timeline} bind:isOpen>
+<WeightPopoverCard id="logits" title={'Logits'} bind:isAnimationActive {timeline} bind:isOpen>
 	<div class="weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">

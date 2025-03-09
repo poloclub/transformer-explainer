@@ -35,7 +35,7 @@
 	});
 </script>
 
-<div class={classNames('qkv', className)} role="none">
+<div class={classNames('qkv', className)} role="none" data-click="qkv-step">
 	<div class="content relative">
 		<div
 			class="vector-column block-start-column relative flex"
@@ -54,7 +54,7 @@
 			</div>
 			<div class="operations flex">
 				<OperationGroup type="dropout" id={'embedding-dropout'} />
-				<OperationGroup type="residual-start" id={'residual-first'} />
+				<OperationGroup type="residual-start" id={'embedding-residual'} />
 				<OperationGroup type="ln" id={'embedding-ln'} />
 			</div>
 		</div>

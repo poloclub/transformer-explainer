@@ -272,24 +272,38 @@
 	const onClickNext = () => {
 		$attentionHeadIdxTemp =
 			$attentionHeadIdxTemp < $modelMeta.attention_head_num - 1 ? $attentionHeadIdxTemp + 1 : 0;
+		window.dataLayer.push({
+			event: `pagination-attention-head-next`,
+			page_num: $attentionHeadIdxTemp,
+			pagination_name: 'attention-head'
+		});
 	};
 
 	const onClickPrev = () => {
 		$attentionHeadIdxTemp =
 			$attentionHeadIdxTemp > 0 ? $attentionHeadIdxTemp - 1 : $modelMeta.attention_head_num - 1;
+		window.dataLayer.push({
+			event: `pagination-attention-head-prev`,
+			page_num: $attentionHeadIdxTemp,
+			pagination_name: 'attention-head'
+		});
 	};
 </script>
 
-<div class="multi-head flex w-full">
+<div class="multi-head flex w-full" data-click="attention-head">
 	<div class="head-title absolute bottom-2 right-3 text-right text-gray-400">
 		<span class="title-text"
 			>Head {$attentionHeadIdxTemp + 1} of {$modelMeta.attention_head_num}</span
 		>
-		<button on:click={onClickPrev} disabled={$isOnAnimation || disablePagination}
-			><AngleLeftOutline size="sm"></AngleLeftOutline></button
+		<button
+			on:click={onClickPrev}
+			disabled={$isOnAnimation || disablePagination}
+			data-click="attention-head-prev-btn"><AngleLeftOutline size="sm"></AngleLeftOutline></button
 		>
-		<button on:click={onClickNext} disabled={$isOnAnimation || disablePagination}
-			><AngleRightOutline size="sm"></AngleRightOutline></button
+		<button
+			on:click={onClickNext}
+			disabled={$isOnAnimation || disablePagination}
+			data-click="attention-head-next-btn"><AngleRightOutline size="sm"></AngleRightOutline></button
 		>
 	</div>
 	<div class={'head-content'} bind:this={headContent}>

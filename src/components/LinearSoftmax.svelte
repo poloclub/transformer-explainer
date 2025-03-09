@@ -22,7 +22,7 @@
 
 	const blockId = getContext('block-id');
 
-	let isSoftmaxExpanded = true;
+	let isSoftmaxExpanded = false;
 	let showLogitPopover = false;
 
 	// event handling
@@ -67,11 +67,10 @@
 
 	let drawBars: () => void;
 
-	const expandSoftmax = async () => {
-		ga('probability_expand', {
-			event_category: 'expansion'
-		});
+	// google analytics
+	let startTime = null;
 
+	const expandSoftmax = async () => {
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = true;
 		await tick();
@@ -91,14 +90,27 @@
 			duration: 0.2,
 			delay: 0.5
 		});
+
+		startTime = performance.now();
+		window.dataLayer.push({
+			event: 'visibility-show',
+			visible_name: 'prob-expansion',
+			start_time: startTime
+		});
 	};
 
 	const collapseSoftmax = async () => {
-		showLogitPopover = false;
+		let endTime = performance.now();
+		let visibleDuration = endTime - startTime;
 
-		ga('probability_collapse', {
-			event_category: 'expansion'
+		window.dataLayer.push({
+			event: 'visibility-hide',
+			visible_name: 'prob-expansion',
+			end_time: endTime,
+			visible_duration: visibleDuration
 		});
+
+		showLogitPopover = false;
 
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = false;
@@ -160,6 +172,7 @@
 	bind:this={expandableEl}
 	on:click={onClickSoftmax}
 	on:keydown={onClickSoftmax}
+	data-click="prob-step"
 >
 	<div
 		class="title expandable"
@@ -168,6 +181,7 @@
 		on:keydown={onClickSoftmaxTitle}
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
+		data-click="prob-step-title"
 	>
 		<div class="flex items-center gap-1">Probabilities <ZoomInOutline></ZoomInOutline></div>
 	</div>
@@ -205,7 +219,11 @@
 						<div class="title-text">Tokens</div>
 					</div>
 					<div class="title-box logits">
-						<div class="title-text btn shadow-sm" on:click={onClickLogits}>
+						<div
+							class="title-text btn shadow-sm"
+							on:click={onClickLogits}
+							data-click="prob-expansion-logit-btn"
+						>
 							Logits <EyeOutline class="icon text-gray-400" size="sm" />
 						</div>
 					</div>

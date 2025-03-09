@@ -39,15 +39,20 @@
 	}
 </script>
 
-<div class={classNames('attention', className, { expanded: isAttentionExpanded })}>
+<div
+	class={classNames('attention', className, { expanded: isAttentionExpanded })}
+	data-click="attention-step"
+>
 	<div
 		class="title"
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
-		on:click={(e) => onClickReadMore(e, 'self-attention')}
 		role="group"
+		data-click="attention-step-title"
 	>
-		<div>Multi-head Self Attention</div>
+		<div class="w-max" on:click={(e) => onClickReadMore(e, 'self-attention')}>
+			Multi-head Self Attention
+		</div>
 	</div>
 	<div class="content relative">
 		<div
@@ -140,7 +145,7 @@
 		z-index: $COLUMN_TITLE_INDEX;
 	}
 	.attention {
-		> .title {
+		> .title > div {
 			cursor: help;
 		}
 		&.expanded {

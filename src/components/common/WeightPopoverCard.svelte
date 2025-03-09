@@ -1,21 +1,42 @@
 <script lang="ts">
 	import { Card } from 'flowbite-svelte';
 	import { CloseOutline } from 'flowbite-svelte-icons';
-	import { fade } from 'svelte/transition';
+	import { onDestroy, onMount } from 'svelte';
 	import { weightPopover } from '~/store';
-	import { ga } from '~/utils/event';
 
-	export let title;
-	export let className;
+	export let id: string;
+	export let title: string;
+	export let className: string | undefined = undefined;
 	export let isAnimationActive: boolean = false;
 	export let timeline;
 	export let isOpen: boolean = true;
+
+	let startTime;
+
+	onMount(() => {
+		startTime = performance.now();
+		window.dataLayer.push({
+			event: 'visibility-show',
+			visible_name: `weight-popover-${id}`,
+			start_time: startTime
+		});
+	});
+	onDestroy(() => {
+		let endTime = performance.now();
+		let visibleDuration = endTime - startTime;
+
+		window.dataLayer.push({
+			event: 'visibility-hide',
+			visible_name: `weight-popover-${id}`,
+			end_time: endTime,
+			visible_duration: visibleDuration
+		});
+	});
 </script>
 
 <Card
 	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 ${className}`}
-	transition={fade}
-	params={{ duration: 100 }}
+	data-click="weight-popover"
 	on:click={(e) => {
 		e.stopPropagation();
 	}}
@@ -28,9 +49,9 @@
 			{#if isAnimationActive}
 				<button
 					class="play-control forward"
+					data-click="matrix-calc-forward-btn"
 					on:click={(e) => {
 						e.stopPropagation();
-						ga('matrix_calc_forward_btn_click');
 						timeline.progress(1);
 						isAnimationActive = false;
 					}}
@@ -53,9 +74,9 @@
 			{:else}
 				<button
 					class="play-control restart"
+					data-click="matrix-calc-restart-btn"
 					on:click={(e) => {
 						e.stopPropagation();
-						ga('matrix_calc_restart_btn_click');
 						isAnimationActive = true;
 						timeline.restart();
 					}}
@@ -81,6 +102,7 @@
 			{/if}
 			<button
 				class="close"
+				data-click="matrix-calc-close-btn"
 				on:click={(e) => {
 					e.stopPropagation();
 					weightPopover.set(null);

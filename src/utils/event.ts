@@ -19,5 +19,5 @@ export function scrollToDiv(e: Event, goTo: string) {
 
 export function onClickReadMore(e: Event, goTo: string, params?: any) {
 	scrollToDiv(e, goTo);
-	ga('readmore_btn_click', params);
+	// ga('readmore_btn_click', params);
 }

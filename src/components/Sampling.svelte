@@ -11,7 +11,7 @@
 	$: samplingValStep = $sampling.type === 'top-k' ? 1 : 0.1;
 </script>
 
-<div class="sampling-input">
+<div class="sampling-input" data-click="input-sampling">
 	<Slider
 		{disabled}
 		className="sampling-slider"
@@ -38,6 +38,10 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-k', value: 5 });
+						window.dataLayer.push({
+							event: 'sampling-selected',
+							sampling_type: 'top-k'
+						});
 					}}
 					checked={$sampling.type === 'top-k'}
 					{disabled}
@@ -53,6 +57,10 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-p', value: 0.5 });
+						window.dataLayer.push({
+							event: 'sampling-selected',
+							sampling_type: 'top-p'
+						});
 					}}
 					{disabled}
 					color="purple">Top-p</Radio

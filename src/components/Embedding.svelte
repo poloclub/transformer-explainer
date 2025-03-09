@@ -64,11 +64,10 @@
 	// animation
 	let containerState: any;
 
-	const expandEmbedding = async () => {
-		ga('embedding_expand', {
-			event_category: 'expansion'
-		});
+	// google analytics
+	let startTime = null;
 
+	const expandEmbedding = async () => {
 		containerState = Flip.getState('.embedding .token-column');
 		isEmbeddingExpanded = true;
 		await tick();
@@ -82,11 +81,24 @@
 			duration: 0.5,
 			delay: 0.5
 		});
+
+		startTime = performance.now();
+		window.dataLayer.push({
+			event: 'visibility-show',
+			visible_name: 'embedding-expansion',
+			start_time: startTime
+		});
 	};
 
 	const collapseEmbedding = async () => {
-		ga('embedding_collapse', {
-			event_category: 'expansion'
+		let endTime = performance.now();
+		let visibleDuration = endTime - startTime;
+
+		window.dataLayer.push({
+			event: 'visibility-hide',
+			visible_name: 'embedding-expansion',
+			end_time: endTime,
+			visible_duration: visibleDuration
 		});
 
 		containerState = Flip.getState('.embedding .token-column');
@@ -118,6 +130,7 @@
 	role="none"
 	on:click={onClickEmbedding}
 	on:keydown={onClickEmbedding}
+	data-click="embedding-step"
 >
 	<div
 		class="title expandable"
@@ -126,6 +139,7 @@
 		on:keydown={onClickEmbeddingTitle}
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
+		data-click="embedding-step-title"
 	>
 		<div class="flex items-center gap-1">Embedding <ZoomInOutline></ZoomInOutline></div>
 	</div>

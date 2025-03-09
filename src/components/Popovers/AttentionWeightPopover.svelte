@@ -253,6 +253,7 @@
 </script>
 
 <WeightPopoverCard
+	id="attention"
 	title={`Attention Head ${$attentionHeadIdx + 1} Out`}
 	bind:isAnimationActive
 	{timeline}

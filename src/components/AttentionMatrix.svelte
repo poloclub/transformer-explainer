@@ -88,11 +88,10 @@
 	let expandTl = gsap.timeline();
 	let collapseTl = gsap.timeline();
 
-	const expandAttention = () => {
-		ga('attention_expand', {
-			event_category: 'expansion'
-		});
+	// google analytics
+	let startTime = null;
 
+	const expandAttention = () => {
 		isAttentionExpanded = true;
 		collapseTl.progress(1);
 
@@ -215,11 +214,24 @@
 			);
 
 		expandTl.to(outPaths, { opacity: ATTENTION_OUT });
+
+		startTime = performance.now();
+		window.dataLayer.push({
+			event: 'visibility-show',
+			visible_name: 'attention-expansion',
+			start_time: startTime
+		});
 	};
 
 	const collapseAttention = () => {
-		ga('attention_collapse', {
-			event_category: 'expansion'
+		let endTime = performance.now();
+		let visibleDuration = endTime - startTime;
+
+		window.dataLayer.push({
+			event: 'visibility-hide',
+			visible_name: 'attention-expansion',
+			end_time: endTime,
+			visible_duration: visibleDuration
 		});
 
 		isAttentionExpanded = false;
@@ -281,6 +293,7 @@
 <div
 	class="flex items-center gap-8 px-5"
 	style={`--attention-matrix-width: ${attentionMatrixWidth}px;`}
+	data-click="attention-matrix"
 >
 	<!-- QK -->
 	<div

@@ -6,6 +6,22 @@
 	export let step: number;
 	export let value: number;
 	export let valueText: string;
+
+	let startValue = null;
+	let endValue = null;
+
+	function handleMouseDown() {
+		startValue = valueText;
+	}
+
+	function handleMouseUp() {
+		endValue = valueText;
+		window.dataLayer.push({
+			event: `slider-interaction-${className}`,
+			slider_start_value: startValue,
+			slider_end_value: endValue
+		});
+	}
 </script>
 
 <div class={`slider-input shrink-0 text-gray-900 ${className}`}>
@@ -25,6 +41,8 @@
 				e.preventDefault();
 				e.stopPropagation();
 			}}
+			on:mousedown={handleMouseDown}
+			on:mouseup={handleMouseUp}
 		/>
 		<div class="value">
 			<p>{valueText}</p>

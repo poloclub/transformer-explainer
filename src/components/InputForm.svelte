@@ -14,15 +14,21 @@
 		isLoaded,
 		isOnAnimation,
 		isMobile,
-		weightPopover
+		weightPopover,
+		sampling,
+		attentionHeadIdx,
+		blockIdx,
+		temperature,
+		tokenIds
 	} from '~/store';
 	import LoadingDots from './common/LoadingDots.svelte';
 	import classNames from 'classnames';
-	import { ga } from '~/utils/event';
 	import Sampling from './Sampling.svelte';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
+
+	let useCustomInput = false;
 
 	$: inputTextTemp = $inputText || '';
 
@@ -51,9 +57,19 @@
 		onFocusInput();
 		inputText.set(inputTextTemp);
 
-		ga('generate_btn_click', {
-			event_category: 'user_input'
-			// value: inputTextTemp
+		window.dataLayer.push({
+			event: 'generate-next-token',
+			attn_head_num: $attentionHeadIdx,
+			transformer_block_num: $blockIdx,
+			sampling_type: $sampling.type,
+			sampling_value: $sampling.value,
+			temperature_value: $temperature,
+			current_token_length: $tokenIds.length,
+			input_word_count: inputTextTemp
+				.trim()
+				.split(/\s+/)
+				.filter((word) => word.length > 0).length,
+			use_custom_input: useCustomInput
 		});
 	};
 
@@ -62,7 +78,9 @@
 			e.preventDefault();
 			if (disabled || exceedLimit) return;
 			handleSubmit(e);
+			return;
 		}
+		useCustomInput = true;
 	};
 
 	// Example select box
@@ -81,11 +99,7 @@
 			return d.trim();
 		});
 		selectedExampleIdx.set(i);
-
-		ga('example_dropdown_click', {
-			event_category: 'user_input',
-			value: i
-		});
+		useCustomInput = false;
 	};
 
 	const moveCursorToEnd = (element) => {
@@ -110,10 +124,11 @@
 	$: parameterDisabled = $isOnAnimation || !!$weightPopover;
 </script>
 
-<div class="input-area">
-	<form class="input-form">
+<div class="input-area" data-click="input-area">
+	<form class="input-form" data-click="input-form">
 		<ButtonGroup class="input-btn-group" size="sm">
 			<button
+				data-click="dropdown-btn"
 				type="button"
 				disabled={selectDisabled}
 				class:selectDisabled
@@ -124,6 +139,7 @@
 			<Dropdown placement="bottom-start" bind:open={dropdownOpen} class="example-dropdown">
 				{#each inputTextExample as text, index}
 					<DropdownItem
+						data-click={`dropdown-item-${index}`}
 						class={$selectedExampleIdx === index && 'active'}
 						on:click={() => {
 							onSelectExample(text, index);
@@ -133,6 +149,7 @@
 			</Dropdown>
 
 			<div
+				data-click="text-input"
 				class="input-container"
 				class:disabled
 				role="none"
@@ -194,6 +211,7 @@
 			</div>
 		</ButtonGroup>
 		<button
+			data-click="generate-btn"
 			disabled={disabled || exceedLimit || exceedLimit}
 			class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
 				disabled: disabled || exceedLimit,
@@ -205,7 +223,7 @@
 			Generate
 		</button>
 	</form>
-	<div class="parameters">
+	<div class="parameters" data-click="input-parameters">
 		<Temperature disabled={parameterDisabled} />
 		<Sampling disabled={parameterDisabled} />
 	</div>

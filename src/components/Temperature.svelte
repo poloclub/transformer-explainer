@@ -16,7 +16,7 @@
 	$: temperature.set(temperatureTemp);
 </script>
 
-<div class="temperature-input">
+<div class="temperature-input" data-click="temperature-input">
 	<Slider
 		{disabled}
 		className="temperature-slider"
