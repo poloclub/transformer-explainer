@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { Spinner } from 'flowbite-svelte';
 	import Alert from '~/components/Alert.svelte';
+	import GTM from '~/utils/gtm.svelte';
 
 	let topBarHeight = 0;
 	let scrollLeft = 0;
@@ -53,6 +54,7 @@
 	};
 </script>
 
+<GTM />
 <div
 	id="app"
 	style={`--min-screen-width:${minScreenWidth}px;--min-column-width:${minColumWidth}px;--predicted-color:${predictedColor};`}

@@ -1,6 +1,5 @@
 <script>
-	import { Alert, Button } from 'flowbite-svelte';
-	import { InfoCircleSolid } from 'flowbite-svelte-icons';
+	import { Alert } from 'flowbite-svelte';
 	import { fade } from 'svelte/transition';
 
 	let showAlert = true;
