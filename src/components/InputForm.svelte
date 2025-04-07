@@ -156,12 +156,10 @@
 				on:keydown={(e) => {
 					e.stopPropagation();
 					inputRef.focus();
-					moveCursorToEnd(inputRef);
 				}}
 				on:click={(e) => {
 					e.stopPropagation();
 					inputRef.focus();
-					moveCursorToEnd(inputRef);
 				}}
 			>
 				<div class={`editable ${!$isModelRunning ? 'w-full' : ''}`}>
