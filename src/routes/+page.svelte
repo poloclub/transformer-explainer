@@ -65,7 +65,7 @@
 			.map((d, i) => `${base}/model-v2/gpt2.onnx.part${i}`);
 
 		// Fetch from cache
-		const mergedArray = await fetchAndMergeChunks(chunkUrls);
+		const { hasCache, mergedArray } = await fetchAndMergeChunks(chunkUrls);
 
 		// Create a Blob from the merged array
 		const blob = new Blob([mergedArray], { type: 'application/octet-stream' });
@@ -81,6 +81,11 @@
 		modelSession.set(session);
 
 		isFetchingModel.set(false);
+
+		window.dataLayer.push({
+			event: `model-loaded`,
+			use_cache: hasCache
+		});
 	};
 
 	// Subscribe inputs
