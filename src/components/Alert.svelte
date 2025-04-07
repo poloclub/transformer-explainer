@@ -1,5 +1,5 @@
 <script>
-	import { Alert } from 'flowbite-svelte';
+	import { Alert, Button } from 'flowbite-svelte';
 	import { InfoCircleSolid } from 'flowbite-svelte-icons';
 	import { fade } from 'svelte/transition';
 
@@ -7,21 +7,28 @@
 
 	setTimeout(() => {
 		showAlert = false;
-	}, 5000);
+	}, 10000);
 </script>
 
 {#if showAlert}
 	<div transition:fade>
 		<Alert color="blue" dismissable>
-			<InfoCircleSolid slot="icon" class="h-5 w-5" />
-			We collect anonymous click data to improve user experience.
-			<a
-				href="/"
-				class="font-semibold underline hover:text-blue-800 dark:hover:text-blue-900"
-				target="_blank"
-			>
-				Read more
-			</a>
+			<div class="alert-content">
+				We collect anonymous data for research.
+				<a
+					href="./consent-form.pdf"
+					class="font-semibold underline hover:text-blue-800 dark:hover:text-blue-900"
+					target="_blank"
+				>
+					Learn more
+				</a>
+			</div>
 		</Alert>
 	</div>
 {/if}
+
+<style lang="scss">
+	.alert-content {
+		// width: 30rem;
+	}
+</style>
