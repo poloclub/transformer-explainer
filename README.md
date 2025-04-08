@@ -44,7 +44,7 @@ Transformer Explainer was created by <a href="https://aereeeee.github.io/" targe
   title = {Transformer Explainer: Interactive Learning of Text-Generative Models},
   shorttitle = {Transformer Explainer},
   author = {Cho, Aeree and Kim, Grace C. and Karpekov, Alexander and Helbling, Alec and Wang, Zijie J. and Lee, Seongmin and Hoover, Benjamin and Chau, Duen Horng},
-  journal={IEEE VIS},
+  journal={IEEE VIS Poster},
   year={2024}
 }
 ```
