@@ -70,8 +70,8 @@ export const selectedModel = writable(initialSelectedModel);
 export const modelMeta = derived(selectedModel, ($selectedModel) => modelMetaMap[$selectedModel]);
 
 // Temperature setting
-export const initialtTemperature = 0.8;
-export const temperature = writable(initialtTemperature);
+export const initialTemperature = 0.8;
+export const temperature = writable(initialTemperature);
 
 // Sampling
 export const sampling = writable<Sampling>({ type: 'top-k', value: 5 });

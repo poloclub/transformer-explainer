@@ -13,8 +13,8 @@
 	import { ga } from '~/utils/event';
 	import { EyeOutline, ZoomInOutline } from 'flowbite-svelte-icons';
 	import { fade } from 'svelte/transition';
-	import SoftmaxPopover from './popovers/SoftmaxPopover.svelte';
-	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
+	import SoftmaxPopover from './Popovers/SoftmaxPopover.svelte';
+	import LogitWeightPopover from './Popovers/LogitWeightPopover.svelte';
 
 	export let className: string | undefined = undefined;
 
