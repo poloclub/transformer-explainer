@@ -38,7 +38,7 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-k', value: 5 });
-						window.dataLayer.push({
+						window.dataLayer?.push({
 							event: 'sampling-selected',
 							sampling_type: 'top-k'
 						});
@@ -57,7 +57,7 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-p', value: 0.5 });
-						window.dataLayer.push({
+						window.dataLayer?.push({
 							event: 'sampling-selected',
 							sampling_type: 'top-p'
 						});

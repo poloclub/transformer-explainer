@@ -272,7 +272,7 @@
 	const onClickNext = () => {
 		$attentionHeadIdxTemp =
 			$attentionHeadIdxTemp < $modelMeta.attention_head_num - 1 ? $attentionHeadIdxTemp + 1 : 0;
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-attention-head-next`,
 			page_num: $attentionHeadIdxTemp,
 			pagination_name: 'attention-head'
@@ -282,7 +282,7 @@
 	const onClickPrev = () => {
 		$attentionHeadIdxTemp =
 			$attentionHeadIdxTemp > 0 ? $attentionHeadIdxTemp - 1 : $modelMeta.attention_head_num - 1;
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-attention-head-prev`,
 			page_num: $attentionHeadIdxTemp,
 			pagination_name: 'attention-head'

@@ -57,7 +57,7 @@
 		onFocusInput();
 		inputText.set(inputTextTemp);
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'generate-next-token',
 			attn_head_num: $attentionHeadIdx,
 			transformer_block_num: $blockIdx,
@@ -197,7 +197,7 @@
 				{/if}
 				{#if $isMobile}
 					<span class="helper-text"
-						>Try the examples. Please access on a desktop computer to use GPT-2 model.</span
+						>Try the examples. Please use a desktop computer to input GPT-2 prompts directly.</span
 					>
 				{:else if $isLoaded && $isFetchingModel}
 					<span class="helper-text"

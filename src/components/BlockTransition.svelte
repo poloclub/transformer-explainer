@@ -138,7 +138,7 @@
 		e.stopPropagation();
 		$blockIdxTemp = $blockIdxTemp < $modelMeta.layer_num - 1 ? $blockIdxTemp + 1 : 0;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-transformer-block-next`,
 			page_num: $blockIdxTemp,
 			pagination_name: 'transformer-block'
@@ -148,7 +148,7 @@
 		e.stopPropagation();
 		$blockIdxTemp = $blockIdxTemp > 0 ? $blockIdxTemp - 1 : $modelMeta.layer_num - 1;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-transformer-block-prev`,
 			page_num: $blockIdxTemp,
 			pagination_name: 'transformer-block'

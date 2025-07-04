@@ -216,7 +216,7 @@
 		expandTl.to(outPaths, { opacity: ATTENTION_OUT });
 
 		startTime = performance.now();
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: 'attention-expansion',
 			start_time: startTime
@@ -227,7 +227,7 @@
 		let endTime = performance.now();
 		let visibleDuration = endTime - startTime;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-hide',
 			visible_name: 'attention-expansion',
 			end_time: endTime,

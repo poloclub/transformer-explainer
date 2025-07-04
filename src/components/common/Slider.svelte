@@ -16,7 +16,7 @@
 
 	function handleMouseUp() {
 		endValue = valueText;
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `slider-interaction-${className}`,
 			slider_start_value: startValue,
 			slider_end_value: endValue

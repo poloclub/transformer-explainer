@@ -15,7 +15,7 @@
 
 	onMount(() => {
 		startTime = performance.now();
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: `weight-popover-${id}`,
 			start_time: startTime
@@ -25,7 +25,7 @@
 		let endTime = performance.now();
 		let visibleDuration = endTime - startTime;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-hide',
 			visible_name: `weight-popover-${id}`,
 			end_time: endTime,
