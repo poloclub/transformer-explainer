@@ -30,6 +30,7 @@
 			</div>
 			<div class="sampling-type-input flex">
 				<Radio
+					name="samplingType"
 					class={`type-btn ${disabled ? 'disabled' : ''}`}
 					inline
 					value="top-k"
@@ -48,6 +49,7 @@
 					color="purple">Top-k</Radio
 				>
 				<Radio
+					name="samplingType"
 					class={`type-btn ${disabled ? 'disabled' : ''}`}
 					inline
 					value="top-p"
