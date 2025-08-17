@@ -50,7 +50,7 @@
             dataLayer.push(arguments);
             }
             gtag('js', new Date());
-            // gtag('config', 'G-HHT51PP7TD', { debug_mode: true });
+            // gtag('config', '${import.meta.env.VITE_GA_ID}', { debug_mode: true });
             gtag('config', '${import.meta.env.VITE_GA_ID}');
         </script>
         `}

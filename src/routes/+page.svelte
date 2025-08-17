@@ -17,7 +17,9 @@
 		selectedExampleIdx,
 		isMobile,
 		isOnBlockTransition,
-		blockIdx
+		blockIdx,
+		isTextbookOpen,
+		userId
 	} from '~/store';
 	import { PreTrainedTokenizer } from '@xenova/transformers';
 	import Sankey from '~/components/Sankey.svelte';
@@ -40,8 +42,10 @@
 	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
 	import BlockTransition from '~/components/BlockTransition.svelte';
 	import QKV from '~/components/QKV.svelte';
+	import Textbook from '~/components/textbook/Textbook.svelte';
 
 	let active = false;
+	let appStartTime = Date.now();
 
 	// fetch model
 	onMount(async () => {
@@ -82,16 +86,19 @@
 
 		isFetchingModel.set(false);
 
-		window.dataLayer.push({
+		const loadTime = Date.now() - appStartTime;
+		window.dataLayer?.push({
 			event: `model-loaded`,
-			use_cache: hasCache
+			use_cache: hasCache,
+			load_time_ms: loadTime,
+			user_id: $userId
 		});
 	};
 
 	// Subscribe inputs
 	const cachedDataMap = [ex0, ex1, ex2, ex3, ex4];
 	const subscribeInputs = (tokenizer: PreTrainedTokenizer) => {
-		const unsubscribeInputText = inputText.subscribe((value) => {
+		const runModelOrCache = () => {
 			if ($isFetchingModel || !$modelSession) {
 				const cachedData = cachedDataMap[$selectedExampleIdx];
 
@@ -106,10 +113,14 @@
 			// run model when input has changed
 			runModel({
 				tokenizer,
-				input: value.trim(),
+				input: $inputText.trim(),
 				temperature: $temperature,
 				sampling: $sampling
 			});
+		};
+
+		const unsubscribeInputText = inputText.subscribe((value) => {
+			runModelOrCache();
 		});
 
 		let initialTemperature = true; // prevent initial redundant rendering
@@ -172,7 +183,10 @@
 	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;--content-height:${vizHeight - titleHeight}px;`}
 >
 	{#if !!$expandedBlock.id}
-		<div class="dim" transition:fade={{ duration: 100 }}></div>
+		<div
+			class={classNames('dim', `${$expandedBlock.id || ''}`)}
+			transition:fade={{ duration: 100 }}
+		></div>
 		<div
 			class={classNames('dim-partial left', `${$expandedBlock.id || ''}`)}
 			transition:fade={{ duration: 100 }}
@@ -210,6 +224,9 @@
 		</div>
 		<WeightPopovers />
 		<BlockTransition />
+		{#if !$isMobile}
+			<Textbook showTextCard={$isTextbookOpen} />
+		{/if}
 	</div>
 </div>
 
@@ -479,6 +496,7 @@
 		border-radius: 0.5rem;
 		transition: opacity 0.5s;
 		opacity: 0;
+		pointer-events: none;
 	}
 	:global(.bounding.active) {
 		opacity: 0.8;
@@ -510,6 +528,10 @@
 		background-color: white;
 		opacity: 0.7;
 		user-select: none;
+
+		&.attention {
+			z-index: 0;
+		}
 	}
 	.dim-partial {
 		user-select: none;
@@ -564,12 +586,22 @@
 				z-index: $EXPANDED_ATTENTION_INDEX !important;
 				pointer-events: none;
 			}
-			:global(.sankey-top > g) {
-				opacity: 0.3;
-			}
-			:global(.sankey-top > g.attention) {
-				opacity: 1;
-			}
+			// :global(.sankey-top > g) {
+			// 	opacity: 0.3;
+			// }
+			// :global(.sankey-top > g.attention) {
+			// 	opacity: 1;
+			// }
 		}
+	}
+
+	:global(svg g.path-group) {
+		transition: opacity 0.5s;
+	}
+	:global(div.step > div) {
+		transition: opacity 0.5s;
+	}
+	:global(div.step .column) {
+		transition: opacity 0.5s;
 	}
 </style>

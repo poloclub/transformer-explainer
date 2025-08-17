@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { Popover } from 'flowbite-svelte';
+	import { userId } from '~/store';
 	import { onClickReadMore } from '~/utils/event';
 
 	export let id: string;
 	export let placement: string = 'bottom';
 	export let goTo: string | undefined = undefined;
+	export let textbook: string | undefined = undefined;
 
 	let startTime;
 	const onShow = (e) => {
@@ -12,7 +14,8 @@
 		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: `help-popover-${id}`,
-			start_time: e.timeStamp
+			start_time: e.timeStamp,
+			user_id: $userId
 		});
 	};
 	const onHide = (e) => {
@@ -20,7 +23,8 @@
 			event: 'visibility-hide',
 			visible_name: `help-popover-${id}`,
 			end_time: e.timeStamp,
-			visible_duration: e.timeStamp - (startTime || 0)
+			visible_duration: e.timeStamp - (startTime || 0),
+			user_id: $userId
 		});
 	};
 </script>
@@ -50,6 +54,18 @@
 	}}
 	><div class="help-content">
 		<slot />
+		{#if textbook}
+			<div class="textbook-link">
+				<a
+					href={`https://transformer-explainer.github.io/textbook/${textbook}`}
+					target="_blank"
+					data-click={`textbook-link-${id}`}
+					class="text-blue-600 hover:underline"
+				>
+					Open Textbook
+				</a>
+			</div>
+		{/if}
 		{#if goTo}
 			<div
 				data-click={`read-more-btn-${id}`}

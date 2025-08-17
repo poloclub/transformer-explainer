@@ -3,6 +3,7 @@
 	import classNames from 'classnames';
 	import { Tooltip } from 'flowbite-svelte';
 	import VectorCanvas from './common/VectorCanvas.svelte';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
 
 	export let className: string | undefined = undefined;
 </script>
@@ -27,10 +28,12 @@
 				class:active={$blockIdx !== $modelMeta.layer_num - 1}
 			>
 				<div class="text" class:highlight={$isBoundingBoxActive}>
-					{$modelMeta.layer_num - $blockIdx - 1} more identical<br /><span class="strong"
-						>Transformer<br />Blocks</span
-					>.
+					<TextbookTooltip id="blocks">
+						<span class="strong">{$modelMeta.layer_num - $blockIdx - 1}</span> more identical<br
+						/><span class="strong">Transformer<br />Blocks</span>
+					</TextbookTooltip>
 				</div>
+
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="h-6 w-6 text-gray-300"
@@ -53,9 +56,11 @@
 					>
 						<VectorCanvas colorScale="blue" />
 					</div>
-					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				</div>
 			{/each}
+			<Tooltip class="popover" triggeredBy={'.transformer-blocks .vector'} placement="right"
+				>vector({$modelMeta.dimension})</Tooltip
+			>
 		</div>
 		<div class="second-column">
 			<div class="prob-dim" class:expanded={$expandedBlock.id === 'softmax'}></div>
@@ -71,6 +76,7 @@
 			}
 		}
 		.guide {
+			z-index: 200;
 			opacity: 0;
 			transition: opacity 0.2s;
 			white-space: pre;

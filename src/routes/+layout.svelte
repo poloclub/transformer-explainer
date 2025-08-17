@@ -2,12 +2,13 @@
 	import '~/styles/app.css';
 	import '~/styles/global.scss';
 	import Topbar from '~/components/Topbar.svelte';
-	import { isLoaded, predictedColor, rootRem } from '~/store';
+	import { isLoaded, predictedColor, rootRem, userId } from '~/store';
 	import Article from '~/components/article/Article.svelte';
 	import { onMount } from 'svelte';
 	import { Spinner } from 'flowbite-svelte';
 	import Alert from '~/components/Alert.svelte';
 	import GTM from '~/utils/gtm.svelte';
+	import { page } from '$app/stores';
 
 	let topBarHeight = 0;
 	let scrollLeft = 0;
@@ -21,6 +22,17 @@
 
 	onMount(() => {
 		isLoaded.set(true);
+
+		const userIdParam = $page.url.searchParams.get('userId');
+
+		if (userIdParam) {
+			userId.set(userIdParam);
+			(window as any).dataLayer?.push({
+				event: 'user_identified',
+				user_id: userIdParam,
+				timestamp: new Date().toISOString()
+			});
+		}
 
 		intersectionObserver = new IntersectionObserver(handleIntersection, {
 			root: null,
@@ -39,8 +51,8 @@
 		};
 	});
 
-	function handleIntersection(entries) {
-		entries.forEach((entry) => {
+	function handleIntersection(entries: any[]) {
+		entries.forEach((entry: any) => {
 			if (entry.isIntersecting) {
 				tobBarActive = true;
 			} else {
@@ -84,7 +96,7 @@
 	.alert {
 		position: fixed;
 		bottom: 1rem;
-		right: 1rem;
+		left: 1rem;
 		z-index: 9999;
 	}
 
@@ -94,7 +106,7 @@
 	}
 
 	#landing {
-		height: 90%;
+		height: 100%;
 		width: 100%;
 		min-width: var(--min-screen-width);
 	}
@@ -107,7 +119,7 @@
 	}
 	main {
 		position: relative;
-		height: 100%;
+		height: 95%;
 		width: 100%;
 		display: flex;
 		justify-content: start;

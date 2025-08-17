@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { userId } from '~/store';
+
 	export let className: string | undefined;
 	export let disabled: boolean = false;
 	export let min: number;
@@ -6,6 +8,7 @@
 	export let step: number;
 	export let value: number;
 	export let valueText: string;
+	export let onClick: (() => void) | undefined = undefined;
 
 	let startValue = null;
 	let endValue = null;
@@ -19,7 +22,8 @@
 		window.dataLayer?.push({
 			event: `slider-interaction-${className}`,
 			slider_start_value: startValue,
-			slider_end_value: endValue
+			slider_end_value: endValue,
+			user_id: $userId
 		});
 	}
 </script>
@@ -40,6 +44,7 @@
 			on:click={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
+				onClick?.();
 			}}
 			on:mousedown={handleMouseDown}
 			on:mouseup={handleMouseUp}
@@ -67,7 +72,7 @@
 		.value {
 			white-space: nowrap;
 			flex-shrink: 0;
-			font-size: 0.8rem;
+			font-size: 0.9rem;
 			line-height: 0;
 			font-family: monospace;
 			color: theme('colors.gray.800');

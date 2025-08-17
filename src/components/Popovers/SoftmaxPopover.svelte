@@ -4,6 +4,7 @@
 	import Katex from '~/utils/Katex.svelte';
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
 	import Arrow from '../common/Arrow.svelte';
+	import TextbookTooltip from '../common/TextbookTooltip.svelte';
 
 	export let hoveredIndex: number | null = null;
 
@@ -33,8 +34,10 @@
 	</div>
 	<div class="softmax-popover-content">
 		<div class="formula-steps">
-			<div class="formula-step">
-				<div class="step-title">Scaled logit</div>
+			<div class="formula-step scaled">
+				<TextbookTooltip id="temperature">
+					<div class="step-title">Scaled logit</div></TextbookTooltip
+				>
 				<div class="step-content">
 					<div class="fraction">
 						<div class="frac-top relative">
@@ -82,12 +85,15 @@
 				</div>
 				<ArrowRightOutline class="step-arrow" />
 			{/if}
-			<div class="formula-step">
-				<div class="step-title">
-					<span>{$sampling.type === 'top-k' ? 'Top-k' : 'Top-p'} Filtering</span>
-					<span class="sub-title">({$sampling.type === 'top-k' ? 'k' : 'p'}={$sampling.value})</span
-					>
-				</div>
+			<div class="formula-step sampling">
+				<TextbookTooltip id="sampling">
+					<div class="step-title">
+						<span>{$sampling.type === 'top-k' ? 'Top-k' : 'Top-p'} Filtering</span>
+						<span class="sub-title"
+							>({$sampling.type === 'top-k' ? 'k' : 'p'}={$sampling.value})</span
+						>
+					</div></TextbookTooltip
+				>
 				<div class="step-content">
 					<div class="topk-formula">
 						{#if $sampling.type === 'top-k'}

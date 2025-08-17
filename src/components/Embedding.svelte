@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { tokens, expandedBlock, modelMeta, tokenIds, blockIdx } from '~/store';
+	import {
+		tokens,
+		expandedBlock,
+		modelMeta,
+		tokenIds,
+		blockIdx,
+		isExpandOrCollapseRunning,
+		textbookCurrentPageId,
+		isTextbookOpen,
+		userId
+	} from '~/store';
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick, setContext, getContext, onMount } from 'svelte';
@@ -11,6 +21,9 @@
 	import { ga } from '~/utils/event';
 	import { Tooltip } from 'flowbite-svelte';
 	import { ZoomInOutline } from 'flowbite-svelte-icons';
+
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
+	import { textPages } from '~/utils/textbookPages';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -27,23 +40,26 @@
 		isEmbeddingExpanded = false;
 		collapseEmbedding();
 	}
+	$: if ($expandedBlock.id === blockId && !isEmbeddingExpanded) {
+		isEmbeddingExpanded = true;
+		expandEmbedding();
+	}
 
 	const onClickEmbedding = () => {
 		if (!isEmbeddingExpanded) {
 			expandedBlock.set({ id: blockId });
-			expandEmbedding();
 		}
 	};
 
 	const onClickEmbeddingTitle = (e) => {
 		e.stopPropagation();
 		e.preventDefault();
+		textPages.find((page) => page.id === 'embedding')?.complete();
+
 		if (!isEmbeddingExpanded) {
 			expandedBlock.set({ id: blockId });
-			expandEmbedding();
 		} else {
 			expandedBlock.set({ id: null });
-			collapseEmbedding();
 		}
 	};
 
@@ -70,11 +86,17 @@
 	const expandEmbedding = async () => {
 		containerState = Flip.getState('.embedding .token-column');
 		isEmbeddingExpanded = true;
+
 		await tick();
+
+		isExpandOrCollapseRunning.set(true);
 
 		Flip.from(containerState, {
 			duration: 0.5,
-			ease: 'power2.inOut'
+			ease: 'power2.inOut',
+			onComplete: () => {
+				isExpandOrCollapseRunning.set(false);
+			}
 		});
 		gsap.to('.embedding-detail', {
 			opacity: 1,
@@ -86,7 +108,8 @@
 		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: 'embedding-expansion',
-			start_time: startTime
+			start_time: startTime,
+			user_id: $userId
 		});
 	};
 
@@ -98,16 +121,22 @@
 			event: 'visibility-hide',
 			visible_name: 'embedding-expansion',
 			end_time: endTime,
-			visible_duration: visibleDuration
+			visible_duration: visibleDuration,
+			user_id: $userId
 		});
 
 		containerState = Flip.getState('.embedding .token-column');
 		isEmbeddingExpanded = false;
 		await tick();
 
+		isExpandOrCollapseRunning.set(true);
+
 		Flip.from(containerState, {
 			duration: 0.5,
-			ease: 'power2.inOut'
+			ease: 'power2.inOut',
+			onComplete: () => {
+				isExpandOrCollapseRunning.set(false);
+			}
 		});
 	};
 
@@ -125,7 +154,10 @@
 </script>
 
 <div
-	class={classNames('embedding', className, { expanded: isEmbeddingExpanded })}
+	class={classNames('embedding', className, {
+		expanded: isEmbeddingExpanded,
+		'textbook-highlight': $isTextbookOpen && $textbookCurrentPageId === 'transformer-architecture'
+	})}
 	bind:this={expandableEl}
 	role="none"
 	on:click={onClickEmbedding}
@@ -141,35 +173,36 @@
 		on:mouseleave={handleMouseLeave}
 		data-click="embedding-step-title"
 	>
-		<div class="flex items-center gap-1">Embedding <ZoomInOutline></ZoomInOutline></div>
+		<div class="title-text flex w-max items-center gap-1">
+			Embedding
+			<ZoomInOutline></ZoomInOutline>
+		</div>
 	</div>
 	<div class="content relative">
+		<div class="bounding embedding-bounding" class:active={isHovered && !isEmbeddingExpanded}></div>
 		<div class="token-column resizable resize-watch flex">
 			<!-- token -->
 			<div class="column token-string relative">
-				{#if isEmbeddingExpanded}<div class="subtitle embedding-detail">Token</div>{/if}
+				{#if isEmbeddingExpanded}<div class="subtitle embedding-detail">
+						<TextbookTooltip id="token-embedding">Tokenization</TextbookTooltip>
+					</div>{/if}
 				{#each $tokens as token, index}
 					<div class="cell" class:last={index === $tokens.length - 1}>
 						<span class="label">{token}</span>
 					</div>
 				{/each}
-				<div
-					class="bounding embedding-bounding"
-					class:active={isHovered && !isEmbeddingExpanded}
-				></div>
 			</div>
 			{#if isEmbeddingExpanded}
-				<Tooltip triggeredBy=".embedding .vector" placement="right" class="popover"
-					>vector({$modelMeta.dimension})</Tooltip
-				>
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
-						<span>Token<br />Embedding</span><HelpPopover
+						<TextbookTooltip id="token-embedding"><span>Token<br />Embedding</span></TextbookTooltip
+						>
+						<!-- <HelpPopover
 							id="token-embedding"
 							goTo="article-token-embedding"
 							>{`Converts tokens into numerical \nrepresentations using embeddings \nderived from predefined vocabulary, \ncapturing their semantic meaning.`}</HelpPopover
-						>
+						> -->
 					</div>
 					{#each $tokens as token, index}
 						<div class="token-id flex items-center">
@@ -205,16 +238,19 @@
 				<!-- position embedding -->
 				<div class="column symbol embedding-detail">
 					{#each $tokens as token, index}
-						<div class="cell">+</div>
+						<div class="cell text-lg">+</div>
 					{/each}
 				</div>
 				<div class="column embedding-detail position-embedding">
 					<div class="subtitle flex gap-1">
-						<span>Positional<br />Encoding</span><HelpPopover
+						<TextbookTooltip id="positional-encoding">
+							<span>Positional<br />Encoding</span>
+						</TextbookTooltip>
+						<!-- <HelpPopover
 							id="position-embedding"
 							goTo="article-positional-embedding"
 							>{`Converts token positions into \nnumerical representations that \ncapture their order in the sequence.`}</HelpPopover
-						>
+						> -->
 					</div>
 					{#each $tokens as token, index}
 						<div class="cell flex items-center">
@@ -243,6 +279,9 @@
 						<div class="cell">=</div>
 					{/each}
 				</div>
+				<Tooltip triggeredBy=".embedding .vector" class="popover" placement="right"
+					>vector({$modelMeta.dimension})</Tooltip
+				>
 				<!-- <PositionalEncodingPopover triggeredBy=".position-embedding" /> -->
 			{/if}
 		</div>
@@ -253,9 +292,11 @@
 					<div class={`vector ${embeddingVectorColor}`} class:last={index === $tokens.length - 1}>
 						<VectorCanvas active={$blockIdx === 0 && (isHovered || isEmbeddingExpanded)} />
 					</div>
-					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				{/each}
 			</div>
+			<Tooltip triggeredBy=".step.embedding .vector" class="popover" placement="right"
+				>vector({$modelMeta.dimension})</Tooltip
+			>
 		</div>
 	</div>
 </div>
@@ -264,8 +305,8 @@
 	.embedding-bounding {
 		top: -0.5rem;
 		padding: 0.5rem 0;
-		left: 0;
-		width: calc(100% + 0.8rem);
+		left: 2rem;
+		width: calc(100% - 2rem);
 		height: 100%;
 	}
 	.embedding {
@@ -285,6 +326,8 @@
 		.title {
 			justify-content: end;
 			padding-left: 3rem;
+			width: 1rem;
+			white-space: nowrap;
 		}
 		.content {
 			padding-left: 2rem;
@@ -319,7 +362,7 @@
 			.index-val .label {
 				color: theme('colors.gray.400');
 				line-height: 1;
-				font-size: 0.7rem;
+				font-size: 0.8rem;
 			}
 			.index-val .val {
 				width: 4rem;

@@ -19,11 +19,14 @@
 		attentionHeadIdx,
 		blockIdx,
 		temperature,
-		tokenIds
+		tokenIds,
+		userId
 	} from '~/store';
 	import LoadingDots from './common/LoadingDots.svelte';
 	import classNames from 'classnames';
 	import Sampling from './Sampling.svelte';
+	import { completeCurrentAnimation } from '~/utils/animation';
+	import { textPages } from '~/utils/textbookPages';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
@@ -54,23 +57,31 @@
 	};
 
 	const handleSubmit = (e) => {
-		onFocusInput();
-		inputText.set(inputTextTemp);
+		// Complete any running animation before starting new generation
+		completeCurrentAnimation();
 
-		window.dataLayer?.push({
-			event: 'generate-next-token',
-			attn_head_num: $attentionHeadIdx,
-			transformer_block_num: $blockIdx,
-			sampling_type: $sampling.type,
-			sampling_value: $sampling.value,
-			temperature_value: $temperature,
-			current_token_length: $tokenIds.length,
-			input_word_count: inputTextTemp
-				.trim()
-				.split(/\s+/)
-				.filter((word) => word.length > 0).length,
-			use_custom_input: useCustomInput
-		});
+		setTimeout(() => {
+			onFocusInput();
+			textPages.find((page) => page.id === 'how-transformers-work')?.complete();
+
+			inputText.set(inputTextTemp);
+
+			window.dataLayer?.push({
+				event: 'generate-next-token',
+				attn_head_num: $attentionHeadIdx,
+				transformer_block_num: $blockIdx,
+				sampling_type: $sampling.type,
+				sampling_value: $sampling.value,
+				temperature_value: $temperature,
+				current_token_length: $tokenIds.length,
+				input_word_count: inputTextTemp
+					.trim()
+					.split(/\s+/)
+					.filter((word) => word.length > 0).length,
+				use_custom_input: useCustomInput,
+				user_id: $userId
+			});
+		}, 0);
 	};
 
 	const handleKeyDown = (e) => {
@@ -86,19 +97,23 @@
 	// Example select box
 	let dropdownOpen = false;
 	const onSelectExample = (d, i) => {
+		if ($isFetchingModel) {
+			textPages.find((page) => page.id === 'how-transformers-work')?.complete();
+		}
+
 		dropdownOpen = false;
+
+		selectedExampleIdx.set(i);
+		predictedTokenTemp = '';
 
 		inputTextTemp = d;
 		inputRef.innerText = inputTextTemp;
-
-		predictedTokenTemp = '';
 		inputText.update((prev) => {
 			if (prev === d.trim()) {
 				return d + ' ';
 			}
 			return d.trim();
 		});
-		selectedExampleIdx.set(i);
 		useCustomInput = false;
 	};
 
@@ -114,14 +129,12 @@
 
 	$: isLoading = $isFetchingModel || $isModelRunning;
 	$: disabled =
-		$isOnAnimation ||
 		$isFetchingModel ||
-		$isModelRunning ||
+		// $isModelRunning ||
 		$expandedBlock.id !== null ||
 		!!$weightPopover;
-	$: selectDisabled =
-		$isOnAnimation || $isModelRunning || $expandedBlock.id !== null || !!$weightPopover;
-	$: parameterDisabled = $isOnAnimation || !!$weightPopover;
+	$: selectDisabled = $isModelRunning || $expandedBlock.id !== null || !!$weightPopover;
+	$: parameterDisabled = !!$weightPopover;
 </script>
 
 <div class="input-area" data-click="input-area">
@@ -136,7 +149,7 @@
 			>
 				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
 			</button>
-			<Dropdown placement="bottom-start" bind:open={dropdownOpen} class="example-dropdown">
+			<Dropdown bind:open={dropdownOpen} class="example-dropdown">
 				{#each inputTextExample as text, index}
 					<DropdownItem
 						data-click={`dropdown-item-${index}`}
@@ -178,19 +191,21 @@
 					>
 						{inputTextTemp}
 					</div>
-					<div
-						bind:this={predictRef}
-						class="predicted"
-						role="none"
-						on:click={(e) => {
-							e.stopPropagation();
-							onFocusInput(e);
-							inputRef.focus();
-							moveCursorToEnd(inputRef);
-						}}
-					>
-						<span>{predictedTokenTemp}</span>
-					</div>
+					{#if !$isModelRunning}
+						<div
+							bind:this={predictRef}
+							class="predicted"
+							role="none"
+							on:click={(e) => {
+								e.stopPropagation();
+								onFocusInput(e);
+								inputRef.focus();
+								moveCursorToEnd(inputRef);
+							}}
+						>
+							<span>{predictedTokenTemp}</span>
+						</div>
+					{/if}
 				</div>
 				{#if $isModelRunning}
 					<div class="loading"><LoadingDots /></div>
@@ -264,7 +279,7 @@
 		border-left: none;
 		border-start-end-radius: 0.5rem;
 		border-end-end-radius: 0.5rem;
-		font-size: 0.9rem;
+		font-size: 1rem;
 		line-height: 1rem;
 		padding: 0.5rem;
 		white-space: pre-wrap;
@@ -312,7 +327,7 @@
 
 	.select-button {
 		flex-shrink: 0;
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		border: 1px solid theme('colors.gray.300');
 		color: theme('colors.gray.900');
 		&:hover {

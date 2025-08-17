@@ -2,6 +2,7 @@
 	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
+	import { userId } from '~/store';
 	import { onClickReadMore } from '~/utils/event';
 
 	export let offset: PopoverProps['offset'] = undefined;
@@ -19,7 +20,8 @@
 		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: `help-popover-${className}`,
-			start_time: e.timeStamp
+			start_time: e.timeStamp,
+			user_id: $userId
 		});
 	};
 	const onHide = (e) => {
@@ -27,7 +29,8 @@
 			event: 'visibility-hide',
 			visible_name: `help-popover-${className}`,
 			end_time: e.timeStamp,
-			visible_duration: e.timeStamp - (startTime || 0)
+			visible_duration: e.timeStamp - (startTime || 0),
+			user_id: $userId
 		});
 	};
 </script>

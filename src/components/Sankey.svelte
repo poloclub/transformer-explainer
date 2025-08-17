@@ -23,6 +23,7 @@
 		MLP,
 		TRANSFORMER_BLOCKS
 	} from '~/constants/opacity';
+	import { textPages } from '~/utils/textbookPages';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -126,6 +127,8 @@
 			},
 			onMouseClick: (e, d) => {
 				e.stopPropagation();
+				textPages.find((page) => page.id === 'qkv')?.complete();
+
 				if ($weightPopover === 'qkv') weightPopover.set(null);
 				else weightPopover.set('qkv');
 			}
@@ -251,6 +254,7 @@
 			},
 			onMouseClick: (e, d) => {
 				e.stopPropagation();
+				textPages.find((page) => page.id === 'output-concatenation')?.complete();
 
 				if ($weightPopover === 'attention') weightPopover.set(null);
 				else weightPopover.set('attention');
@@ -293,6 +297,7 @@
 			},
 			onMouseClick: (e, d) => {
 				e.stopPropagation();
+				textPages.find((page) => page.id === 'output-concatenation')?.complete();
 
 				if ($weightPopover === 'attention') weightPopover.set(null);
 				else weightPopover.set('attention');
@@ -473,6 +478,7 @@
 				},
 				onMouseClick: (e, d) => {
 					e.stopPropagation();
+					textPages.find((page) => page.id === 'output-logit')?.complete();
 
 					if ($weightPopover === 'softmax') weightPopover.set(null);
 					else weightPopover.set('softmax');
@@ -713,6 +719,3 @@
 		style={`z-index:${$modelMeta.attention_head_num};`}
 	/>
 </div>
-
-<style lang="scss">
-</style>

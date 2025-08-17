@@ -9,7 +9,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"deploy": "gh-pages -d build --nojekyll"
+		"deploy": "gh-pages -d build --nojekyll",
+		"deploy-temp": "gh-pages -d build --nojekyll --repo https://github.com/aereeeee/te-temp.git"
 	},
 	"devDependencies": {
 		"@neoconfetti/svelte": "^1.0.0",

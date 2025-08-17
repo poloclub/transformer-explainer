@@ -6,6 +6,7 @@
 	import VectorCanvas from './common/VectorCanvas.svelte';
 	import { Tooltip } from 'flowbite-svelte';
 	import { onClickReadMore } from '~/utils/event';
+	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -36,8 +37,11 @@
 		role="group"
 		data-click="mlp-step-title"
 	>
-		<div class="w-max" on:click={(e) => onClickReadMore(e, 'article-activation')}>MLP</div>
+		<div class="w-max">
+			<TextbookTooltip id="mlp">MLP</TextbookTooltip>
+		</div>
 	</div>
+
 	<div class="content relative">
 		<div class="bounding mlp-bounding" class:active={isHovered}></div>
 		<div class="layer mlpUp first-layer flex">
@@ -61,9 +65,11 @@
 							<div class="sub-vector head-rest grow"></div>
 						</div>
 					</div>
-					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				{/each}
 			</div>
+			<Tooltip triggeredBy={'.step.mlp .initial .cell'} class="popover" placement="right">
+				vector({$modelMeta.dimension})</Tooltip
+			>
 			<OperationGroup type="dropout" id={'mlp-first-dropout'} />
 			<OperationGroup type="residual-end" id={'embedding-residual'} />
 			<OperationGroup type="ln" id={'mlp-first-ln'} />
@@ -80,10 +86,12 @@
 							<VectorCanvas colorScale="indigo" />
 						</div>
 					</div>
-					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension * 4})</Tooltip>
 				{/each}
 			</div>
 		</div>
+		<Tooltip triggeredBy={'.step.mlp .mlp-mid-column .cell'} class="popover" placement="right">
+			vector({$modelMeta.dimension * 4})</Tooltip
+		>
 		<div class="layer mlpDown out-layer relative flex justify-between">
 			<div class="activation">
 				<OperationGroup type="activation" id={'mlp-activation'} className="x4" />
@@ -108,9 +116,11 @@
 								<VectorCanvas colorScale="blue" />
 							</div>
 						</div>
-						<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 					{/each}
 				</div>
+				<Tooltip triggeredBy={'.step.mlp .mlp-out-column .cell'} class="popover" placement="right">
+					vector({$modelMeta.dimension})</Tooltip
+				>
 			</div>
 		</div>
 	</div>
@@ -119,8 +129,9 @@
 <style lang="scss">
 	.mlp {
 		.title > div {
-			cursor: help;
+			// cursor: help;
 		}
+
 		.mlp-bounding {
 			top: -0.5rem;
 			padding: 0.5rem 0;

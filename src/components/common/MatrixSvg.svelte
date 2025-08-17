@@ -80,7 +80,13 @@
 					.selectAll('rect.cell')
 					.data((d, colIndex) => d.map((cell, rowIndex) => ({ cell, colIndex, rowIndex })))
 					.join('rect')
-					.attr('class', (d, i) => `cell row-${i} col-${d.colIndex}`)
+					.attr('class', (d, i, arr) => {
+						const baseClass = `cell row-${i} col-${d.colIndex}`;
+						const isLastRow = i === arr.length - 1;
+						const isLastCol = d.colIndex === arr.length - 1;
+						const lastClass = isLastRow || isLastCol ? ' last' : '';
+						return baseClass + lastClass;
+					})
 					.attr('x', 0)
 					.attr('y', (d, i) => i * cellHeight + i * rowGap)
 					.attr('width', cellWidth)
@@ -96,7 +102,13 @@
 					.selectAll('circle.cell')
 					.data((d, colIndex) => d.map((cell, rowIndex) => ({ cell, colIndex, rowIndex })))
 					.join('circle')
-					.attr('class', (d, i) => `cell row-${i} col-${d.colIndex}`)
+					.attr('class', (d, i, arr) => {
+						const baseClass = `cell row-${i} col-${d.colIndex}`;
+						const isLastRow = i === arr.length - 1;
+						const isLastCol = d.colIndex === arr.length - 1;
+						const lastClass = isLastRow || isLastCol ? ' last' : '';
+						return baseClass + lastClass;
+					})
 					.attr('cx', 0)
 					.attr('cy', (d, i) => i * cellHeight + i * rowGap)
 					.attr('r', cellWidth / 2)
@@ -130,6 +142,13 @@
 					.data((d, rowIndex) => d.map((cell, colIndex) => ({ cell, rowIndex, colIndex })))
 					.join('rect')
 					.attr('class', (d, i) => `cell row-${d.rowIndex} col-${i}`)
+					.attr('class', (d, i, arr) => {
+						const baseClass = `cell row-${d.rowIndex} col-${i}`;
+						const isLastCol = i === arr.length - 1;
+						const isLastRow = d.rowIndex === arr.length - 1;
+						const lastClass = isLastRow || isLastCol ? ' last' : '';
+						return baseClass + lastClass;
+					})
 					.attr(transpose ? 'y' : 'x', (d, i) => i * cellWidth + i * colGap)
 					.attr(transpose ? 'x' : 'y', 0)
 					.attr('width', transpose ? cellHeight : cellWidth)
@@ -165,7 +184,13 @@
 					.selectAll('circle.cell')
 					.data((d, rowIndex) => d.map((cell, colIndex) => ({ cell, rowIndex, colIndex })))
 					.join('circle')
-					.attr('class', (d, i) => `cell row-${d.rowIndex} col-${i}`)
+					.attr('class', (d, i, arr) => {
+						const baseClass = `cell row-${d.rowIndex} col-${i}`;
+						const isLastCol = i === arr.length - 1;
+						const isLastRow = d.rowIndex === arr.length - 1;
+						const lastClass = isLastRow || isLastCol ? ' last' : '';
+						return baseClass + lastClass;
+					})
 					.attr(transpose ? 'cy' : 'cx', (d, i) => cellWidth / 2 + i * cellWidth + i * colGap)
 					.attr(transpose ? 'cx' : 'cy', 0)
 					.attr('r', cellWidth / 2)

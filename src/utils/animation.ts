@@ -3,6 +3,7 @@ import resolveConfig from 'tailwindcss/resolveConfig';
 import tailwindConfig from '../../tailwind.config';
 import { blockIdx, isOnAnimation, modelMeta } from '~/store';
 import { get } from 'svelte/store';
+import * as d3 from 'd3';
 const { theme } = resolveConfig(tailwindConfig);
 
 const getGradientStops = (className: string, stopIdx = 1) => {
@@ -17,7 +18,7 @@ const generateGradientAnimation = (
 ) => {
 	const {
 		color = 'rgba(255,255,255,0)',
-		duration = 0.2,
+		duration = 0.1,
 		ease = 'power1.in',
 		offset = { from: '0%', to: '100%' },
 		position = '+=0',
@@ -60,8 +61,17 @@ const generateGradientAnimation = (
 
 const fadeOutColor = theme.colors.gray[100];
 const nodeFadeOutOpacity = 0.2;
+let flowTimeline: GSAPTimeline;
+
+export const completeCurrentAnimation = () => {
+	if (flowTimeline) {
+		flowTimeline.progress(1);
+	}
+};
 
 export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = true) => {
+	completeCurrentAnimation();
+
 	let isFirstBlock = get(blockIdx) === 0;
 	let isLastBlock = get(blockIdx) === get(modelMeta)?.layer_num - 1;
 
@@ -106,16 +116,28 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 
 			const startBlockTl = gsap.timeline();
 
-			generateGradientAnimation(startBlockTl, [embeddingToStartStop1, embeddingToStartStop1Last], {
-				duration: duration * 5,
-				offset: { to: '50%' },
-				ease: 'sine.inOut'
-			});
-			generateGradientAnimation(startBlockTl, [embeddingToStartStop2, embeddingToStartStop2Last], {
-				duration: duration * 5,
-				offset: { from: '50%' },
-				ease: 'sine.inOut'
-			});
+			generateGradientAnimation(
+				startBlockTl,
+				isNextTokenOnly
+					? [embeddingToStartStop1Last]
+					: [embeddingToStartStop1, embeddingToStartStop1Last],
+				{
+					duration: duration * 5,
+					offset: { to: '50%' },
+					ease: 'sine.inOut'
+				}
+			);
+			generateGradientAnimation(
+				startBlockTl,
+				isNextTokenOnly
+					? [embeddingToStartStop2Last]
+					: [embeddingToStartStop2, embeddingToStartStop2Last],
+				{
+					duration: duration * 5,
+					offset: { from: '50%' },
+					ease: 'sine.inOut'
+				}
+			);
 
 			tl.add(startBlockTl);
 
@@ -126,7 +148,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 				{
 					opacity: (i, d) => {
 						if (isNextTokenOnly) {
-							return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+							return d.classList.contains('last') ? 0 : 1;
 						}
 						return 0;
 					}
@@ -146,10 +168,10 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		);
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, embeddingToQKVGrad, {
-				color: fadeOutColor,
-				duration: duration * 10
-			});
+			// generateGradientAnimation(tl, embeddingToQKVGrad, {
+			// 	color: fadeOutColor,
+			// 	duration: duration * 10
+			// });
 			generateGradientAnimation(tl, embeddingToQKVGradLast, {
 				position: '<',
 				duration: duration * 10
@@ -169,7 +191,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			{
 				opacity: (i, d) => {
 					if (isNextTokenOnly) {
-						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+						return d.classList.contains('last') ? 0 : 1;
 					}
 					return 0;
 				}
@@ -192,14 +214,14 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		const [valueGrad, valueGradLast] = getGradientStops('.green-green2');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(
-				tl,
-				[queryH1Grad, keyH1Grad, valueH1Grad, queryGrad, keyGrad, valueGrad],
-				{
-					color: fadeOutColor,
-					duration: duration * 10
-				}
-			);
+			// generateGradientAnimation(
+			// 	tl,
+			// 	[queryH1Grad, keyH1Grad, valueH1Grad, queryGrad, keyGrad, valueGrad],
+			// 	{
+			// 		color: fadeOutColor,
+			// 		duration: duration * 10
+			// 	}
+			// );
 
 			generateGradientAnimation(tl, [queryH1GradLast, keyH1GradLast, valueH1GradLast], {
 				// stagger: 0.2
@@ -239,7 +261,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			{
 				opacity: (i, d) => {
 					if (isNextTokenOnly) {
-						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+						return d.classList.contains('last') ? 0 : 1;
 					}
 					return 0;
 				}
@@ -255,46 +277,97 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		const queryPaths = document.querySelectorAll('.sankey-top g.attention path.query-to-attention');
 		const attentionMatrix = document.querySelector('.attention .attention-result');
 
-		[...keyPaths, ...queryPaths].forEach((path) => {
-			const length = path.getTotalLength();
-			path.style.strokeDasharray = length;
-			path.style.strokeDashoffset = length;
-		});
+		if (isNextTokenOnly) {
+			const QKDuration = 0.7;
+			const stagger = Number((QKDuration / tokenLength).toFixed(2));
 
-		const QKDuration = 0.4;
-		const stagger = Number((QKDuration / tokenLength).toFixed(2));
+			[...keyPaths, ...queryPaths].forEach((path) => {
+				path.style.strokeDasharray = 0;
+				path.style.strokeDashoffset = 0;
+			});
 
-		tl.to(keyPaths, {
-			strokeDashoffset: 0,
-			stagger,
-			duration: QKDuration,
-			ease: 'power2.out'
-		})
-			.to(
-				queryPaths,
-				{
-					strokeDashoffset: 0,
-					stagger,
-					duration: QKDuration,
-					// ease: 'back.out(1.7)'
-					ease: 'power2.out'
-				},
-				'<'
-			)
-			.from(
-				attentionMatrix.querySelectorAll('svg circle'),
-				{
-					scale: 0,
-					transformOrigin: '50% 50%',
-					opacity: 0,
-					delay: QKDuration / tokenLength,
-					stagger: Number((QKDuration / Math.pow(tokenLength, 2)).toFixed(2)),
-					ease: 'power2.out',
-					// ease: 'back.out(1.7)',
-					duration: QKDuration
-				},
-				'<'
-			);
+			const lastKeyPath = keyPaths[keyPaths.length - 1];
+			const lastQueryPath = queryPaths[queryPaths.length - 1];
+
+			[lastKeyPath, lastQueryPath].forEach((path) => {
+				const length = path.getTotalLength();
+				path.style.strokeDasharray = length;
+				path.style.strokeDashoffset = length;
+			});
+
+			tl.to(lastKeyPath, {
+				strokeDashoffset: 0,
+				stagger,
+				duration: QKDuration,
+				ease: 'power2.out'
+			})
+				.to(
+					lastQueryPath,
+					{
+						strokeDashoffset: 0,
+						stagger,
+						duration: QKDuration,
+						// ease: 'back.out(1.7)'
+						ease: 'power2.out'
+					},
+					'<'
+				)
+				.from(
+					attentionMatrix.querySelectorAll('svg circle.last'),
+					{
+						scale: 0,
+						transformOrigin: '50% 50%',
+						opacity: 0,
+						delay: QKDuration / tokenLength,
+						stagger: Number((QKDuration / Math.pow(tokenLength, 2)).toFixed(2)),
+						ease: 'power2.out',
+						// ease: 'back.out(1.7)',
+						duration: QKDuration
+					},
+					'<'
+				);
+		} else {
+			const QKDuration = 0.4;
+			const stagger = Number((QKDuration / tokenLength).toFixed(2));
+
+			[...keyPaths, ...queryPaths].forEach((path) => {
+				const length = path.getTotalLength();
+				path.style.strokeDasharray = length;
+				path.style.strokeDashoffset = length;
+			});
+
+			tl.to(keyPaths, {
+				strokeDashoffset: 0,
+				stagger,
+				duration: QKDuration,
+				ease: 'power2.out'
+			})
+				.to(
+					queryPaths,
+					{
+						strokeDashoffset: 0,
+						stagger,
+						duration: QKDuration,
+						// ease: 'back.out(1.7)'
+						ease: 'power2.out'
+					},
+					'<'
+				)
+				.from(
+					attentionMatrix.querySelectorAll('svg circle'),
+					{
+						scale: 0,
+						transformOrigin: '50% 50%',
+						opacity: 0,
+						delay: QKDuration / tokenLength,
+						stagger: Number((QKDuration / Math.pow(tokenLength, 2)).toFixed(2)),
+						ease: 'power2.out',
+						// ease: 'back.out(1.7)',
+						duration: QKDuration
+					},
+					'<'
+				);
+		}
 
 		// ============================
 		// draw val and attention mul path
@@ -318,7 +391,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			{
 				opacity: (i, d) => {
 					if (isNextTokenOnly) {
-						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+						return d.classList.contains('last') ? 0 : 1;
 					}
 					return 0;
 				}
@@ -333,9 +406,9 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		const [outputGrad, outputGradLast] = getGradientStops('.transparent-purple');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, [outputH1Grad, outputGrad], {
-				color: fadeOutColor
-			});
+			// generateGradientAnimation(tl, [outputH1Grad, outputGrad], {
+			// 	color: fadeOutColor
+			// });
 			generateGradientAnimation(tl, [outputH1GradLast, outputGradLast], { position: '<' });
 		} else {
 			generateGradientAnimation(tl, [outputH1Grad, outputGrad, outputH1GradLast, outputGradLast]);
@@ -351,7 +424,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			{
 				opacity: (i, d) => {
 					if (isNextTokenOnly) {
-						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+						return d.classList.contains('last') ? 0 : 1;
 					}
 					return 0;
 				}
@@ -366,9 +439,9 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		const [mlpInputPath, mlpInputPathLast] = getGradientStops('.purple-indigo');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, mlpInputPath, {
-				color: fadeOutColor
-			});
+			// generateGradientAnimation(tl, mlpInputPath, {
+			// 	color: fadeOutColor
+			// });
 			generateGradientAnimation(tl, mlpInputPathLast, { position: '<' });
 		} else {
 			generateGradientAnimation(tl, [mlpInputPath, mlpInputPathLast]);
@@ -385,7 +458,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			{
 				opacity: (i, d) => {
 					if (isNextTokenOnly) {
-						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+						return d.classList.contains('last') ? 0 : 1;
 					}
 					return 0;
 				}
@@ -399,9 +472,9 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		const [mlpSecondPath, mlpSecondPathLast] = getGradientStops('.indigo-blue');
 
 		if (isNextTokenOnly) {
-			generateGradientAnimation(tl, mlpSecondPath, {
-				color: fadeOutColor
-			});
+			// generateGradientAnimation(tl, mlpSecondPath, {
+			// 	color: fadeOutColor
+			// });
 			generateGradientAnimation(tl, mlpSecondPathLast, { position: '<' });
 		} else {
 			generateGradientAnimation(tl, [mlpSecondPath, mlpSecondPathLast]);
@@ -416,7 +489,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			{
 				opacity: (i, d) => {
 					if (isNextTokenOnly) {
-						return d.classList.contains('last') ? 0 : nodeFadeOutOpacity;
+						return d.classList.contains('last') ? 0 : 1;
 					}
 					return 0;
 				}
@@ -428,9 +501,9 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			const [lastBlockPath, lastBlockPathLast] = getGradientStops('.blue');
 
 			if (isNextTokenOnly) {
-				generateGradientAnimation(tl, lastBlockPath, {
-					color: fadeOutColor
-				});
+				// generateGradientAnimation(tl, lastBlockPath, {
+				// 	color: fadeOutColor
+				// });
 				generateGradientAnimation(tl, lastBlockPathLast, { position: '<' });
 			} else {
 				generateGradientAnimation(tl, [lastBlockPath, lastBlockPathLast]);
@@ -449,46 +522,29 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 			const blockTl = gsap.timeline({
 				// repeat: 2
 			});
-
-			// if (isNextTokenOnly) {
-			// 	generateGradientAnimation(blockTl, transformerBlocksStop1, {
-			// 		color: fadeOutColor,
-			// 		duration: duration * 5,
-			// 		offset: { to: '50%' },
-			// 		ease: 'sine.inOut'
-			// 	});
-
-			// 	generateGradientAnimation(blockTl, transformerBlocksStop1Last, {
-			// 		duration: duration * 5,
-			// 		offset: { to: '50%' },
-			// 		ease: 'sine.inOut',
-			// 		position: '<'
-			// 	});
-
-			// 	generateGradientAnimation(blockTl, transformerBlocksStop2, {
-			// 		duration: duration * 5,
-			// 		color: fadeOutColor,
-			// 		offset: { from: '50%' },
-			// 		ease: 'sine.inOut'
-			// 	});
-			// 	generateGradientAnimation(blockTl, transformerBlocksStop2Last, {
-			// 		duration: duration * 5,
-			// 		offset: { from: '50%' },
-			// 		ease: 'sine.inOut',
-			// 		position: '<'
-			// 	});
-			// } else {
-			generateGradientAnimation(blockTl, [transformerBlocksStop1, transformerBlocksStop1Last], {
-				duration: duration * 5,
-				offset: { to: '50%' },
-				ease: 'sine.inOut'
-			});
-			generateGradientAnimation(blockTl, [transformerBlocksStop2, transformerBlocksStop2Last], {
-				duration: duration * 5,
-				offset: { from: '50%' },
-				ease: 'sine.inOut'
-			});
-			// }
+			if (isNextTokenOnly) {
+				generateGradientAnimation(blockTl, [transformerBlocksStop1Last], {
+					duration: duration * 5,
+					offset: { to: '50%' },
+					ease: 'sine.inOut'
+				});
+				generateGradientAnimation(blockTl, [transformerBlocksStop2Last], {
+					duration: duration * 5,
+					offset: { from: '50%' },
+					ease: 'sine.inOut'
+				});
+			} else {
+				generateGradientAnimation(blockTl, [transformerBlocksStop1, transformerBlocksStop1Last], {
+					duration: duration * 5,
+					offset: { to: '50%' },
+					ease: 'sine.inOut'
+				});
+				generateGradientAnimation(blockTl, [transformerBlocksStop2, transformerBlocksStop2Last], {
+					duration: duration * 5,
+					offset: { from: '50%' },
+					ease: 'sine.inOut'
+				});
+			}
 
 			tl.add(blockTl);
 		}
@@ -500,7 +556,12 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		tl.fromTo(
 			finalOutput,
 			{
-				opacity: 0
+				opacity: (i, d) => {
+					if (isNextTokenOnly) {
+						return d.classList.contains('last') ? 0 : 1;
+					}
+					return 0;
+				}
 			},
 			{ opacity: 1, duration }
 		);
@@ -523,5 +584,67 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		// sampling animation
 		// ============================
 		// showSamplingAnimation();
+
+		flowTimeline = tl;
 	});
+};
+
+export const drawResidualLine = (id?: string) => {
+	let residualAnimation: GSAPTween | undefined;
+
+	const connectLine = (paths: any) => {
+		residualAnimation = gsap.to(paths.nodes(), {
+			strokeDashoffset: -50,
+			duration: 1,
+			repeat: -1,
+			ease: 'none'
+		});
+	};
+
+	const drawLine = () => {
+		let startGroup, endGroup, connector;
+
+		if (!id) {
+			startGroup = document.querySelectorAll('[data-click="residual-start"]');
+			endGroup = document.querySelectorAll('[data-click="residual-end"]');
+			connector = d3.selectAll(`.residual-connector`);
+		} else {
+			startGroup = document.querySelectorAll(`#${id}-start`);
+			endGroup = document.querySelectorAll(`#${id}-end`);
+			connector = d3.selectAll(`.residual-connector.${id}`);
+		}
+		connector.style('opacity', 1);
+		connectLine(connector);
+
+		startGroup.forEach((el) => el.classList.add('active'));
+		endGroup.forEach((el) => el.classList.add('active'));
+	};
+
+	const removeLine = () => {
+		let startGroup, endGroup, connector;
+
+		if (!id) {
+			startGroup = document.querySelectorAll('[data-click="residual-start"]');
+			endGroup = document.querySelectorAll('[data-click="residual-end"]');
+			connector = d3.selectAll(`.residual-connector`);
+		} else {
+			startGroup = document.querySelectorAll(`#${id}-start`);
+			endGroup = document.querySelectorAll(`#${id}-end`);
+			connector = d3.selectAll(`.residual-connector.${id}`);
+		}
+
+		connector.style('opacity', 0);
+		if (residualAnimation) {
+			residualAnimation.kill();
+			connector.style('stroke-dashoffset', 0);
+		}
+
+		startGroup.forEach((el) => el.classList.remove('active'));
+		endGroup.forEach((el) => el.classList.remove('active'));
+	};
+
+	return {
+		drawLine,
+		removeLine
+	};
 };

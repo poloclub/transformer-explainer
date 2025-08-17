@@ -76,16 +76,16 @@ export const gradientMap = {
 		100: { color: theme.colors.purple[200], opacity: 1 }
 	},
 	'blue-blue': {
-		0: theme.colors.blue[defaultGradientBrightness],
-		100: theme.colors.blue[defaultGradientBrightness]
+		0: theme.colors.blue[300],
+		100: theme.colors.blue[300]
 	},
 	'red-red': {
-		0: theme.colors.red[defaultGradientBrightness],
-		100: theme.colors.red[defaultGradientBrightness]
+		0: theme.colors.red[300],
+		100: theme.colors.red[300]
 	},
 	'green-green': {
-		0: theme.colors.green[defaultGradientBrightness],
-		100: theme.colors.green[defaultGradientBrightness]
+		0: theme.colors.green[300],
+		100: theme.colors.green[300]
 	},
 	'blue-blue2': {
 		0: theme.colors.blue[defaultGradientBrightness],
@@ -104,8 +104,8 @@ export const gradientMap = {
 		100: theme.colors.gray[defaultGradientBrightness]
 	},
 	'purple-purple': {
-		0: theme.colors.purple[defaultGradientBrightness],
-		100: theme.colors.purple[defaultGradientBrightness]
+		0: theme.colors.purple[300],
+		100: theme.colors.purple[300]
 	},
 	blue: {
 		0: theme.colors.blue[defaultGradientBrightness],
