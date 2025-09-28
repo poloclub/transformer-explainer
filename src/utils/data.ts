@@ -13,8 +13,6 @@ import { get } from 'svelte/store';
 import { reshapeArray } from './array';
 import { showFlowAnimation } from './animation';
 
-ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
-
 export const fakeRunWithCachedData = async ({
 	cachedData,
 	tokenizer,

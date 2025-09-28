@@ -44,6 +44,9 @@
 	import QKV from '~/components/QKV.svelte';
 	import Textbook from '~/components/textbook/Textbook.svelte';
 
+	ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/';
+	ort.env.logLevel = 'error';
+
 	let active = false;
 	let appStartTime = Date.now();
 
