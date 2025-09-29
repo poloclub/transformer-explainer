@@ -1,11 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { page } from '$app/stores';
 	import InputForm from '~/components/InputForm.svelte';
 	import { ga } from '~/utils/event';
 	import Sampling from '~/components/Sampling.svelte';
 
 	export let isActive;
+
+	// Check if current page is about page
+	$: isAboutPage = $page.url.pathname === '/about';
 </script>
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>
@@ -14,7 +18,9 @@
 	</div>
 	<div class="inputs flex grow items-center">
 		<div class="input-wrapper w-full" class:active={isActive}>
-			<InputForm />
+			{#if !isAboutPage}
+				<InputForm />
+			{/if}
 		</div>
 	</div>
 	<div class="icons flex items-center gap-3">

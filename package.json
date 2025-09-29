@@ -9,13 +9,14 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"deploy": "gh-pages -d build --nojekyll"
+		"deploy": "gh-pages -d build --nojekyll",
+		"deploy-temp": "gh-pages -d build --nojekyll --repo https://github.com/aereeeee/te-temp.git"
 	},
 	"devDependencies": {
 		"@neoconfetti/svelte": "^1.0.0",
 		"@sveltejs/adapter-auto": "^3.2.0",
-		"@sveltejs/adapter-static": "^3.0.1",
-		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/adapter-static": "^3.0.8",
+		"@sveltejs/kit": "^2.21.2",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/d3": "^7.4.3",
 		"@types/d3-sankey": "^0.12.4",
@@ -53,7 +54,7 @@
 		"@xenova/transformers": "^2.17.1",
 		"gsap": "^3.12.5",
 		"katex": "^0.16.10",
-		"onnxruntime-web": "^1.18.0"
+		"onnxruntime-web": "^1.23.0"
 	},
 	"engines": {
 		"node": ">=20.0.0",

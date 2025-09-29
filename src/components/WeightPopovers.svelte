@@ -8,8 +8,14 @@
 	import MLPDownWeightPopover from './popovers/MLPDownWeightPopover.svelte';
 
 	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
-	import * as d3 from 'd3';
 	import { ArrowUpRightDownLeftOutline } from 'flowbite-svelte-icons';
+	import {
+		highlightAttentionPath,
+		highlightLogitPath,
+		highlightPath,
+		removeAttentionPathHighlight,
+		removePathHighlight
+	} from '~/utils/textbook';
 
 	let resizeObserver: ResizeObserver;
 	let qkvPos = { left: 0, top: 0 };
@@ -46,22 +52,22 @@
 			const attention = document.querySelector('.step.attention .content .multi-head');
 			const softmax = document.querySelector('.step.transformer-blocks .content');
 
-			const embeddingRect = embedding.getBoundingClientRect();
-			const mlpRect = mlp.getBoundingClientRect();
-			const mlpDownRect = mlpDown.getBoundingClientRect();
-			const attentionRect = attention.getBoundingClientRect();
-			const softmaxRect = softmax.getBoundingClientRect();
+			const embeddingRect = embedding?.getBoundingClientRect();
+			const mlpRect = mlp?.getBoundingClientRect();
+			const mlpDownRect = mlpDown?.getBoundingClientRect();
+			const attentionRect = attention?.getBoundingClientRect();
+			const softmaxRect = softmax?.getBoundingClientRect();
 
-			qkvPos = { left: embeddingRect.right + scrollLeft, top: embeddingRect.top - topbarHeight };
-			mlpPos = { left: mlpRect.left + scrollLeft, top: mlpRect.top - topbarHeight };
-			mlpDownPos = { left: mlpDownRect.left + scrollLeft, top: mlpDownRect.top - topbarHeight };
+			qkvPos = { left: embeddingRect?.right + scrollLeft, top: embeddingRect?.top - topbarHeight };
+			mlpPos = { left: mlpRect?.left + scrollLeft, top: mlpRect?.top - topbarHeight };
+			mlpDownPos = { left: mlpDownRect?.left + scrollLeft, top: mlpDownRect?.top - topbarHeight };
 			attentionPos = {
-				left: attentionRect.right + scrollLeft,
-				top: attentionRect.top + attentionRect.height / 2 - topbarHeight
+				left: attentionRect?.right + scrollLeft,
+				top: attentionRect?.top + attentionRect?.height / 2 - topbarHeight
 			};
 			softmaxPos = {
-				left: softmaxRect.left + scrollLeft,
-				top: softmaxRect.top - topbarHeight
+				left: softmaxRect?.left + scrollLeft,
+				top: softmaxRect?.top - topbarHeight
 			};
 		};
 
@@ -94,22 +100,17 @@
 
 		const unsubscribe = weightPopover.subscribe((value) => {
 			if (!value) {
-				d3.selectAll(`svg g.path-group`).style('opacity', 1);
-				d3.selectAll('div.step > div').style('opacity', 1);
-				d3.selectAll('div.step.mlp .layer').style('opacity', 1);
-				d3.selectAll('.steps').style('pointer-events', 'auto');
+				removePathHighlight();
+				removeAttentionPathHighlight();
 				return;
 			}
 
-			d3.selectAll(`svg g.path-group`).style('opacity', 0.3);
-			d3.selectAll(`svg g.path-group.${value}`).style('opacity', 1);
-			d3.selectAll('div.step > div').style('opacity', 0.3);
-			d3.selectAll(`div.step.${value} > div`).style('opacity', 1);
-			d3.selectAll('.steps').style('pointer-events', 'none');
-
-			if (value === 'mlpUp' || value === 'mlpDown') {
-				d3.selectAll(`div.step.${value} .layer`).style('opacity', 0.3);
-				d3.selectAll(`div.step.${value} .layer.${value}`).style('opacity', 1);
+			if (value === 'attention') {
+				highlightAttentionPath();
+			} else if (value === 'softmax') {
+				highlightLogitPath();
+			} else {
+				highlightPath(value);
 			}
 		});
 		return () => {
@@ -215,11 +216,26 @@
 		border-radius: 0.4rem;
 		pointer-events: none;
 		white-space: nowrap;
-		font-size: 0.8rem;
+		font-size: 1rem;
 		font-weight: 300;
 
 		display: flex;
 		align-items: center;
 		gap: 2px;
+	}
+	:global(.formula) {
+		height: 4rem;
+		position: relative;
+	}
+	:global(.formula > div) {
+		position: absolute;
+		width: 100%;
+		top: 0;
+	}
+	:global(.first-row) {
+		transform: translateY(100%);
+	}
+	:global(.katex-display) {
+		margin: 0 !important;
 	}
 </style>

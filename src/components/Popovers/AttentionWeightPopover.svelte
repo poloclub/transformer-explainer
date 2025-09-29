@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { modelMeta, tokens, rootRem, modelData, attentionHeadIdx } from '~/store';
+	import { modelMeta, tokens, rootRem, modelData, attentionHeadIdx, blockIdx } from '~/store';
 	import * as d3 from 'd3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
@@ -8,13 +8,19 @@
 	import tailwindConfig from '../../../tailwind.config';
 	import { maskArray } from '~/utils/array';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
+	import Katex from '~/utils/Katex.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
 	const tokenGap = 6;
 
+	// placeholder data
+	$: placeHolderData = Array($tokens.length)
+		.fill(0)
+		.map((col) => Array($tokens.length).fill(-Infinity));
+
 	// generate data
-	$: softmaxed = $modelData?.outputs?.block_0_attn_head_0_attn_dropout?.data || placeHolderData;
+	$: softmaxed = $modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn_dropout`]?.data || placeHolderData;
 
 	const visibleDimension = 8;
 	$: tokenLen = $tokens.length;
@@ -142,21 +148,18 @@
 			//symbol
 			if (isFirstOutCell) {
 				timeline.from(
-					[mulSymbol, equalSymbol, '.formula .first-row .part1'],
+					[
+						mulSymbol,
+						equalSymbol,
+						'.formula .first-row .part1',
+						equalSymbol,
+						'.formula .first-row .part2'
+					],
 					{
 						duration: 0.05,
 						opacity: 1
 					},
 					'<50%'
-				);
-
-				timeline.from(
-					[equalSymbol, '.formula .first-row .part2'],
-					{
-						duration: 0.5,
-						opacity: 0.1
-					},
-					'<'
 				);
 			}
 			//out
@@ -333,7 +336,7 @@
 			</div>
 		</div>
 	</div>
-	<!-- <div class="formula">
+	<div class="formula">
 		<div class="first-row flex items-center justify-center gap-1">
 			<span class="part1">
 				<Katex
@@ -354,12 +357,12 @@
 	`}
 			/>
 		</div>
-	</div> -->
+	</div>
 </WeightPopoverCard>
 
 <style lang="scss">
 	.weight-popover-content {
-		padding: 3rem 3rem 3rem 2.5rem;
+		padding: 3rem 3rem 1.5rem 2.5rem;
 		gap: 1rem;
 	}
 </style>

@@ -6,7 +6,9 @@
 		rootRem,
 		attentionHeadIdx,
 		hoveredMatrixCell,
-		blockIdx
+		blockIdx,
+		isExpandOrCollapseRunning,
+		userId
 	} from '~/store';
 	import classNames from 'classnames';
 	import Matrix from '~/components/common/Matrix.svelte';
@@ -21,6 +23,9 @@
 	import { ATTENTION_OUT } from '~/constants/opacity';
 	import { ga } from '~/utils/event';
 	import { ZoomInOutline } from 'flowbite-svelte-icons';
+	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
+	import { textPages } from '~/utils/textbookPages';
+	import { highlightAttentionPath, removeAttentionPathHighlight } from '~/utils/textbook';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -62,11 +67,18 @@
 		isAttentionExpanded = false;
 		collapseAttention();
 	}
+	$: if ($expandedBlock.id === blockId && !isAttentionExpanded) {
+		isAttentionExpanded = true;
+		expandAttention();
+	}
 
-	const onClickAttention = () => {
+	const onClickAttention = (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		textPages.find((page) => page.id === 'masked-self-attention')?.complete();
+
 		if (!isAttentionExpanded) {
 			expandedBlock.set({ id: blockId });
-			expandAttention();
 		}
 	};
 
@@ -92,7 +104,10 @@
 	let startTime = null;
 
 	const expandAttention = () => {
+		highlightAttentionPath();
+
 		isAttentionExpanded = true;
+		isExpandOrCollapseRunning.set(true);
 		collapseTl.progress(1);
 
 		const keyPaths = document.querySelectorAll('div.sankey g.attention path.key-to-attention');
@@ -213,28 +228,37 @@
 				'<'
 			);
 
-		expandTl.to(outPaths, { opacity: ATTENTION_OUT });
+		expandTl.to(outPaths, {
+			opacity: ATTENTION_OUT,
+			onComplete: () => {
+				isExpandOrCollapseRunning.set(false);
+			}
+		});
 
 		startTime = performance.now();
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: 'attention-expansion',
-			start_time: startTime
+			start_time: startTime,
+			user_id: $userId
 		});
 	};
 
 	const collapseAttention = () => {
+		removeAttentionPathHighlight();
 		let endTime = performance.now();
 		let visibleDuration = endTime - startTime;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-hide',
 			visible_name: 'attention-expansion',
 			end_time: endTime,
-			visible_duration: visibleDuration
+			visible_duration: visibleDuration,
+			user_id: $userId
 		});
 
 		isAttentionExpanded = false;
+		isExpandOrCollapseRunning.set(true);
 		expandTl.progress(1);
 		collapseTl.to([attentionQK, attentionMask, attentionSoftmax], {
 			opacity: 0,
@@ -248,7 +272,10 @@
 			{
 				opacity: 1,
 				display: 'flex',
-				duration: 0.5
+				duration: 0.5,
+				onComplete: () => {
+					isExpandOrCollapseRunning.set(false);
+				}
 			},
 			0
 		);
@@ -325,7 +352,10 @@
 				{onMouseOutCell}
 				{showTooltip}
 			/>
-			<div class="matrix-label">Dot product</div>
+			<TextbookTooltip id="masked-self-attention">
+				<div class="matrix-label">Dot product</div>
+			</TextbookTooltip>
+
 			<Tooltip class="popover tooltip">
 				<Katex math={'Q \\cdot K^T'}></Katex>
 			</Tooltip>
@@ -388,7 +418,10 @@
 					{showTooltip}
 				/>
 			</div>
-			<div class="matrix-label">Scaling · Mask</div>
+			<TextbookTooltip id="masked-self-attention">
+				<div class="matrix-label">Scaling · Mask</div>
+			</TextbookTooltip>
+
 			<Tooltip class="popover tooltip">
 				<Katex math={'\\frac{QK^T}{\\sqrt{d_k}} + M'}></Katex>
 			</Tooltip>
@@ -399,7 +432,7 @@
 			</div>
 		</div>
 
-		<!-- Softmax · Dropout -->
+		<!-- Softmax -->
 		<div
 			class={classNames('attention-matrix attention-softmax flex flex-col items-center', {
 				'attention-out': isAttentionExpanded
@@ -454,9 +487,11 @@
 				/>
 			</div>
 
-			<div class="matrix-label">Softmax · Dropout</div>
+			<TextbookTooltip id="masked-self-attention">
+				<div class="matrix-label">Softmax</div>
+			</TextbookTooltip>
 			<Tooltip class="popover tooltip">
-				<Katex math={'\\text{Dropout}(\\text{softmax}(\\frac{QK^T}{\\sqrt{d_k}} + M))'}></Katex>
+				<Katex math={'\\text{softmax}(\\frac{QK^T}{\\sqrt{d_k}} + M)'}></Katex>
 			</Tooltip>
 			<div class="color-scale">
 				<span class="val">-1.0</span>

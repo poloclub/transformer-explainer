@@ -8,6 +8,7 @@
 	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
+	import Katex from '~/utils/Katex.svelte';
 
 	export let isOpen = true;
 
@@ -160,7 +161,14 @@
 			//symbol
 			if (isFirstOutCell) {
 				timeline.from(
-					[mulSymbol, equalSymbol, '.formula .first-row .part1'],
+					[
+						mulSymbol,
+						equalSymbol,
+						'.formula .first-row .part1',
+						plusSymbol,
+						equalSymbol,
+						'.formula .first-row .part2'
+					],
 					{
 						duration: 0.05,
 						opacity: 1
@@ -168,14 +176,14 @@
 					'<50%'
 				);
 
-				timeline.from(
-					[plusSymbol, equalSymbol, '.formula .first-row .part2'],
-					{
-						duration: 0.5,
-						opacity: 0.1
-					},
-					'<'
-				);
+				// timeline.from(
+				// 	[plusSymbol, equalSymbol, '.formula .first-row .part2'],
+				// 	{
+				// 		duration: 0.5,
+				// 		opacity: 0.1
+				// 	},
+				// 	'<'
+				// );
 			}
 			//bias
 			timeline
@@ -314,7 +322,7 @@
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
 				<span>Output<br />Embedding</span>
-				<HelpPopover id="hidden-states" placement="top"
+				<HelpPopover id="hidden-states" 
 					>{`After passing through all blocks, \nthe final token's embedding vector \ncontains all the contextual information \nfrom the preceding tokens.`}</HelpPopover
 				>
 			</div>
@@ -334,7 +342,7 @@
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
 				Output Projection Weights
-				<HelpPopover id="lm-head-weights" placement="top"
+				<HelpPopover id="lm-head-weights" 
 					>{`Transforms the final embedding into a vocabulary distribution.\nParameters tha learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -357,7 +365,7 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Output Projection Bias<HelpPopover id="lm-head-bias" placement="top"
+				Output Projection Bias<HelpPopover id="lm-head-bias" 
 					>{`Offsets added after the transformation.\nParameters tha learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -378,7 +386,7 @@
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
 				Logits
-				<HelpPopover id="logits" placement="top"
+				<HelpPopover id="logits" 
 					>{`Raw scores representing the model’s preference \nfor each vocabulary token before applying softmax.`}</HelpPopover
 				>
 			</div>
@@ -400,13 +408,13 @@
 			<div class="size">(1, 50,257)</div>
 		</div>
 	</div>
-	<!-- <div class="formula">
+	<div class="formula">
 		<div class="first-row flex items-center justify-center gap-1">
 			<span class="part1">
 				<Katex
 					displayMode
 					math={`
-	(Embedding_{1} \\cdot Weights_{1,1} + \\cdots + Embedding_{768} \\cdot Weights_{768,1})`}
+	(Embedding_{1}×Weights_{1,1} + \\cdots + Embedding_{768}×Weights_{768,1})`}
 				/>
 			</span>
 			<span class="part2">
@@ -421,12 +429,12 @@
 	`}
 			/>
 		</div>
-	</div> -->
+	</div>
 </WeightPopoverCard>
 
 <style lang="scss">
 	.weight-popover-content {
-		padding: 3rem 2rem 3rem 3.5rem;
+		padding: 3rem 2rem 1.5rem 3.5rem;
 		gap: 0.5rem;
 	}
 	.matrix .title {

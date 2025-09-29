@@ -49,9 +49,12 @@
 					>
 						<VectorCanvas colorScale={$blockIdx !== 0 ? 'blue' : 'gray'} />
 					</div>
-					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
 				{/each}
 			</div>
+			<Tooltip class="popover" triggeredBy={'.qkv .embedding-column .vector'} placement="right"
+				>vector({$modelMeta.dimension})</Tooltip
+			>
+
 			<div class="operations flex">
 				<OperationGroup type="dropout" id={'embedding-dropout'} />
 				<OperationGroup type="residual-start" id={'embedding-residual'} />
@@ -102,8 +105,10 @@
 						</div>
 					</div>
 				</div>
-				<Tooltip placement="right" class="popover">vector({$modelMeta.dimension * 3})</Tooltip>
 			{/each}
+			<Tooltip class="popover" triggeredBy={'.qkv .qkv-column .vector'} placement="right"
+				>vector({$modelMeta.dimension * 3})</Tooltip
+			>
 		</div>
 	</div>
 </div>
@@ -135,9 +140,9 @@
 				}
 				.sub-vector {
 					user-select: none;
-					font-size: 0.8rem;
+					font-size: 1rem;
 					span {
-						opacity: 0.2;
+						opacity: 0.3;
 					}
 					&.query {
 						color: theme('colors.blue.500');

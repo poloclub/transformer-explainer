@@ -8,6 +8,7 @@
 	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
+	import Katex from '~/utils/Katex.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -95,13 +96,16 @@
 
 		const outRows = d3.selectAll('.weight-popover-content .mlp-out g.g-row').nodes();
 
-		const [mulSymbol1] = d3.selectAll('.weight-popover-content .symbol.mul').nodes();
-		const [plusSymbol1] = d3.selectAll('.weight-popover-content .symbol.plus').nodes();
-		const [equalSymbol1] = d3.selectAll('.weight-popover-content .symbol.equal').nodes();
+		const mulSymbol = d3.select('.weight-popover-content .symbol.mul').node();
+		const plusSymbol = d3.select('.weight-popover-content .symbol.plus').node();
+		const equalSymbol = d3.select('.weight-popover-content .symbol.equal').node();
+
 		const highlight = '#94a3b8';
 
 		// first row detail animation
 		timeline.set(weightBiasCells, { opacity: 0.1 });
+		timeline.set('.formula .first-row', { opacity: 1 });
+		timeline.set('.formula .total', { opacity: 0 });
 
 		const firstOutputRowRects = d3.select(outRows[0]).selectAll('rect').nodes();
 		const firstEmbeddingRowRects = d3.select(embeddingRows[0]).selectAll('rect').nodes();
@@ -159,10 +163,17 @@
 			//symbol
 			if (isFirstOutCell) {
 				timeline.from(
-					[plusSymbol1, equalSymbol1],
+					[
+						mulSymbol,
+						equalSymbol,
+						plusSymbol,
+						,
+						'.formula .first-row .part1',
+						'.formula .first-row .part2'
+					],
 					{
-						duration: 0.5,
-						opacity: 0.1
+						duration: 0.05,
+						opacity: 1
 					},
 					'<'
 				);
@@ -213,6 +224,11 @@
 					},
 					'<50%'
 				);
+
+			if (isFirstOutCell) {
+				timeline.to('.formula .first-row', { opacity: 0, duration: 0.3 }, '>+1');
+				timeline.to('.formula .total', { opacity: 1, duration: 0.3 }, `<`);
+			}
 		});
 
 		// rest row animation
@@ -305,7 +321,7 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Embeddings<HelpPopover id="mlp-emgeddings" placement="top"
+				Embeddings<HelpPopover id="mlp-emgeddings" 
 					>{`Embeddings transformed through attention mechanism.`}</HelpPopover
 				>
 			</div>
@@ -324,7 +340,7 @@
 		<div class="operator"><div class="symbol mul">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Weights<HelpPopover id="mlp-weights" placement="top"
+				Expansion Weights<HelpPopover id="mlp-weights" 
 					>{`Projects embedding vectors to expanded latent space. \nParameters tha learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -347,7 +363,7 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Bias <HelpPopover id="mlp-bias" placement="top"
+				Expansion Bias <HelpPopover id="mlp-bias" 
 					>{`Offsets added after expansion. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -394,13 +410,35 @@
 			</div>
 			<div class="size">({tokenLen}, {$modelMeta.dimension * 4})</div>
 		</div>
+	</div>
+	<div class="formula">
+		<div class="first-row flex items-center justify-center gap-1">
+			<span class="part1">
+				<Katex
+					displayMode
+					math={`
+	(Emb_{1,1}×W_{1,1} + \\cdots + Emb_{1,768}×W_{768,1})`}
+				/>
+			</span>
+			<span class="part2">
+				<Katex displayMode math={`+ Bias_1 = Expanded{1,1}`} />
+			</span>
+		</div>
+		<div class="total">
+			<Katex
+				displayMode
+				math={`
+	\\sum_{d=1}^{768} Emb_{id} \\cdot Weights_{dj} + Bias_j = Expanded{ij} 
+	`}
+			/>
+		</div>
 	</div></WeightPopoverCard
 >
 
 <style lang="scss">
 	.weight-popover-content {
-		padding: 3rem 3rem 3rem 1rem;
-		gap: 0.2rem;
+		padding: 3rem 3rem 1.5rem 1rem;
+		gap: 0.6rem;
 	}
 	.operator {
 		position: relative;
@@ -414,8 +452,5 @@
 			line-height: 1.1;
 			text-align: center;
 		}
-	}
-	.formula {
-		padding: 0.8rem;
 	}
 </style>

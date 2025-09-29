@@ -2,7 +2,7 @@
 	import { Card } from 'flowbite-svelte';
 	import { CloseOutline } from 'flowbite-svelte-icons';
 	import { onDestroy, onMount } from 'svelte';
-	import { weightPopover } from '~/store';
+	import { userId, weightPopover } from '~/store';
 
 	export let id: string;
 	export let title: string;
@@ -15,21 +15,23 @@
 
 	onMount(() => {
 		startTime = performance.now();
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: `weight-popover-${id}`,
-			start_time: startTime
+			start_time: startTime,
+			user_id: $userId
 		});
 	});
 	onDestroy(() => {
 		let endTime = performance.now();
 		let visibleDuration = endTime - startTime;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-hide',
 			visible_name: `weight-popover-${id}`,
 			end_time: endTime,
-			visible_duration: visibleDuration
+			visible_duration: visibleDuration,
+			user_id: $userId
 		});
 	});
 </script>
@@ -157,7 +159,7 @@
 	}
 
 	:global(.weight-popover-content) {
-		padding: 3rem 2rem 3rem 1rem;
+		padding: 3rem 2rem 1.5rem 1rem;
 		width: 100%;
 
 		:global(.tokens) {
@@ -181,7 +183,7 @@
 			:global(.title),
 			:global(.size) {
 				color: theme('colors.gray.900');
-				font-size: 0.7rem;
+				font-size: 0.8rem;
 				white-space: nowrap;
 				position: absolute;
 			}

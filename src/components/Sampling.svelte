@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { Radio } from 'flowbite-svelte';
-	import { sampling } from '~/store';
+	import { sampling, userId } from '~/store';
 	import HelpPopover from './common/HelpPopover.svelte';
 	import Slider from './common/Slider.svelte';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
+	import { textPages } from '~/utils/textbookPages';
 
 	export let disabled: boolean = false;
 
@@ -20,27 +22,39 @@
 		step={samplingValStep}
 		bind:value={$sampling.value}
 		valueText={`${$sampling.type === 'top-k' ? 'k' : 'p'}=${$sampling.value}`}
+		onClick={() => {
+			textPages.find((page) => page.id === 'sampling')?.complete();
+		}}
 	>
 		<div class="sampling-type">
 			<div class="title flex items-center gap-[2px]">
-				<div>Sampling</div>
-				<HelpPopover id="sampling-help" placement="right" goTo="article-sampling">
+				<TextbookTooltip id="sampling">
+					<div>Sampling</div></TextbookTooltip
+				>
+				<!-- <HelpPopover
+					id="sampling-help"
+					
+					goTo="article-sampling"
+					textbook="sampling"
+				>
 					{`Changes how next \ntoken is selected from \nprobability distribution.`}
-				</HelpPopover>
+				</HelpPopover> -->
 			</div>
 			<div class="sampling-type-input flex">
 				<Radio
 					class={`type-btn ${disabled ? 'disabled' : ''}`}
 					inline
+					name="sampling-type"
 					value="top-k"
 					on:click={(e) => {
 						e.stopPropagation();
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-k', value: 5 });
-						window.dataLayer.push({
+						window.dataLayer?.push({
 							event: 'sampling-selected',
-							sampling_type: 'top-k'
+							sampling_type: 'top-k',
+							user_id: $userId
 						});
 					}}
 					checked={$sampling.type === 'top-k'}
@@ -50,6 +64,7 @@
 				<Radio
 					class={`type-btn ${disabled ? 'disabled' : ''}`}
 					inline
+					name="sampling-type"
 					value="top-p"
 					checked={$sampling.type === 'top-p'}
 					on:click={(e) => {
@@ -57,9 +72,10 @@
 					}}
 					on:change={(e) => {
 						e.target.checked && sampling.set({ type: 'top-p', value: 0.5 });
-						window.dataLayer.push({
+						window.dataLayer?.push({
 							event: 'sampling-selected',
-							sampling_type: 'top-p'
+							sampling_type: 'top-p',
+							user_id: $userId
 						});
 					}}
 					{disabled}
@@ -82,7 +98,7 @@
 	}
 
 	:global(.type-btn) {
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		cursor: pointer;
 		color: theme('colors.gray.900');
 		font-weight: 400;
@@ -121,12 +137,10 @@
 		}
 	}
 	.title {
-		font-size: 1rem;
 		white-space: nowrap;
 		flex-shrink: 0;
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		line-height: 0;
-		font-weight: 500;
 		color: theme('colors.gray.600');
 	}
 </style>

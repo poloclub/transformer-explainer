@@ -13,8 +13,6 @@ import { get } from 'svelte/store';
 import { reshapeArray } from './array';
 import { showFlowAnimation } from './animation';
 
-ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
-
 export const fakeRunWithCachedData = async ({
 	cachedData,
 	tokenizer,
@@ -32,14 +30,16 @@ export const fakeRunWithCachedData = async ({
 	tokens.set(cachedData.tokens);
 	tokenIds.set(cachedData.tokenIds);
 
-	await showFlowAnimation(cachedData.tokens.length, false);
-	adjustTemperature({
-		tokenizer,
-		logits: cachedData.logits,
-		temperature,
-		sampling
-	});
-	isModelRunning.set(false);
+	setTimeout(async () => {
+		await showFlowAnimation(cachedData.tokens.length, true);
+		adjustTemperature({
+			tokenizer,
+			logits: cachedData.logits,
+			temperature,
+			sampling
+		});
+		isModelRunning.set(false);
+	}, 0);
 };
 
 export const runModel = async ({
@@ -74,6 +74,7 @@ export const runModel = async ({
 	// To ensure the animation starts after all elements have been rendered
 	setTimeout(async () => {
 		await showFlowAnimation(input_tokens.length, isOneTokenAdded);
+
 		predictedToken.set(sampled);
 		// setPredictedTokenForAnimation(probabilities, sampled, sampling);
 
@@ -219,7 +220,7 @@ function topKSampling(
 	const output = filteredLogits.map((item, i) => ({
 		...item,
 		rank: i,
-		token: tokenizer.decode([item.tokenId]),
+		token: formatTokenForDisplay(tokenizer.decode([item.tokenId])),
 		expLogit: expLogits[i],
 		probability: probabilities[i]
 	}));
@@ -276,7 +277,7 @@ function topPSampling(
 	const output = scaledLogits.map((item, i) => ({
 		...item,
 		rank: i,
-		token: tokenizer.decode([item.tokenId]),
+		token: formatTokenForDisplay(tokenizer.decode([item.tokenId])),
 		expLogit: expLogits[i],
 		probability: newProbabilities[i] || 0,
 		topPProbability: probabilities[i], //original
@@ -295,6 +296,16 @@ function softmax(logits: number[]): { expLogits: number[]; probabilities: number
 	const probabilities = expLogits.map((val) => val / sumExpLogits);
 
 	return { expLogits, probabilities };
+}
+
+// Helper function to format tokens for display
+function formatTokenForDisplay(token: string): string {
+	// Replace special whitespace characters with readable labels
+	return token
+		.replace(/\n/g, '[NEWLINE]')
+		.replace(/\t/g, '[TAB]')
+		.replace(/\r/g, '[CR]')
+		.replace(/\s{2,}/g, (match) => `[${match.length} SPACES]`); // Multiple spaces
 }
 
 // Simulates the np.random.choice function in Python.

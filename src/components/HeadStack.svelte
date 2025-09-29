@@ -4,11 +4,14 @@
 		headGap,
 		attentionHeadIdx,
 		attentionHeadIdxTemp,
-		isOnAnimation
+		isOnAnimation,
+		userId
 	} from '~/store';
 	import { onMount } from 'svelte';
 	import { gsap, Power1 } from '~/utils/gsap';
 	import { AngleLeftOutline, AngleRightOutline } from 'flowbite-svelte-icons';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
+	import { textPages } from '~/utils/textbookPages';
 
 	const asyncUpdateAttentionIdx = () => {
 		setTimeout(() => {
@@ -270,30 +273,38 @@
 	};
 
 	const onClickNext = () => {
+		textPages.find((page) => page.id === 'multi-head')?.complete();
+
 		$attentionHeadIdxTemp =
 			$attentionHeadIdxTemp < $modelMeta.attention_head_num - 1 ? $attentionHeadIdxTemp + 1 : 0;
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-attention-head-next`,
 			page_num: $attentionHeadIdxTemp,
-			pagination_name: 'attention-head'
+			pagination_name: 'attention-head',
+			user_id: $userId
 		});
 	};
 
 	const onClickPrev = () => {
+		textPages.find((page) => page.id === 'multi-head')?.complete();
+
 		$attentionHeadIdxTemp =
 			$attentionHeadIdxTemp > 0 ? $attentionHeadIdxTemp - 1 : $modelMeta.attention_head_num - 1;
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-attention-head-prev`,
 			page_num: $attentionHeadIdxTemp,
-			pagination_name: 'attention-head'
+			pagination_name: 'attention-head',
+			user_id: $userId
 		});
 	};
 </script>
 
 <div class="multi-head flex w-full" data-click="attention-head">
 	<div class="head-title absolute bottom-2 right-3 text-right text-gray-400">
-		<span class="title-text"
-			>Head {$attentionHeadIdxTemp + 1} of {$modelMeta.attention_head_num}</span
+		<TextbookTooltip id="multi-head">
+			<span class="title-text"
+				>Head {$attentionHeadIdxTemp + 1} of {$modelMeta.attention_head_num}</span
+			></TextbookTooltip
 		>
 		<button
 			on:click={onClickPrev}

@@ -8,6 +8,7 @@
 	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
+	import Katex from '~/utils/Katex.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -155,21 +156,19 @@
 			//symbol
 			if (isFirstOutCell) {
 				timeline.from(
-					[mulSymbol, equalSymbol, '.formula .first-row .part1'],
+					[
+						mulSymbol,
+						equalSymbol,
+						plusSymbol,
+
+						'.formula .first-row .part1',
+						'.formula .first-row .part2'
+					],
 					{
 						duration: 0.05,
 						opacity: 1
 					},
 					'<50%'
-				);
-
-				timeline.from(
-					[plusSymbol, equalSymbol, '.formula .first-row .part2'],
-					{
-						duration: 0.5,
-						opacity: 0.1
-					},
-					'<'
 				);
 			}
 			//bias
@@ -320,7 +319,7 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1 self-end">
-				Embeddings<HelpPopover id="qkv-emgeddings" placement="top"
+				Embeddings<HelpPopover id="qkv-emgeddings" 
 					>{`Embeddings originate from tokens \nbut evolve through blocks, becoming \nabstract representations.`}</HelpPopover
 				>
 			</div>
@@ -340,7 +339,7 @@
 		<div class="operator"><div class="symbol mul">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Q·K·V Weights<HelpPopover id="qkv-weights" placement="top"
+				Q·K·V Weights<HelpPopover id="qkv-weights" 
 					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters tha learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -363,7 +362,7 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Q·K·V Bias<HelpPopover id="qkv-bias" placement="top"
+				Q·K·V Bias<HelpPopover id="qkv-bias" 
 					>{`Offsets added after transformation. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -408,13 +407,13 @@
 			<div class="size">({tokenLen}, {$modelMeta.dimension * 3})</div>
 		</div>
 	</div>
-	<!-- <div class="formula">
+	<div class="formula">
 		<div class="first-row flex items-center justify-center gap-1">
 			<span class="part1">
 				<Katex
 					displayMode
 					math={`
-	(Embedding_{1,1} \\cdot Weights_{1,1} + \\cdots + Embedding_{1,768} \\cdot Weights_{768,1})`}
+	(Embedding_{1,1}×Weights_{1,1} + \\cdots + Embedding_{1,768}×Weights_{768,1})`}
 				/>
 			</span>
 			<span class="part2">
@@ -429,7 +428,7 @@
 	`}
 			/>
 		</div>
-	</div> -->
+	</div>
 </WeightPopoverCard>
 
 <style lang="scss">

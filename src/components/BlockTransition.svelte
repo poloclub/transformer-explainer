@@ -10,8 +10,11 @@
 		isBoundingBoxActive,
 		expandedBlock,
 		weightPopover,
-		isOnAnimation
+		isOnAnimation,
+		userId
 	} from '~/store';
+	import { textPages } from '~/utils/textbookPages';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
 
 	let resizeObserver: ResizeObserver;
 	let boundingPos = { left: 0, top: 0, width: 0 };
@@ -120,9 +123,9 @@
 			const blockRect = block.getBoundingClientRect();
 
 			boundingPos = {
-				left: embeddingRect.left + scrollLeft,
+				left: embeddingRect.left + scrollLeft + rootRem,
 				top: embeddingRect.top - topbarHeight,
-				width: blockRect.left - embeddingRect.left
+				width: blockRect.left - embeddingRect.left - rootRem
 			};
 		};
 		setPosition();
@@ -136,22 +139,28 @@
 
 	const onClickNext = (e) => {
 		e.stopPropagation();
+		textPages.find((page) => page.id === 'blocks')?.complete();
+
 		$blockIdxTemp = $blockIdxTemp < $modelMeta.layer_num - 1 ? $blockIdxTemp + 1 : 0;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-transformer-block-next`,
 			page_num: $blockIdxTemp,
-			pagination_name: 'transformer-block'
+			pagination_name: 'transformer-block',
+			user_id: $userId
 		});
 	};
 	const onClickPrev = (e) => {
 		e.stopPropagation();
+		textPages.find((page) => page.id === 'blocks')?.complete();
+
 		$blockIdxTemp = $blockIdxTemp > 0 ? $blockIdxTemp - 1 : $modelMeta.layer_num - 1;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: `pagination-transformer-block-prev`,
 			page_num: $blockIdxTemp,
-			pagination_name: 'transformer-block'
+			pagination_name: 'transformer-block',
+			user_id: $userId
 		});
 	};
 </script>
@@ -161,6 +170,7 @@
 	class:active={$isBoundingBoxActive}
 	style={`left:${boundingPos.left}px;top:${boundingPos.top - rootRem * 3.5}px;width:${boundingPos.width}px;`}
 ></div>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	class="transformer-bounding-title"
 	data-click="transformer-bounding-title"
@@ -175,7 +185,9 @@
 	style={`top:${boundingPos.top - rootRem * 3.5}px;`}
 	class:active={$isBoundingBoxActive}
 >
-	<span class="title-text">Transformer Block {$blockIdxTemp + 1}</span>
+	<TextbookTooltip id="blocks">
+		<span class="title-text">Transformer Block {$blockIdxTemp + 1}</span>
+	</TextbookTooltip>
 	<button
 		data-click="transformer-block-prev-btn"
 		on:click={onClickPrev}
@@ -247,11 +259,12 @@
 		opacity: 1;
 		z-index: $BOUNDING_BOX_INDEX;
 		pointer-events: none;
-		height: calc(100% - 3rem);
+		height: calc(95% - 3.5rem);
 		border-radius: 1rem;
 		transition: all 0.2s;
-	}
-	.transformer-bounding.active {
-		border: 2px dashed theme('colors.blue.400');
+
+		&.active {
+			border: 2px dashed theme('colors.blue.400');
+		}
 	}
 </style>

@@ -15,6 +15,7 @@
 	import { setContext, getContext } from 'svelte';
 	import { Tooltip } from 'flowbite-svelte';
 	import { onClickReadMore } from '~/utils/event';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -40,7 +41,9 @@
 </script>
 
 <div
-	class={classNames('attention', className, { expanded: isAttentionExpanded })}
+	class={classNames('attention', className, {
+		expanded: isAttentionExpanded
+	})}
 	data-click="attention-step"
 >
 	<div
@@ -50,8 +53,8 @@
 		role="group"
 		data-click="attention-step-title"
 	>
-		<div class="w-max" on:click={(e) => onClickReadMore(e, 'self-attention')}>
-			Multi-head Self Attention
+		<div class="w-max">
+			<TextbookTooltip id="self-attention">Multi-head Self Attention</TextbookTooltip>
 		</div>
 	</div>
 	<div class="content relative">
@@ -68,7 +71,7 @@
 				>
 					<div class="qkv flex h-full flex-col justify-center gap-[5rem] pl-[6rem]">
 						<div class="column key">
-							<div class="head1 title">Key</div>
+							<div class="head1 title"><TextbookTooltip id="qkv">Key</TextbookTooltip></div>
 
 							{#each $tokens as token, index}
 								<div
@@ -79,14 +82,14 @@
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${keyHeadVectorColor}`}></div>
 								</div>
-								<Tooltip placement="right" class="popover"
-									>Key, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-										$modelMeta.attention_head_num})</Tooltip
-								>
 							{/each}
+							<Tooltip class="popover" triggeredBy={'.step.attention .key .cell'} placement="right"
+								>Key, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
+									$modelMeta.attention_head_num})</Tooltip
+							>
 						</div>
 						<div class="column query">
-							<div class="head1 title">Query</div>
+							<div class="head1 title"><TextbookTooltip id="qkv">Query</TextbookTooltip></div>
 							{#each $tokens as token, index}
 								<div
 									class="head1 cell x1-12 query text-xs"
@@ -96,24 +99,30 @@
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12  ${queryHeadVectorColor}`}></div>
 								</div>
-								<Tooltip placement="right" class="popover"
-									>Query, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-										$modelMeta.attention_head_num})</Tooltip
-								>
 							{/each}
+							<Tooltip
+								class="popover"
+								triggeredBy={'.step.attention .query .cell'}
+								placement="right"
+								>Query, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
+									$modelMeta.attention_head_num})</Tooltip
+							>
 						</div>
 						<div class="column value">
-							<div class="head1 title">Value</div>
+							<div class="head1 title"><TextbookTooltip id="qkv">Value</TextbookTooltip></div>
 							{#each $tokens as token, index}
 								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
 									<div class={`vector x1-12 ${valHeadVectorColor}`}></div>
 								</div>
-								<Tooltip placement="right" class="popover"
-									>Value, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-										$modelMeta.attention_head_num})</Tooltip
-								>
 							{/each}
+							<Tooltip
+								class="popover"
+								triggeredBy={'.step.attention .value .cell'}
+								placement="right"
+								>Value, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
+									$modelMeta.attention_head_num})</Tooltip
+							>
 						</div>
 					</div>
 					<div class="resize-watch attention-matrix flex">
@@ -121,16 +130,18 @@
 					</div>
 					<div class="head-out mx-[2rem]">
 						<div class="column out">
-							<div class="head1 title">Out</div>
+							<div class="head1 title">
+								<TextbookTooltip id="output-concatenation">Out</TextbookTooltip>
+							</div>
 							{#each $tokens as token, index}
 								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
 									<div class={`vector x1-12 ${outputVectorColor}`}></div>
 								</div>
-								<Tooltip placement="right" class="popover"
-									>Attention Out, Head 1, vector({$modelMeta.dimension /
-										$modelMeta.attention_head_num})</Tooltip
-								>
 							{/each}
+							<Tooltip class="popover" triggeredBy={'.step.attention .out .cell'} placement="right"
+								>Attention Out, Head 1, vector({$modelMeta.dimension /
+									$modelMeta.attention_head_num})</Tooltip
+							>
 						</div>
 					</div>
 				</div>
@@ -146,7 +157,7 @@
 	}
 	.attention {
 		> .title > div {
-			cursor: help;
+			// cursor: help;
 		}
 		&.expanded {
 			.title,
@@ -173,10 +184,10 @@
 			.title {
 				z-index: $COLUMN_TITLE_INDEX;
 				position: absolute;
-				top: -1.5rem;
+				top: -1.7rem;
 				left: 50%;
 				transform: translateX(-50%);
-				font-size: 0.8rem;
+				font-size: 0.9rem;
 				transition: none;
 			}
 			&.query .title {
@@ -213,12 +224,18 @@
 						.label {
 							background-color: theme('colors.blue.100');
 							color: theme('colors.blue.700');
+							font-size: 1rem;
+							z-index: 100;
+							padding: 0.2rem;
 						}
 					}
 					&.key {
 						.label {
 							background-color: theme('colors.red.100');
 							color: theme('colors.red.700');
+							font-size: 1rem;
+							z-index: 100;
+							padding: 0.2rem;
 						}
 					}
 				}

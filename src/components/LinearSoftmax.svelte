@@ -6,7 +6,15 @@
 	import { tick } from 'svelte';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { rootRem, temperature, sampling } from '~/store';
+	import {
+		rootRem,
+		temperature,
+		sampling,
+		isExpandOrCollapseRunning,
+		isTextbookOpen,
+		textbookCurrentPageId,
+		userId
+	} from '~/store';
 	import { expandedBlock, predictedToken, highlightedIndex, modelData } from '~/store';
 	import ProbabilityBars from './ProbabilityBars.svelte';
 	import Katex from '~/utils/Katex.svelte';
@@ -15,6 +23,8 @@
 	import { fade } from 'svelte/transition';
 	import SoftmaxPopover from './popovers/SoftmaxPopover.svelte';
 	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
+	import { textPages } from '~/utils/textbookPages';
+	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 
 	export let className: string | undefined = undefined;
 
@@ -30,16 +40,22 @@
 		isSoftmaxExpanded = false;
 		collapseSoftmax();
 	}
+	$: if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
+		isSoftmaxExpanded = true;
+		expandSoftmax();
+	}
+
 	const onClickSoftmax = () => {
 		if (!isSoftmaxExpanded) {
 			expandedBlock.set({ id: blockId });
-			expandSoftmax();
 		}
 	};
 
 	const onClickSoftmaxTitle = (e) => {
 		e.stopPropagation();
 		e.preventDefault();
+		textPages.find((page) => page.id === 'output-probabilities')?.out();
+
 		if (!isSoftmaxExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandSoftmax();
@@ -75,6 +91,8 @@
 		isSoftmaxExpanded = true;
 		await tick();
 
+		isExpandOrCollapseRunning.set(true);
+
 		gsap.set('.steps', { justifyContent: 'end' });
 		gsap.set('.softmax-detail', { opacity: 0 });
 
@@ -83,6 +101,7 @@
 			ease: 'power2.inOut',
 			onComplete: () => {
 				drawBars?.();
+				isExpandOrCollapseRunning.set(false);
 			}
 		});
 		gsap.to('.softmax-detail', {
@@ -92,10 +111,11 @@
 		});
 
 		startTime = performance.now();
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-show',
 			visible_name: 'prob-expansion',
-			start_time: startTime
+			start_time: startTime,
+			user_id: $userId
 		});
 	};
 
@@ -103,11 +123,12 @@
 		let endTime = performance.now();
 		let visibleDuration = endTime - startTime;
 
-		window.dataLayer.push({
+		window.dataLayer?.push({
 			event: 'visibility-hide',
 			visible_name: 'prob-expansion',
 			end_time: endTime,
-			visible_duration: visibleDuration
+			visible_duration: visibleDuration,
+			user_id: $userId
 		});
 
 		showLogitPopover = false;
@@ -116,11 +137,14 @@
 		isSoftmaxExpanded = false;
 		await tick();
 
+		isExpandOrCollapseRunning.set(true);
+
 		await Flip.from(containerState, {
 			duration: 0.5,
 			ease: 'power2.inOut',
 			onComplete: () => {
 				drawBars?.();
+				isExpandOrCollapseRunning.set(false);
 			}
 		});
 		gsap.to('.softmax-detail', {
@@ -167,7 +191,10 @@
 </script>
 
 <div
-	class={classNames('softmax', className, { expanded: isSoftmaxExpanded })}
+	class={classNames('softmax', className, {
+		expanded: isSoftmaxExpanded,
+		'textbook-highlight': $isTextbookOpen && $textbookCurrentPageId === 'transformer-architecture'
+	})}
 	role="none"
 	bind:this={expandableEl}
 	on:click={onClickSoftmax}
@@ -183,8 +210,12 @@
 		on:mouseleave={handleMouseLeave}
 		data-click="prob-step-title"
 	>
-		<div class="flex items-center gap-1">Probabilities <ZoomInOutline></ZoomInOutline></div>
+		<div class="title-text flex w-max items-center gap-1">
+			Probabilities
+			<ZoomInOutline></ZoomInOutline>
+		</div>
 	</div>
+
 	<div
 		class="content resize-watch relative"
 		style={`--softmax-row-height: ${rowHeight}px;--softmax-row-gap: ${rowGap}px`}
@@ -203,7 +234,7 @@
 						class:final_token_highlight={$predictedToken?.rank === idx}
 					>
 						<span>{item.token.trim() === '' ? '\u00A0' : item.token}</span>
-						<Tooltip class="softmax-tooltip" placement="left" type="light">
+						<Tooltip class="softmax-tooltip" type="light">
 							Token ID: <span class="number">{tokenIds[idx]}</span>
 						</Tooltip>
 					</div>
@@ -228,10 +259,16 @@
 						</div>
 					</div>
 					<div class="title-box scaled">
-						<div class="title-text">Scaled logits</div>
+						<TextbookTooltip id="temperature"
+							><div class="title-text">Scaled logits</div></TextbookTooltip
+						>
 					</div>
 					<div class="title-box sampling">
-						<div class="title-text">{$sampling.type === 'top-k' ? 'Top-k' : 'Softmax & Top-p'}</div>
+						<TextbookTooltip id="sampling"
+							><div class="title-text">
+								{$sampling.type === 'top-k' ? 'Top-k' : 'Softmax & Top-p'}
+							</div></TextbookTooltip
+						>
 					</div>
 					<div class="title-box probability">
 						<div class="title-text mr-1">
@@ -257,7 +294,7 @@
 									>
 										<span class="number">{logit?.toFixed(2)}</span>
 									</div>
-									<Tooltip class="softmax-tooltip" placement="left" type="light">
+									<Tooltip class="softmax-tooltip" type="light">
 										<Katex math={`\\text{logit}_{${tokenIds[idx]}}`}></Katex>
 									</Tooltip>
 								{/if}
@@ -277,7 +314,7 @@
 									>
 										<span class="number">{logit?.toFixed(2)}</span>
 									</div>
-									<Tooltip class="softmax-tooltip" placement="left" type="light">
+									<Tooltip class="softmax-tooltip" type="light">
 										<Katex math={`${logits[idx]?.toFixed(2)} / ${$temperature}`}></Katex>
 									</Tooltip>
 								{/if}
@@ -330,7 +367,7 @@
 												>
 											{/if}
 										</div>
-										<Tooltip class="softmax-tooltip" placement="left" type="light">
+										<Tooltip class="softmax-tooltip" type="light">
 											sum=<Katex math={`${cumulativeProbabilities[idx]?.toFixed(2)}`}></Katex>
 										</Tooltip>
 									{/if}
@@ -382,14 +419,6 @@
 			background: theme('colors.purple.500');
 			top: 1.5rem;
 			position: absolute;
-
-			span {
-				position: absolute;
-				white-space: nowrap;
-				font-size: 0.8rem;
-				transform: translate(4px, -50%);
-				color: theme('colors.purple.500');
-			}
 		}
 		&.expanded {
 			.title,
@@ -469,7 +498,7 @@
 							color: theme('colors.purple.500');
 							top: 1rem;
 							transform: translate(0, 50%);
-							font-size: 0.75rem;
+							font-size: 0.9rem;
 							font-weight: 600;
 							font-family: serif;
 							line-height: 1;
@@ -534,7 +563,6 @@
 						align-items: end;
 						gap: 2px;
 						color: theme('colors.gray.400');
-						cursor: default;
 
 						&:hover {
 							background-color: theme('colors.gray.50');

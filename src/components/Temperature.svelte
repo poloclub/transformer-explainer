@@ -2,6 +2,9 @@
 	import { temperature } from '~/store';
 	import HelpPopover from './common/HelpPopover.svelte';
 	import Slider from './common/Slider.svelte';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
+	import { removeFingerFromElements } from '~/utils/textbook';
+	import { textPages } from '~/utils/textbookPages';
 
 	export let disabled: boolean = false;
 
@@ -25,12 +28,17 @@
 		step={1}
 		bind:value={temperatureIndex}
 		valueText={temperatureTemp}
+		onClick={() => {
+			textPages.find((page) => page.id === 'temperature')?.complete();
+		}}
 	>
 		<div class="temperature-text flex items-center gap-[2px]">
-			<div>Temperature</div>
-			<HelpPopover id="temperature-help" placement="right" goTo="article-temperature">
+			<TextbookTooltip id="temperature">
+				<div>Temperature</div></TextbookTooltip
+			>
+			<!-- <HelpPopover id="temperature-help"  goTo="article-temperature">
 				{`Changes output \nprobability distribution \nand randomness \nof next token.`}
-			</HelpPopover>
+			</HelpPopover> -->
 		</div>
 	</Slider>
 </div>
@@ -43,13 +51,13 @@
 	}
 
 	.temperature-text {
-		margin-left: -0.5rem;
-		font-size: 1rem;
+		// margin-left: -0.5rem;
+		height: 1rem;
+		width: 100%;
 		white-space: nowrap;
 		flex-shrink: 0;
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		line-height: 0;
-		font-weight: 500;
 		color: theme('colors.gray.600');
 	}
 </style>

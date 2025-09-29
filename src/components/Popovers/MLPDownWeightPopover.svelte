@@ -8,6 +8,7 @@
 	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
+	import Katex from '~/utils/Katex.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -90,13 +91,16 @@
 
 		const outRows = d3.selectAll('.weight-popover-content .mlp-down-out g.g-row').nodes();
 
-		const [plusSymbol1] = d3.selectAll('.weight-popover-content .symbol.plus').nodes();
-		const [equalSymbol1] = d3.selectAll('.weight-popover-content .symbol.equal').nodes();
+		const mulSymbol = d3.select('.weight-popover-content .symbol.mul').node();
+		const plusSymbol = d3.select('.weight-popover-content .symbol.plus').node();
+		const equalSymbol = d3.select('.weight-popover-content .symbol.equal').node();
 
 		const highlight = '#94a3b8';
 
 		// first row detail animation
 		timeline.set(weightBiasCells, { opacity: 0.1 });
+		timeline.set('.formula .first-row', { opacity: 1 });
+		timeline.set('.formula .total', { opacity: 0 });
 
 		const firstOutputRowRects = d3.select(outRows[0]).selectAll('rect').nodes();
 		const firstEmbeddingRowRects = d3.select(embeddingRows[0]).selectAll('rect').nodes();
@@ -154,12 +158,19 @@
 			//symbol
 			if (isFirstOutCell) {
 				timeline.from(
-					[plusSymbol1, equalSymbol1],
+					[
+						mulSymbol,
+						equalSymbol,
+						plusSymbol,
+						,
+						'.formula .first-row .part1',
+						'.formula .first-row .part2'
+					],
 					{
-						duration: 0.5,
-						opacity: 0.1
+						duration: 0.05,
+						opacity: 1
 					},
-					'<'
+					'<50%'
 				);
 			}
 			//bias
@@ -208,6 +219,10 @@
 					},
 					'<50%'
 				);
+			if (isFirstOutCell) {
+				timeline.to('.formula .first-row', { opacity: 0, duration: 0.3 }, '>+1');
+				timeline.to('.formula .total', { opacity: 1, duration: 0.3 }, `<`);
+			}
 		});
 
 		// rest row animation
@@ -300,7 +315,7 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expanded Embeddings <HelpPopover id="mlp-down-emgeddings" placement="top"
+				Expanded Embeddings <HelpPopover id="mlp-down-emgeddings" 
 					>{`Expanded latent vectors through MLP expansion layer.`}</HelpPopover
 				>
 			</div>
@@ -324,7 +339,7 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Compression Weights <HelpPopover id="mlp-down-weights" placement="top"
+				Compression Weights <HelpPopover id="mlp-down-weights" 
 					>{`Projects expanded latent vectors back to original space. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -347,7 +362,7 @@
 		<div class="operator"><div class="symbol plus px-3">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Compression Bias <HelpPopover id="mlp-down-bias" placement="top"
+				Compression Bias <HelpPopover id="mlp-down-bias" 
 					>{`Offsets added after compression. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
@@ -387,12 +402,34 @@
 			<div class="size">({tokenLen}, {$modelMeta.dimension})</div>
 		</div>
 	</div>
+	<div class="formula">
+		<div class="first-row flex items-center justify-center gap-1">
+			<span class="part1">
+				<Katex
+					displayMode
+					math={`
+	(Emb_{1,1}×W_{1,1} + \\cdots + Emb_{1,768}×W_{768,1})`}
+				/>
+			</span>
+			<span class="part2">
+				<Katex displayMode math={`+ Bias_1 = Compressed_Emb{1,1}`} />
+			</span>
+		</div>
+		<div class="total">
+			<Katex
+				displayMode
+				math={`
+	\\sum_{d=1}^{768} Emb_{id} \\cdot Weights_{dj} + Bias_j = Compressed_Emb{ij} 
+	`}
+			/>
+		</div>
+	</div>
 </WeightPopoverCard>
 
 <style lang="scss">
 	.weight-popover-content {
-		padding: 3rem 4rem 3rem 1rem;
-		gap: 0.6rem;
+		padding: 3rem 4rem 1.5rem 1rem;
+		gap: 1rem;
 	}
 
 	.operator {
@@ -401,11 +438,5 @@
 	.symbol.activation {
 		font-size: 0.8rem;
 		font-weight: 500;
-	}
-
-	.matrix {
-	}
-	.formula {
-		padding: 0.8rem;
 	}
 </style>

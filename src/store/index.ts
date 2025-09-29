@@ -3,6 +3,7 @@ import * as ort from 'onnxruntime-web';
 import tailwindConfig from '../../tailwind.config';
 import resolveConfig from 'tailwindcss/resolveConfig';
 import { ex0 } from '~/constants/examples';
+import { textPages } from '~/utils/textbookPages';
 
 const { theme } = resolveConfig(tailwindConfig);
 
@@ -13,6 +14,13 @@ export const blockIdx = writable(0);
 export const isOnBlockTransition = writable(false);
 
 export const isOnAnimation = writable(false);
+
+// Textbook state management
+export const textbookCurrentPage = writable<number>(0);
+export const textbookPreviousPage = writable<number>(-1);
+export const textbookCurrentPageId = writable<string>(textPages[0].id);
+export const textbookPreviousPageId = writable<string>('');
+export const isTextbookOpen = writable<boolean>(true);
 
 // is transformer running?
 export const isModelRunning = writable(false);
@@ -59,6 +67,7 @@ export const highlightedHead = writable<HighlightedToken>({
 
 // expanded block
 export const expandedBlock = writable<ExpandedBlock>({ id: null });
+export const isExpandOrCollapseRunning = writable(false);
 
 // user input text
 export const inputText = writable(inputTextExample[initialExIdx]);
@@ -83,7 +92,7 @@ export const finalTokenIndex = writable(null);
 // Visual element style
 export const rootRem = 16;
 export const minVectorHeight = 12;
-export const maxVectorHeight = 48;
+export const maxVectorHeight = 30;
 export const maxVectorScale = 3.4;
 
 export const vectorHeight = writable(0);
@@ -101,6 +110,9 @@ export const weightPopover = writable();
 export const tooltip = writable();
 
 export const isMobile = readable(detectDevice());
+
+// User identification
+export const userId = writable<string | null>(null);
 
 function detectDevice() {
 	const userAgent = navigator.userAgent.toLowerCase();

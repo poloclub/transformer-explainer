@@ -12,12 +12,9 @@ button {
 *:focus {
 	outline: none;
 }
-
-// @media (min-width: 1920px) {
-// 	:root {
-// 		font-size: 18px;
-// 	}
-// }
+:root {
+	font-size: 17px;
+}
 
 @media (min-width: 2560px) {
 	:root {
