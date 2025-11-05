@@ -343,7 +343,7 @@
 			<div class="title flex items-center gap-1">
 				Output Projection Weights
 				<HelpPopover id="lm-head-weights" 
-					>{`Transforms the final embedding into a vocabulary distribution.\nParameters tha learned in training, fixed in prediction.`}</HelpPopover
+					>{`Transforms the final embedding into a vocabulary distribution.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
@@ -366,7 +366,7 @@
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
 				Output Projection Bias<HelpPopover id="lm-head-bias" 
-					>{`Offsets added after the transformation.\nParameters tha learned in training, fixed in prediction.`}</HelpPopover
+					>{`Offsets added after the transformation.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<Matrix
