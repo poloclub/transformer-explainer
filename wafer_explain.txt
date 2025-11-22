@@ -1,0 +1,137 @@
+✅ 프로젝트 구조 & 각 파일 역할 요약
+
+아래 설명은 너가 사용하고 있는 구조 기준(SvelteKit 기반 Transformer-Explainer) + 네가 추가한 WaferPage/WaferMapPanel 포함.
+
+📁 1. src/ (메인 코드 폴더)
+
+Svelte 프로젝트의 핵심 UI, 로직 파일들이 들어가는 공간.
+
+📁 src/components/
+
+개별 UI 구성 요소가 들어있는 곳.
+너가 만든 wafer 관련 컴포넌트도 여기에 포함됨.
+
+✔️ WaferPage.svelte
+
+Wafer 한 개를 로드하고 보여주는 페이지 역할
+
+prev/next 버튼
+
+선택한 wafer 정보 표시
+
+wafer 데이터를 가져오기(fetch)도 여기서 진행됨
+
+아래의 WaferMapPanel을 호출해서 실제 wafer map 그림을 그리게 함
+
+즉, “한 장의 wafer를 어떻게 보여줄지 결정하는 메인 페이지 컴포넌트”
+
+✔️ WaferMapPanel.svelte
+
+실제 wafer map(원형 + die grid)을 SVG로 그리는 핵심 컴포넌트
+
+좌표(row/col) → 실제 화면의 위치로 변환
+
+fail_bin → 색깔 매핑
+
+waferPage에서 넘어온 { wafer } 데이터를 그래픽으로 표현
+
+즉, “wafer map 그리기 엔진” 역할.
+
+✔️ Transformer Explainer 기존 컴포넌트들
+
+(너가 안 건드리고 그대로 둔 파일들)
+
+⭐ Popovers, InputForm, Sankey, Attention, OperationGroup …
+
+원래 Transformer attention 시각화 UI용
+
+지금은 네 프로젝트에 필요 없음
+
+남아 있어도 괜찮지만 제거 가능
+
+📁 2. src/routes/
+
+SvelteKit는 /routes 안의 파일 = 웹 페이지.
+
+✔️ +page.svelte
+
+사이트의 “메인 페이지”
+
+네가 여기에서 Transformer UI를 제거하고
+Wafer Analyzer UI + WaferPage 넣었기 때문에
+지금 보여지는 메인 화면은 모두 이 파일에서 결정됨
+
+즉, “홈페이지(= localhost:5173) 자체를 정의하는 파일”
+
+📁 3. src/styles/
+
+Tailwind 또는 SCSS 스타일들이 들어가는 폴더
+Transformer-Explainer커스텀 테마 설정 등이 있음.
+
+네가 Wafer Analyzer UI의 디자인을 원하면
+여기 스타일을 참고해서 계속 가져다 쓰면 됨.
+
+📁 4. public/
+
+정적 파일 저장소
+브라우저가 직접 접근할 수 있는 파일들.
+
+✔️ wafer_bin.json
+
+네가 올린 wafer 데이터
+
+fetch("/wafer_bin.json") 으로 접근
+
+빌드/배포해도 URL 그대로 동작
+
+즉, wafer 데이터 서버 없이 가져오는 역할
+
+📁 5. 기타 설정 파일들
+✔️ svelte.config.js
+
+SvelteKit 환경 설정
+
+✔️ vite.config.ts
+
+Vite 개발 서버 설정
+
+hmr(핫 리로드), alias(경로 단축) 등을 정의
+
+✔️ package.json
+
+프로젝트 의존성 목록
+
+🎯 전체 흐름 요약
++page.svelte (메인 페이지)
+   └─ WaferPage.svelte (wafer 한 장 표시)
+         └─ WaferMapPanel.svelte (wafer map SVG 그리기)
+
+
+데이터 흐름:
+
+public/wafer_bin.json  →  WaferPage.svelte (fetch)
+                          → WaferMapPanel.svelte에 wafer 전달
+                              → SVG로 그리는 로직 실행
+
+
+UI 구조:
+
+상단: Wafer Analyzer (input 박스)
+아래: Wafer Map Viewer (next/prev)
+맨 아래: wafer map 이미지
+
+필요하면 이렇게도 만들어줄 수 있어
+
+파일 간 역할 구조도(다이어그램)
+
+불필요한 Transformer 파일 제거 정리본
+
+폴더 구조 재정리 가이드
+
+API 서버 연동 버전
+
+wafer 검색 기능 실제 구현
+
+lot/wafer 선택 → 자동 업데이트 기능
+
+원하면 말해줘.

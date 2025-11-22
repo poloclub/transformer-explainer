@@ -1,90 +1,60 @@
-<script lang="ts">
-  import { onMount } from "svelte";
-  import WaferMapPanel from "./WaferMapPanel.svelte";
+<script>
+  // 부모(WaferPage)에서 넘겨주는 wafer 한 장
+  export let wafer;
 
-  const DATA_URL = "/wafer_bin.json";
+  const cellSize = 10; // px
 
-  let wafers = [];
-  let currentIndex = 0;
-  let loading = true;
-  let error = "";
+  // BIN → 색상 매핑
+  const binColors = {
+    "0":  "#111111",  // pass (검정 배경에 살짝 어두운 회색)
+    "JW": "#2665ff",
+    "JP": "#ff3366",
+    "XD": "#22cc88",
+    "I":  "#ffdd33",
+    "IP": "#ff9955"
+  };
 
-  // 현재 선택된 wafer
-  $: currentWafer = wafers.length ? wafers[currentIndex] : null;
-
-  onMount(async () => {
-    try {
-      const res = await fetch(DATA_URL);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      wafers = data;
-      currentIndex = 0;
-    } catch (e) {
-      console.error(e);
-      error = String(e);
-    } finally {
-      loading = false;
-    }
-  });
-
-  function next() {
-    if (!wafers.length) return;
-    currentIndex = (currentIndex + 1) % wafers.length;
+  function getBinColor(die) {
+    const bin = die && die.fail_bin ? die.fail_bin : "0";
+    return binColors[bin] || "#444444";
   }
 
-  function prev() {
-    if (!wafers.length) return;
-    currentIndex = (currentIndex - 1 + wafers.length) % wafers.length;
-  }
+  // row/col 범위 계산
+  $: rowMin = wafer ? wafer.row_min : 0;
+  $: rowMax = wafer ? wafer.row_max : -1;
+  $: colMin = wafer ? wafer.col_min : 0;
+  $: colMax = wafer ? wafer.col_max : -1;
+
+  $: rowCount = rowMax - rowMin + 1;
+  $: colCount = colMax - colMin + 1;
+
+  $: svgWidth = colCount * cellSize;
+  $: svgHeight = rowCount * cellSize;
 </script>
 
-<div class="min-h-screen flex flex-col bg-slate-900 text-slate-100">
-
-  <!-- 상단: 제목 + 이전/다음 -->
-  <header class="flex items-center justify-between px-6 py-3 border-b border-slate-700">
-    <div class="text-lg font-semibold">
-      Wafer Map Viewer
+{#if !wafer}
+  <div class="text-slate-300">No wafer data.</div>
+{:else}
+  <div class="flex flex-col items-center gap-4">
+    <div class="text-slate-300">
+      Wafer {wafer.wafer} (Lot {wafer.lot})
     </div>
 
-    {#if currentWafer}
-      <div class="flex items-center gap-2 text-sm text-slate-100">
-        <button
-          class="px-2 py-1 rounded border border-slate-600 bg-slate-800"
-          on:click={prev}
-        >
-          &lt;
-        </button>
-
-        <div>
-          Wafer {currentWafer.wafer}
-          <span class="text-slate-400 ml-1">
-            (Lot {currentWafer.lot})
-          </span>
-          <span class="ml-2 text-xs text-slate-500">
-            {currentIndex + 1} / {wafers.length}
-          </span>
-        </div>
-
-        <button
-          class="px-2 py-1 rounded border border-slate-600 bg-slate-800"
-          on:click={next}
-        >
-          &gt;
-        </button>
-      </div>
-    {/if}
-  </header>
-
-  <!-- 본문: 웨이퍼 맵 -->
-  <main class="flex-1 flex items-center justify-center p-6">
-    {#if loading}
-      <div class="text-slate-300">Loading wafer data...</div>
-    {:else if error}
-      <div class="text-red-400">Error: {error}</div>
-    {:else if !currentWafer}
-      <div class="text-slate-300">No wafer data.</div>
-    {:else}
-      <WaferMapPanel wafer={currentWafer} />
-    {/if}
-  </main>
-</div>
+    <!-- 여기서만 dies 를 사용하고, 절대 텍스트로 {die} 를 찍지 않는다 -->
+    <svg
+      width={svgWidth}
+      height={svgHeight}
+      style="background:#000"
+    >
+      {#each wafer.dies as die (die.row + '-' + die.col)}
+        <rect
+          x={(die.col - colMin) * cellSize}
+          y={(rowMax - die.row) * cellSize}
+          width={cellSize}
+          height={cellSize}
+          fill={getBinColor(die)}
+        />
+      {/each}
+    </svg>
+  </div>
+{/if}
