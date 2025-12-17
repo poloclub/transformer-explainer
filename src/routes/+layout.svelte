@@ -88,9 +88,9 @@
 	</div>
 </div>
 
-<div class="alert">
+<!-- <div class="alert">
 	<Alert />
-</div>
+</div> -->
 
 <style lang="scss">
 	.alert {

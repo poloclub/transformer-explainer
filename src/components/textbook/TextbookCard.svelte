@@ -11,6 +11,23 @@
 	let mousePosition = { x: 0, y: 0 };
 	let cardElement: HTMLDivElement;
 
+	// Draggable state
+	let isDragging = false;
+	let position = { x: window.innerWidth - 540 - 32, y: window.innerHeight - 300 - 32 };
+	let dragStart = { x: 0, y: 0 };
+
+	// Resizable state
+	let isResizing = false;
+	let resizeDirection = '';
+	let size = { width: 540, height: 300 };
+	let resizeStart = { x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 };
+
+	const MIN_WIDTH = 400;
+	const MIN_HEIGHT = 250;
+	const RESIZE_HANDLE_SIZE = 10;
+	const EDGE_MARGIN = 32; // 2rem
+	const SNAP_DISTANCE = 100; // pixels from corner to trigger snap
+
 	function handleClose() {
 		// Execute current page's out callback before closing
 		const currentPage = textPages[$textbookCurrentPage];
@@ -37,16 +54,204 @@
 		isMouseInCard = false;
 	}
 
+	// Drag functions
+	function handleCardMouseDown(event: MouseEvent) {
+		if ((event.target as HTMLElement).closest('.close-btn')) return;
+
+		// Check if in resize zone
+		const direction = getResizeDirection(event);
+		if (direction) {
+			startResize(event, direction);
+			return;
+		}
+
+		isDragging = true;
+		dragStart = {
+			x: event.clientX - position.x,
+			y: event.clientY - position.y
+		};
+	}
+
+	function handleGlobalMouseMove(event: MouseEvent) {
+		if (isDragging) {
+			position = {
+				x: event.clientX - dragStart.x,
+				y: event.clientY - dragStart.y
+			};
+		} else if (isResizing) {
+			handleResize(event);
+		}
+	}
+
+	function snapToCorner() {
+		const corners = [
+			{ x: EDGE_MARGIN, y: EDGE_MARGIN }, // top-left
+			{ x: window.innerWidth - size.width - EDGE_MARGIN, y: EDGE_MARGIN }, // top-right
+			{ x: EDGE_MARGIN, y: window.innerHeight - size.height - EDGE_MARGIN }, // bottom-left
+			{
+				x: window.innerWidth - size.width - EDGE_MARGIN,
+				y: window.innerHeight - size.height - EDGE_MARGIN
+			} // bottom-right
+		];
+
+		let minDistance = Infinity;
+		let closestCorner = null;
+
+		for (const corner of corners) {
+			const distance = Math.sqrt(
+				Math.pow(position.x - corner.x, 2) + Math.pow(position.y - corner.y, 2)
+			);
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestCorner = corner;
+			}
+		}
+
+		if (minDistance < SNAP_DISTANCE && closestCorner) {
+			position = { x: closestCorner.x, y: closestCorner.y };
+		}
+	}
+
+	function handleGlobalMouseUp() {
+		if (isDragging) {
+			snapToCorner();
+		}
+		isDragging = false;
+		isResizing = false;
+		resizeDirection = '';
+	}
+
+	// Resize functions
+	function getResizeDirection(event: MouseEvent): string {
+		if (!cardElement || isDragging || isResizing) return '';
+
+		const rect = cardElement.getBoundingClientRect();
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+
+		const nearRight = rect.width - x <= RESIZE_HANDLE_SIZE;
+		const nearBottom = rect.height - y <= RESIZE_HANDLE_SIZE;
+		const nearLeft = x <= RESIZE_HANDLE_SIZE;
+		const nearTop = y <= RESIZE_HANDLE_SIZE;
+
+		if (nearRight && nearBottom) return 'se';
+		if (nearLeft && nearBottom) return 'sw';
+		if (nearRight && nearTop) return 'ne';
+		if (nearLeft && nearTop) return 'nw';
+		if (nearRight) return 'e';
+		if (nearBottom) return 's';
+		if (nearLeft) return 'w';
+		if (nearTop) return 'n';
+
+		return '';
+	}
+
+	function handleCardMouseMove(event: MouseEvent) {
+		if (!isResizing && !isDragging) {
+			const direction = getResizeDirection(event);
+			resizeDirection = direction;
+
+			// Update CSS variable for cursor
+			if (cardElement) {
+				const cursor = direction ? getCursorForDirection(direction) : 'grab';
+				cardElement.style.setProperty('--card-cursor', cursor);
+			}
+		} else if (isDragging) {
+			if (cardElement) {
+				cardElement.style.setProperty('--card-cursor', 'grabbing');
+			}
+		}
+		handleMouseMove(event);
+	}
+
+	function startResize(event: MouseEvent, direction: string) {
+		isResizing = true;
+		resizeDirection = direction;
+		resizeStart = {
+			x: event.clientX,
+			y: event.clientY,
+			width: size.width,
+			height: size.height,
+			posX: position.x,
+			posY: position.y
+		};
+		event.preventDefault();
+	}
+
+	function handleResize(event: MouseEvent) {
+		const dx = event.clientX - resizeStart.x;
+		const dy = event.clientY - resizeStart.y;
+
+		let newWidth = resizeStart.width;
+		let newHeight = resizeStart.height;
+		let newX = resizeStart.posX;
+		let newY = resizeStart.posY;
+
+		if (resizeDirection.includes('e')) {
+			newWidth = Math.max(MIN_WIDTH, resizeStart.width + dx);
+		}
+		if (resizeDirection.includes('w')) {
+			const calculatedWidth = resizeStart.width - dx;
+			if (calculatedWidth >= MIN_WIDTH) {
+				newWidth = calculatedWidth;
+				newX = resizeStart.posX + dx;
+			} else {
+				newWidth = MIN_WIDTH;
+				newX = resizeStart.posX + (resizeStart.width - MIN_WIDTH);
+			}
+		}
+		if (resizeDirection.includes('s')) {
+			newHeight = Math.max(MIN_HEIGHT, resizeStart.height + dy);
+		}
+		if (resizeDirection.includes('n')) {
+			const calculatedHeight = resizeStart.height - dy;
+			if (calculatedHeight >= MIN_HEIGHT) {
+				newHeight = calculatedHeight;
+				newY = resizeStart.posY + dy;
+			} else {
+				newHeight = MIN_HEIGHT;
+				newY = resizeStart.posY + (resizeStart.height - MIN_HEIGHT);
+			}
+		}
+
+		size = { width: newWidth, height: newHeight };
+		position = { x: newX, y: newY };
+	}
+
+	function getCursorForDirection(direction: string): string {
+		const cursorMap: Record<string, string> = {
+			n: 'ns-resize',
+			s: 'ns-resize',
+			e: 'ew-resize',
+			w: 'ew-resize',
+			ne: 'nesw-resize',
+			sw: 'nesw-resize',
+			nw: 'nwse-resize',
+			se: 'nwse-resize'
+		};
+		return cursorMap[direction] || 'default';
+	}
+
 	$: isLeftSide = cardElement ? mousePosition.x < cardElement.offsetWidth / 2 : true;
 </script>
 
-<div class="floating-container" transition:fade={{ duration: 150 }}>
+<svelte:window on:mousemove={handleGlobalMouseMove} on:mouseup={handleGlobalMouseUp} />
+
+<div
+	class="floating-container"
+	transition:fade={{ duration: 150 }}
+	style="left: {position.x}px; top: {position.y}px;"
+>
 	<div
 		class="text-card"
 		bind:this={cardElement}
-		on:mousemove={handleMouseMove}
+		on:mousemove={handleCardMouseMove}
+		on:mousedown={handleCardMouseDown}
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
+		role="dialog"
+		aria-label="Textbook"
+		style="width: {size.width}px; height: {size.height}px;"
 	>
 		<div class="card-header">
 			<div class="flex w-full items-center justify-between">
@@ -79,9 +284,12 @@
 </div>
 
 <style lang="scss">
+	.floating-container {
+		position: fixed;
+		z-index: 1000;
+	}
+
 	.text-card {
-		width: 540px;
-		height: 300px;
 		box-shadow:
 			0 12px 32px rgba(0, 0, 0, 0.12),
 			0 4px 8px rgba(0, 0, 0, 0.06);
@@ -90,7 +298,12 @@
 		background: rgba(255, 255, 255, 0.4);
 		display: flex;
 		flex-direction: column;
-		cursor: default;
+		user-select: none;
+		cursor: var(--card-cursor, grab);
+
+		* {
+			cursor: inherit;
+		}
 
 		.card-header {
 			flex-shrink: 0;
@@ -147,9 +360,6 @@
 		margin: 0 0 0.5rem 0;
 	}
 
-	:global(.textbook-content span.highlight) {
-		// background: var(--textbook-highlight-background) !important;
-	}
 	:global(.textbook-content span.red) {
 		color: theme('colors.red.500');
 		font-weight: 500;

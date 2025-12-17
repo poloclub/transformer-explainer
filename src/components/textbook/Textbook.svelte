@@ -62,7 +62,7 @@
 {/if}
 
 <style lang="scss">
-	:global(.floating-container) {
+	.floating-container {
 		position: fixed;
 		bottom: 2rem;
 		right: 2rem;
