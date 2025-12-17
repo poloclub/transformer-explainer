@@ -450,10 +450,10 @@
 	</div>
 
 	<div class="article-section" data-click="article-advanced-features">
-		<h2>Advanced Architectural Features</h2>
+		<h2>Auxiliary Architectural Features</h2>
 
 		<p>
-			There are several advanced architectural features that enhance the performance of Transformer
+			There are several auxiliary architectural features that enhance the performance of Transformer
 			models. While important for the model's overall performance, they are not as important for
 			understanding the core concepts of the architecture. Layer Normalization, Dropout, and
 			Residual Connections are crucial components in Transformer models, particularly during the

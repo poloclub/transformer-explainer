@@ -521,7 +521,7 @@ export const textPages: TextbookPage[] = [
 	{
 		id: 'residual',
 		title: 'Residual Connection',
-		content: `<p>Transformers have extra features that enhance the model performance but aren't core to understanding the basics. For example, a <strong>residual connection</strong> adds a layer's input to its output, keeping information and learning signals from fading through many layers. In GPT-2, it's used twice per block to train deeper stacks effectively.</p>`,
+		content: `<p>Transformers have auxiliary features that enhance the model performance. For example, a <strong>residual connection</strong> adds a layer's input to its output, keeping information from fading through many blocks. In GPT-2, it's used twice per block to train deeper stacks effectively.</p>`,
 		on: function () {
 			this.timeoutId = setTimeout(
 				() => {

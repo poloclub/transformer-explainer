@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { tokens, modelMeta, blockIdx } from '~/store';
+	import { tokens, modelMeta, blockIdx, attentionHeadIdx, vectorHeight } from '~/store';
 	import classNames from 'classnames';
-	import { setContext } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import OperationGroup from './OperationGroup.svelte';
 	import VectorCanvas from './common/VectorCanvas.svelte';
 	import { Tooltip } from 'flowbite-svelte';
@@ -27,6 +27,21 @@
 	}
 
 	let vectorHoverIdx: number | null = null;
+
+	// attentionHeadIdx subscribe
+	const headCursors = {};
+
+	onMount(() => {
+		const unsubscribe = attentionHeadIdx.subscribe(async (newIdx) => {
+			Object.values(headCursors).forEach((el) => {
+				el.style.top = `${($vectorHeight / $modelMeta.attention_head_num) * newIdx}px`;
+			});
+		});
+
+		return () => {
+			unsubscribe();
+		};
+	});
 </script>
 
 <div class={classNames('mlp', 'mlpUp', 'mlpDown', className)} data-click="mlp-step">
@@ -61,7 +76,10 @@
 						<span class="label float">{token}</span>
 						<div class={`vector flex flex-col  ${firstLayerlColor}`}>
 							<VectorCanvas colorScale="purple" active={vectorHoverIdx === index} />
-							<div class="sub-vector x1-12 head1"></div>
+							<div
+								class="sub-vector x1-12 head1 absolute"
+								bind:this={headCursors[`token${index}_out`]}
+							></div>
 							<div class="sub-vector head-rest grow"></div>
 						</div>
 					</div>
