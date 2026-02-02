@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="224" viewBox="0 0 224 224">
+  <defs>
+    <linearGradient id="dogGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="224" height="224" fill="url(#dogGrad)"/>
+  <!-- Dog face -->
+  <ellipse cx="112" cy="125" rx="55" ry="50" fill="#d4a574"/>
+  <!-- Ears -->
+  <ellipse cx="60" cy="85" rx="20" ry="35" fill="#a67c52"/>
+  <ellipse cx="164" cy="85" rx="20" ry="35" fill="#a67c52"/>
+  <!-- Snout -->
+  <ellipse cx="112" cy="145" rx="30" ry="25" fill="#e8c9a4"/>
+  <!-- Eyes -->
+  <circle cx="90" cy="115" r="10" fill="#000"/>
+  <circle cx="134" cy="115" r="10" fill="#000"/>
+  <circle cx="92" cy="113" r="3" fill="#fff"/>
+  <circle cx="136" cy="113" r="3" fill="#fff"/>
+  <!-- Nose -->
+  <ellipse cx="112" cy="138" rx="12" ry="8" fill="#000"/>
+  <!-- Mouth -->
+  <path d="M100,155 Q112,170 124,155" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Tongue -->
+  <ellipse cx="112" cy="165" rx="8" ry="12" fill="#ef4444"/>
+  <text x="112" y="210" text-anchor="middle" font-family="Arial" font-size="14" fill="#1e3a5f">Dog</text>
+</svg>

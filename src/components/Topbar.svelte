@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 	import InputForm from '~/components/InputForm.svelte';
 	import { ga } from '~/utils/event';
 	import Sampling from '~/components/Sampling.svelte';
@@ -10,12 +11,17 @@
 
 	// Check if current page is about page
 	$: isAboutPage = $page.url.pathname === '/about';
+	$: isVitPage = $page.url.pathname.includes('/vit');
 </script>
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>
-	<div class="logo text-bold text-gray-700" data-click="logo">
+	<a href="{base}/" class="logo text-bold text-gray-700" data-click="logo">
 		T<span class="small">RANSFORMER</span> E<span class="small">XPLAINER</span>
-	</div>
+	</a>
+	<a href="{base}/vit" class="vit-link" class:active={isVitPage} data-click="vit-link">
+		<span class="vit-badge">NEW</span>
+		ViT
+	</a>
 	<div class="inputs flex grow items-center">
 		<div class="input-wrapper w-full" class:active={isActive}>
 			{#if !isAboutPage}
@@ -124,6 +130,40 @@
 			flex-shrink: 0;
 			svg {
 				fill: theme('colors.gray.600');
+			}
+		}
+		.vit-link {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			padding: 0.375rem 0.75rem;
+			border-radius: 0.5rem;
+			font-size: 0.875rem;
+			font-weight: 600;
+			color: theme('colors.purple.600');
+			background: theme('colors.purple.50');
+			border: 1px solid theme('colors.purple.200');
+			text-decoration: none;
+			transition: all 0.2s;
+
+			&:hover {
+				background: theme('colors.purple.100');
+				border-color: theme('colors.purple.300');
+			}
+
+			&.active {
+				background: theme('colors.purple.600');
+				color: white;
+				border-color: theme('colors.purple.600');
+			}
+
+			.vit-badge {
+				font-size: 0.6rem;
+				font-weight: 700;
+				padding: 0.125rem 0.25rem;
+				background: theme('colors.green.500');
+				color: white;
+				border-radius: 0.25rem;
 			}
 		}
 	}

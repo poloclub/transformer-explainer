@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="224" viewBox="0 0 224 224">
+  <defs>
+    <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fce7f3"/>
+      <stop offset="100%" style="stop-color:#ec4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="224" height="224" fill="url(#carGrad)"/>
+  <!-- Road -->
+  <rect x="0" y="160" width="224" height="64" fill="#374151"/>
+  <line x1="0" y1="192" x2="224" y2="192" stroke="#fbbf24" stroke-width="3" stroke-dasharray="20,10"/>
+  <!-- Car body -->
+  <rect x="40" y="100" width="144" height="50" rx="5" fill="#ef4444"/>
+  <!-- Car top -->
+  <path d="M70,100 L90,65 L150,65 L170,100" fill="#ef4444"/>
+  <!-- Windows -->
+  <polygon points="95,95 100,72 140,72 155,95" fill="#bfdbfe"/>
+  <line x1="120" y1="72" x2="125" y2="95" stroke="#1e3a5f" stroke-width="2"/>
+  <!-- Wheels -->
+  <circle cx="80" cy="150" r="20" fill="#1f2937"/>
+  <circle cx="80" cy="150" r="12" fill="#6b7280"/>
+  <circle cx="80" cy="150" r="4" fill="#d1d5db"/>
+  <circle cx="160" cy="150" r="20" fill="#1f2937"/>
+  <circle cx="160" cy="150" r="12" fill="#6b7280"/>
+  <circle cx="160" cy="150" r="4" fill="#d1d5db"/>
+  <!-- Headlight -->
+  <rect x="175" y="110" width="10" height="15" rx="2" fill="#fef08a"/>
+  <!-- Taillight -->
+  <rect x="40" y="110" width="8" height="15" rx="2" fill="#dc2626"/>
+  <text x="112" y="215" text-anchor="middle" font-family="Arial" font-size="14" fill="#831843">Car</text>
+</svg>

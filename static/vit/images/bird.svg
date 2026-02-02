@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="224" viewBox="0 0 224 224">
+  <defs>
+    <linearGradient id="birdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d1fae5"/>
+      <stop offset="100%" style="stop-color:#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="224" height="224" fill="url(#birdGrad)"/>
+  <!-- Body -->
+  <ellipse cx="112" cy="130" rx="50" ry="40" fill="#fbbf24"/>
+  <!-- Head -->
+  <circle cx="140" cy="90" r="30" fill="#fcd34d"/>
+  <!-- Eye -->
+  <circle cx="150" cy="85" r="8" fill="#000"/>
+  <circle cx="152" cy="83" r="2" fill="#fff"/>
+  <!-- Beak -->
+  <polygon points="165,90 190,95 165,100" fill="#f97316"/>
+  <!-- Wing -->
+  <ellipse cx="95" cy="130" rx="35" ry="25" fill="#f59e0b"/>
+  <!-- Tail -->
+  <polygon points="65,130 30,110 30,150" fill="#f59e0b"/>
+  <!-- Legs -->
+  <line x1="100" y1="165" x2="95" y2="195" stroke="#f97316" stroke-width="3"/>
+  <line x1="120" y1="165" x2="125" y2="195" stroke="#f97316" stroke-width="3"/>
+  <!-- Feet -->
+  <path d="M85,195 L95,195 L105,195" fill="none" stroke="#f97316" stroke-width="2"/>
+  <path d="M115,195 L125,195 L135,195" fill="none" stroke="#f97316" stroke-width="2"/>
+  <text x="112" y="215" text-anchor="middle" font-family="Arial" font-size="14" fill="#064e3b">Bird</text>
+</svg>
