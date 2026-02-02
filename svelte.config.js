@@ -21,7 +21,7 @@ const config = {
 		}),
 		prerender: {
 			// List the specific routes to prerender
-			entries: ['/' /* other routes if needed */]
+			entries: ['/', '/vit']
 		},
 		alias: {
 			'~': './src'
