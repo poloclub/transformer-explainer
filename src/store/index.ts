@@ -115,6 +115,7 @@ export const isMobile = readable(detectDevice());
 export const userId = writable<string | null>(null);
 
 function detectDevice() {
+	if (typeof navigator === 'undefined') return false;
 	const userAgent = navigator.userAgent.toLowerCase();
 	return /android|iphone|ipad|ipod/i.test(userAgent);
 }
