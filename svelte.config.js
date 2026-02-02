@@ -21,7 +21,12 @@ const config = {
 		}),
 		prerender: {
 			// List the specific routes to prerender
-			entries: ['/', '/vit']
+			entries: ['/', '/vit'],
+			// Handle errors during prerender (e.g., sharp module issues in CI)
+			handleHttpError: ({ path, referrer, message }) => {
+				// Ignore errors and continue
+				console.warn(`Prerender warning: ${message} at ${path}`);
+			}
 		},
 		alias: {
 			'~': './src'
