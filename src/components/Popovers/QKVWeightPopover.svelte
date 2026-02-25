@@ -340,7 +340,7 @@
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
 				Q·K·V Weights<HelpPopover id="qkv-weights" 
-					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters tha learned in training, fixed in prediction.`}</HelpPopover
+					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters that are learned in training, fixed in prediction.`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
