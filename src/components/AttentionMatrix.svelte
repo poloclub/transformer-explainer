@@ -494,7 +494,7 @@
 				<Katex math={'\\text{softmax}(\\frac{QK^T}{\\sqrt{d_k}} + M)'}></Katex>
 			</Tooltip>
 			<div class="color-scale">
-				<span class="val">-1.0</span>
+				<span class="val">0.0</span>
 				<div class="bar"></div>
 				<span class="val">1.0</span>
 			</div>

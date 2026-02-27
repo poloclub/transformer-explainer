@@ -14,16 +14,20 @@
 	export let isLeftSide: boolean = true;
 
 	let showPageDropdown = false;
+	let isDragging = false;
+	let progressBarElement: HTMLElement;
+	let previewProgress = 0;
 
-	function handleProgressClick(event: MouseEvent) {
-		event.stopPropagation();
-		event.preventDefault();
+	function updatePageFromPosition(clientX: number, via: string = 'progress-bar') {
+		if (!progressBarElement) return;
 
-		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-		const clickX = event.clientX - rect.left;
-		const progressRatio = clickX / rect.width;
+		const rect = progressBarElement.getBoundingClientRect();
+		const clickX = clientX - rect.left;
+		const progressRatio = Math.max(0, Math.min(1, clickX / rect.width));
 		const targetPage = Math.floor(progressRatio * textPages.length);
 		const newPageIndex = Math.max(0, Math.min(targetPage, textPages.length - 1));
+
+		if (newPageIndex === $textbookCurrentPage) return;
 
 		textbookPreviousPageId.set($textbookCurrentPageId);
 		textbookPreviousPage.set($textbookCurrentPage);
@@ -35,9 +39,38 @@
 		window.dataLayer?.push({
 			event: `open-textbook`,
 			page_id: newPageId,
-			open_via: 'progress-bar',
+			open_via: via,
 			user_id: $userId
 		});
+	}
+
+	function handleProgressClick(event: MouseEvent) {
+		event.stopPropagation();
+		event.preventDefault();
+		updatePageFromPosition(event.clientX, 'progress-bar-click');
+	}
+
+	function handleProgressMouseDown(event: MouseEvent) {
+		event.stopPropagation();
+		event.preventDefault();
+		isDragging = true;
+	}
+
+	function handleGlobalMouseMove(event: MouseEvent) {
+		if (isDragging && progressBarElement) {
+			const rect = progressBarElement.getBoundingClientRect();
+			const clickX = event.clientX - rect.left;
+			const progressRatio = Math.max(0, Math.min(1, clickX / rect.width));
+			previewProgress = progressRatio;
+		}
+	}
+
+	function handleGlobalMouseUp(event: MouseEvent) {
+		if (isDragging) {
+			updatePageFromPosition(event.clientX, 'progress-bar-drag');
+			isDragging = false;
+			previewProgress = 0;
+		}
 	}
 
 	function navigatePage(direction: 'prev' | 'next') {
@@ -78,6 +111,8 @@
 	$: showRightArrow = true;
 </script>
 
+<svelte:window on:mousemove={handleGlobalMouseMove} on:mouseup={handleGlobalMouseUp} />
+
 <!-- Navigation Footer -->
 <div class="navigation-footer">
 	<!-- Left navigation area -->
@@ -91,10 +126,18 @@
 
 	<!-- Center section with progress and page counter -->
 	<div class="nav-section center">
-		<div class="progress-bar" on:click={handleProgressClick} role="button" tabindex="0">
+		<div
+			class="progress-bar"
+			bind:this={progressBarElement}
+			on:click={handleProgressClick}
+			on:mousedown={handleProgressMouseDown}
+			role="button"
+			tabindex="0"
+		>
 			<div
 				class="progress-fill"
-				style="width: {(($textbookCurrentPage + 1) / textPages.length) * 100}%"
+				class:dragging={isDragging}
+				style="width: {isDragging ? previewProgress * 100 : (($textbookCurrentPage + 1) / textPages.length) * 100}%"
 			></div>
 		</div>
 		<div class="page-counter-container">
@@ -185,9 +228,14 @@
 					cursor: pointer;
 					transition: all 0.2s ease;
 					position: relative;
+					user-select: none;
 
 					&:hover {
 						background: theme('colors.gray.300');
+					}
+
+					&:active {
+						cursor: grabbing;
 					}
 
 					.progress-fill {
@@ -195,6 +243,10 @@
 						background: theme('colors.blue.500');
 						border-radius: 2px;
 						transition: width 0.3s ease;
+
+						&.dragging {
+							transition: none;
+						}
 					}
 				}
 

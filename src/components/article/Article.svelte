@@ -40,11 +40,12 @@
 		</p>
 		<p>
 			Fundamentally, text-generative Transformer models operate on the principle of <strong
-				>next-word prediction</strong
-			>: given a text prompt from the user, what is the <em>most probable next word</em> that will follow
-			this input? The core innovation and power of Transformers lie in their use of self-attention mechanism,
-			which allows them to process entire sequences and capture long-range dependencies more effectively
-			than previous architectures.
+				>next-token prediction</strong
+			>: given a text prompt from the user, what is the
+			<em>most probable next token (a word or part of a word)</em> that will follow this input? The core
+			innovation and power of Transformers lie in their use of self-attention mechanism, which allows
+			them to process entire sequences and capture long-range dependencies more effectively than previous
+			architectures.
 		</p>
 		<p>
 			GPT-2 family of models are prominent examples of text-generative Transformers. Transformer
@@ -133,7 +134,9 @@
 				GPT-2 (small) represents each token in the vocabulary as a 768-dimensional vector; the
 				dimension of the vector depends on the model. These embedding vectors are stored in a matrix
 				of shape <code>(50,257, 768)</code>, containing approximately 39 million parameters! This
-				extensive matrix allows the model to assign semantic meaning to each token.
+				extensive matrix allows the model to assign semantic meaning to each token, in the sense
+				that tokens with similar usage or meaning in language are placed close together in this
+				high-dimensional space, while dissimilar tokens are farther apart.
 			</p>
 		</div>
 		<div class="article-subsection" id="article-positional-embedding">
@@ -214,9 +217,12 @@
 	<div class="article-section" id="self-attention" data-click="article-attention">
 		<h3>Multi-Head Self-Attention</h3>
 		<p>
-			The self-attention mechanism enables the model to focus on relevant parts of the input
-			sequence, allowing it to capture complex relationships and dependencies within the data. Let’s
-			look at how this self-attention is computed step-by-step.
+			The self-attention mechanism enables the model to capture relationships among tokens in a
+			sequence, so that each token’s representation is influenced by the others. Multiple attention
+			heads allow the model to consider these relationships from different perspectives; for
+			example, one head may capture short-range syntactic links while another tracks broader
+			semantic context. In the following section, we will walk through how multi-head self-attention
+			is computed step by step.
 		</p>
 		<div class="article-subsection-l2">
 			<h4>Step 1: Query, Key, and Value Matrices</h4>
@@ -298,21 +304,23 @@
 
 			<ul>
 				<li>
-					<strong>Attention Score</strong>: The dot product of
+					<strong>Dot Product</strong>: The dot product of
 					<span class="q-color">Query</span>
-					and <span class="k-color">Key</span> matrices determines the alignment of each query with each
-					key, producing a square matrix that reflects the relationship between all input tokens.
+					and <span class="k-color">Key</span> matrices determines the
+					<strong>attention score</strong>, producing a square matrix that reflects the relationship
+					between all input tokens.
 				</li>
 				<li>
-					<strong>Masking</strong>: A mask is applied to the upper triangle of the attention matrix
-					to prevent the model from accessing future tokens, setting these values to negative
-					infinity. The model needs to learn how to predict the next token without “peeking” into
-					the future.
+					<strong>Scaling · Mask</strong>: The attention scores are scaled and a mask is applied to
+					the upper triangle of the attention matrix to prevent the model from accessing future
+					tokens, setting these values to negative infinity. The model needs to learn how to predict
+					the next token without “peeking” into the future.
 				</li>
 				<li>
-					<strong>Softmax</strong>: After masking, the attention score is converted into probability
-					by the softmax operation which takes the exponent of each attention score. Each row of the
-					matrix sums up to one and indicates the relevance of every other token to the left of it.
+					<strong>Softmax · Dropout</strong>: After masking and scaling, the attention scores are
+					converted into probabilities by the softmax operation, then optionally regularized with
+					dropout. Each row of the matrix sums to one and indicates the relevance of every other
+					token to the left of it.
 				</li>
 			</ul>
 		</div>
@@ -344,12 +352,30 @@
 			After the multiple heads of self-attention capture the diverse relationships between the input
 			tokens, the concatenated outputs are passed through the Multilayer Perceptron (MLP) layer to
 			enhance the model's representational capacity. The MLP block consists of two linear
-			transformations with a GELU activation function in between. The first linear transformation
-			increases the dimensionality of the input four-fold from <code>768</code>
-			to <code>3072</code>. The second linear transformation reduces the dimensionality back to the
-			original size of <code>768</code>, ensuring that the subsequent layers receive inputs of
-			consistent dimensions. Unlike the self-attention mechanism, the MLP processes tokens
-			independently and simply map them from one representation to another.
+			transformations with a <a
+				href="https://en.wikipedia.org/wiki/Rectified_linear_unit#Gaussian-error_linear_unit_(GELU)"
+				>GELU</a
+			> activation function in between.
+		</p>
+		<p>
+			The first linear transformation expands the dimensionality of the input four-fold from <code
+				>768</code
+			>
+			to
+			<code>3072</code>. This expansion step allows the model to project the token representations
+			into a higher-dimensional space, where it can capture richer and more complex patterns that
+			may not be visible in the original dimension.
+		</p>
+		<p>
+			The second linear transformation then reduces the dimensionality back to the original size of <code
+				>768</code
+			>.This compression step brings the representations back to a manageable size while retaining
+			the useful nonlinear transformations introduced in the expansion step.
+		</p>
+		<p>
+			Unlike the self-attention mechanism, which integrates information across tokens, the MLP
+			processes tokens independently and simply maps each token representation from one space to
+			another, enriching the overall model capacity.
 		</p>
 	</div>
 
@@ -424,10 +450,10 @@
 	</div>
 
 	<div class="article-section" data-click="article-advanced-features">
-		<h2>Advanced Architectural Features</h2>
+		<h2>Auxiliary Architectural Features</h2>
 
 		<p>
-			There are several advanced architectural features that enhance the performance of Transformer
+			There are several auxiliary architectural features that enhance the performance of Transformer
 			models. While important for the model's overall performance, they are not as important for
 			understanding the core concepts of the architecture. Layer Normalization, Dropout, and
 			Residual Connections are crucial components in Transformer models, particularly during the
