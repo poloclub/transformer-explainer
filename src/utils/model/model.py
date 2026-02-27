@@ -89,15 +89,25 @@ class CausalSelfAttention(nn.Module):
         y = attn_dropout @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
         for i in range(self.n_head):
-            if (i == 0):
-                self.dict[f"head_{i}"] = {}
-                # self.dict[f"head_{i}"]["q_weights"], self.dict[f"head_{i}"]["k_weights"], self.dict[f"head_{i}"]["v_weights"] = q_weights[0], k_weights[0], v_weights[0],
-                # self.dict[f"head_{i}"]["q_bias"], self.dict[f"head_{i}"]["k_bias"], self.dict[f"head_{i}"]["v_bias"] = q_bias[0], k_bias[0], v_bias[0],
-                # self.dict[f"head_{i}"]["q"], self.dict[f"head_{i}"]["k"], self.dict[f"head_{i}"]["v"] = q[:, 0], k[:, 0], v[:, 0]
-                q_transposed, k_transposed, v_transposed = q.transpose(-2, -1), k.transpose(-2, -1), v.transpose(-2, -1)
-                # self.dict[f"head_{i}"]["q_transposed"], self.dict[f"head_{i}"]["k_transposed"], self.dict[f"head_{i}"]["v_transposed"] = q_transposed[:, 0], k_transposed[:, 0], v_transposed[:, 0]
-                self.dict[f"head_{i}"]["attn"], self.dict[f"head_{i}"]["attn_scaled"], self.dict[f"head_{i}"]["attn_masked"], self.dict[f"head_{i}"]["attn_softmax"], self.dict[f"head_{i}"]["attn_dropout"] = attn[:, 0], attn_scaled[:, 0], attn_masked[:, 0], attn_softmax[:, 0], attn_dropout[:, 0]
-                # self.dict[f"head_{i}"]["v_output"] = y[:, 0]
+            self.dict[f"head_{i}"] = {}
+            q_transposed, k_transposed, v_transposed = q.transpose(-2, -1), k.transpose(-2, -1), v.transpose(-2, -1)
+
+            # Store attention-related outputs for each head
+            self.dict[f"head_{i}"]["attn"] = attn[:, i]                  # Attention scores
+            self.dict[f"head_{i}"]["attn_scaled"] = attn_scaled[:, i]    # Scaled attention scores
+            self.dict[f"head_{i}"]["attn_masked"] = attn_masked[:, i]    # Masked attention scores
+            self.dict[f"head_{i}"]["attn_softmax"] = attn_softmax[:, i]  # Softmaxed attention scores
+            self.dict[f"head_{i}"]["attn_dropout"] = attn_dropout[:, i]  # Attention scores after dropout
+
+            # if (i == 0):
+            #     self.dict[f"head_{i}"] = {}
+            #     # self.dict[f"head_{i}"]["q_weights"], self.dict[f"head_{i}"]["k_weights"], self.dict[f"head_{i}"]["v_weights"] = q_weights[0], k_weights[0], v_weights[0],
+            #     # self.dict[f"head_{i}"]["q_bias"], self.dict[f"head_{i}"]["k_bias"], self.dict[f"head_{i}"]["v_bias"] = q_bias[0], k_bias[0], v_bias[0],
+            #     # self.dict[f"head_{i}"]["q"], self.dict[f"head_{i}"]["k"], self.dict[f"head_{i}"]["v"] = q[:, 0], k[:, 0], v[:, 0]
+            #     q_transposed, k_transposed, v_transposed = q.transpose(-2, -1), k.transpose(-2, -1), v.transpose(-2, -1)
+            #     # self.dict[f"head_{i}"]["q_transposed"], self.dict[f"head_{i}"]["k_transposed"], self.dict[f"head_{i}"]["v_transposed"] = q_transposed[:, 0], k_transposed[:, 0], v_transposed[:, 0]
+            #     self.dict[f"head_{i}"]["attn"], self.dict[f"head_{i}"]["attn_scaled"], self.dict[f"head_{i}"]["attn_masked"], self.dict[f"head_{i}"]["attn_softmax"], self.dict[f"head_{i}"]["attn_dropout"] = attn[:, 0], attn_scaled[:, 0], attn_masked[:, 0], attn_softmax[:, 0], attn_dropout[:, 0]
+            #     # self.dict[f"head_{i}"]["v_output"] = y[:, 0]
 
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
         # self.dict["v_output_combined"] = y
@@ -243,8 +253,9 @@ class GPT(nn.Module):
         x = input_emb_dropout
         for i, block in enumerate(self.transformer.h):
             x = block(x)
-            if (i == 0):
-                self.dictionary["block"][f"block_{i}"] = block.dict
+            # if (i == 0):
+                # self.dictionary["block"][f"block_{i}"] = block.dict
+            self.dictionary["block"][f"block_{i}"] = block.dict
         x = self.transformer.ln_f(x)
         
         if targets is not None:

@@ -8,6 +8,25 @@ export const gradientMap = {
 		0: theme.colors.gray[defaultGradientBrightness],
 		100: theme.colors.blue[defaultGradientBrightness]
 	},
+	'transparent-blue': {
+		0: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0.5 },
+		100: theme.colors.blue[defaultGradientBrightness]
+	},
+	'gray-transparent-blue': {
+		0: theme.colors.gray[defaultGradientBrightness],
+		60: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0 },
+		100: { color: theme.colors.blue[defaultGradientBrightness], opacity: 1 }
+	},
+	'blue-blue-transparent': {
+		0: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0.5 },
+		60: { color: theme.colors.blue[defaultGradientBrightness], opacity: 1 },
+		100: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0 }
+	},
+	'indigo-blue-transparent': {
+		0: { color: theme.colors.indigo[defaultGradientBrightness], opacity: 0 },
+		40: { color: theme.colors.indigo[defaultGradientBrightness], opacity: 1 },
+		100: theme.colors.blue[defaultGradientBrightness]
+	},
 	'purple-indigo': {
 		0: theme.colors.purple[defaultGradientBrightness],
 		100: theme.colors.indigo[defaultGradientBrightness]
@@ -41,6 +60,12 @@ export const gradientMap = {
 		60: theme.colors.white,
 		100: theme.colors.blue[defaultGradientBrightness]
 	},
+	'gray-white-blue': {
+		0: theme.colors.gray[defaultGradientBrightness],
+		50: theme.colors.white,
+		60: theme.colors.white,
+		100: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0.7 }
+	},
 	'transparent-purple': {
 		0: { color: theme.colors.purple[100], opacity: 0 },
 		// 70: { color: theme.colors.purple[100], opacity: 0.5 },
@@ -51,16 +76,16 @@ export const gradientMap = {
 		100: { color: theme.colors.purple[200], opacity: 1 }
 	},
 	'blue-blue': {
-		0: theme.colors.blue[defaultGradientBrightness],
-		100: theme.colors.blue[defaultGradientBrightness]
+		0: theme.colors.blue[300],
+		100: theme.colors.blue[300]
 	},
 	'red-red': {
-		0: theme.colors.red[defaultGradientBrightness],
-		100: theme.colors.red[defaultGradientBrightness]
+		0: theme.colors.red[300],
+		100: theme.colors.red[300]
 	},
 	'green-green': {
-		0: theme.colors.green[defaultGradientBrightness],
-		100: theme.colors.green[defaultGradientBrightness]
+		0: theme.colors.green[300],
+		100: theme.colors.green[300]
 	},
 	'blue-blue2': {
 		0: theme.colors.blue[defaultGradientBrightness],
@@ -79,7 +104,11 @@ export const gradientMap = {
 		100: theme.colors.gray[defaultGradientBrightness]
 	},
 	'purple-purple': {
-		0: theme.colors.purple[defaultGradientBrightness],
-		100: theme.colors.purple[defaultGradientBrightness]
+		0: theme.colors.purple[300],
+		100: theme.colors.purple[300]
+	},
+	blue: {
+		0: theme.colors.blue[defaultGradientBrightness],
+		100: theme.colors.blue[defaultGradientBrightness]
 	}
 };

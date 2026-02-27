@@ -9,14 +9,15 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"deploy": "gh-pages -d build --nojekyll"
+		"deploy": "gh-pages -d build --nojekyll",
+		"deploy-temp": "gh-pages -d build --nojekyll --repo https://github.com/aereeeee/te-temp.git"
 	},
 	"devDependencies": {
 		"@neoconfetti/svelte": "^1.0.0",
 		"@sveltejs/adapter-auto": "^3.2.0",
-		"@sveltejs/adapter-static": "^3.0.1",
-		"@sveltejs/kit": "^2.0.0",
-		"@sveltejs/vite-plugin-svelte": "^3.0.0",
+		"@sveltejs/adapter-static": "^3.0.8",
+		"@sveltejs/kit": "^2.53.3",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@types/d3": "^7.4.3",
 		"@types/d3-sankey": "^0.12.4",
 		"@types/eslint": "^8.56.0",
@@ -41,20 +42,19 @@
 		"prettier-plugin-svelte": "^3.1.2",
 		"prettier-plugin-tailwindcss": "^0.5.1",
 		"sass": "^1.77.1",
-		"svelte": "^4.2.7",
+		"svelte": "^5.53.5",
 		"svelte-check": "^3.6.0",
 		"tailwindcss": "^3.4.1",
 		"tslib": "^2.4.1",
 		"typescript": "^5.0.0",
-		"vite": "^5.0.3"
+		"vite": "^5.4.21"
 	},
 	"type": "module",
 	"dependencies": {
 		"@xenova/transformers": "^2.17.1",
 		"gsap": "^3.12.5",
 		"katex": "^0.16.10",
-		"onnxruntime-web": "^1.18.0",
-		"svelte-katex": "^0.1.2"
+		"onnxruntime-web": "^1.23.0"
 	},
 	"engines": {
 		"node": ">=20.0.0",

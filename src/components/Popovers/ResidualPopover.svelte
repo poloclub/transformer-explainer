@@ -21,15 +21,12 @@
 	goTo="article-residual"
 >
 	<div class="residual-content">
-		Adds skip-connections to allow for better gradient flow.
+		Adds layer input to output to help preserve information.
 	</div></CommonPopover
 >
 
 <style lang="scss">
-	:global(.residual-popover) {
-		width: 12rem !important;
-		.residual-content {
-			font-size: 0.8rem;
-		}
+	.residual-content {
+		width: 12rem;
 	}
 </style>

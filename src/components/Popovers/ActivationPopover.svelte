@@ -11,7 +11,7 @@
 
 <CommonPopover
 	className="activation-popover"
-	title="GeLu Activation"
+	title="GELU Activation"
 	{offset}
 	{triggeredBy}
 	{trigger}
@@ -19,12 +19,12 @@
 	goTo="article-activation"
 >
 	<div class="activation-content">
-		Applies activation function to neuron outputs.
+		Applies non-linear transformation to linearly transformed output to learn complex patterns.
 	</div></CommonPopover
 >
 
 <style>
 	.activation-content {
-		width: 10rem;
+		width: 12rem;
 	}
 </style>

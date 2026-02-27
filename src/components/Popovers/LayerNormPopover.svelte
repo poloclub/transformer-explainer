@@ -1,8 +1,5 @@
 <script lang="ts">
-	import classNames from 'classnames';
-	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { fade } from 'svelte/transition';
 	import CommonPopover from './CommonPopover.svelte';
 
 	export let offset: PopoverProps['offset'] = undefined;
@@ -21,7 +18,13 @@
 	{placement}
 	goTo="article-ln"
 >
-	<div class="ln-content w-[10rem]">
-		Standardizes layer inputs to maintain consistent mean and variance.
+	<div class="ln-content">
+		Normalizes layer input to have a standard distribution for stability.
 	</div></CommonPopover
 >
+
+<style lang="scss">
+	.ln-content {
+		width: 12rem;
+	}
+</style>

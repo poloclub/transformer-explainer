@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { tokens, modelMeta, isBoundingBoxActive, expandedBlock } from '~/store';
+	import { tokens, modelMeta, isBoundingBoxActive, expandedBlock, blockIdx } from '~/store';
 	import classNames from 'classnames';
-	import Operation from './Operation.svelte';
 	import { Tooltip } from 'flowbite-svelte';
-	import VectorCanvas from './VectorCanvas.svelte';
+	import VectorCanvas from './common/VectorCanvas.svelte';
+	import TextbookTooltip from './common/TextbookTooltip.svelte';
 
 	export let className: string | undefined = undefined;
 </script>
@@ -23,19 +23,17 @@
 	<div class="title"></div>
 	<div class="content">
 		<div class="column final relative">
-			<div class="guide flex flex-col items-start gap-1">
-				<!-- <svg class="arrow" width="28" height="30" viewBox="0 0 28 30" fill="none">
-					<path
-						d="M4.01159 29.4026C4.23396 29.5664 4.54695 29.5188 4.71068 29.2965L7.37882 25.6728C7.54255 25.4504 7.49501 25.1374 7.27264 24.9737C7.05028 24.81 6.73728 24.8575 6.57355 25.0799L4.20188 28.3009L0.980829 25.9292C0.758462 25.7655 0.445469 25.813 0.281739 26.0354C0.118009 26.2578 0.165543 26.5708 0.387911 26.7345L4.01159 29.4026ZM4.80238 28.9249C4.10481 24.3318 4.43981 17.4539 7.67418 11.7465C10.885 6.08071 16.9895 1.5 28 1.5V0.5C16.655 0.5 10.2048 5.25263 6.80417 11.2535C3.42706 17.2128 3.09382 24.3349 3.81372 29.0751L4.80238 28.9249Z"
-						fill="#D1D5DB"
-					/>
-				</svg> -->
-
-				<div class="text" class:active={$isBoundingBoxActive}>
-					{$modelMeta.layer_num - 1} more identical<br /><span class="highlight"
-						>Transformer<br />Blocks</span
-					>.
+			<div
+				class="guide flex flex-col items-start gap-1"
+				class:active={$blockIdx !== $modelMeta.layer_num - 1}
+			>
+				<div class="text" class:highlight={$isBoundingBoxActive}>
+					<TextbookTooltip id="blocks">
+						<span class="strong">{$modelMeta.layer_num - $blockIdx - 1}</span> more identical<br
+						/><span class="strong">Transformer<br />Blocks</span>
+					</TextbookTooltip>
 				</div>
+
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="h-6 w-6 text-gray-300"
@@ -48,6 +46,7 @@
 					/>
 				</svg>
 			</div>
+
 			{#each $tokens as token, index}
 				<div class="cell" class:last={index === $tokens.length - 1}>
 					<div
@@ -57,12 +56,11 @@
 					>
 						<VectorCanvas colorScale="blue" />
 					</div>
-					<Tooltip placement="right" class="popover">vector({$modelMeta.dimension})</Tooltip>
-					<!-- {#if index === $tokens.length - 1}
-						<span class="label float">{token}</span>
-					{/if} -->
 				</div>
 			{/each}
+			<Tooltip class="popover" triggeredBy={'.transformer-blocks .vector'} placement="right"
+				>vector({$modelMeta.dimension})</Tooltip
+			>
 		</div>
 		<div class="second-column">
 			<div class="prob-dim" class:expanded={$expandedBlock.id === 'softmax'}></div>
@@ -78,6 +76,9 @@
 			}
 		}
 		.guide {
+			z-index: 200;
+			opacity: 0;
+			transition: opacity 0.2s;
 			white-space: pre;
 			position: absolute;
 			top: 0;
@@ -90,19 +91,20 @@
 				line-height: 1.2;
 				padding-left: 0.5rem;
 				font-size: 0.85rem;
-				.highlight {
+				.strong {
 					font-weight: 600;
-					// color: theme('colors.gray.500');
 				}
 
-				&.active {
-					opacity: 1;
-					.highlight {
+				&.highlight {
+					.strong {
 						transition: all 0.5s;
 						color: theme('colors.blue.500');
 						font-weight: 600;
 					}
 				}
+			}
+			&.active {
+				opacity: 1;
 			}
 		}
 		.content {
@@ -126,17 +128,18 @@
 		grid-column: span 2;
 	}
 	.prob-dim {
+		pointer-events: none;
 		position: absolute;
 		bottom: -3rem;
 		transform: translateX(-1rem);
 		width: 100%;
 		height: 30%;
-		z-index: 300;
+		z-index: $ABOVE_COLUMN;
 		background-color: white;
 		background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
 
 		&.expanded {
-			z-index: 999;
+			z-index: $EXPANDED_DIM_INDEX;
 		}
 	}
 </style>

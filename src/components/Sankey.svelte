@@ -1,10 +1,18 @@
 <script lang="ts">
-	import { tokens, modelMeta, hoveredPath, rootRem } from '~/store';
+	import {
+		tokens,
+		modelMeta,
+		rootRem,
+		weightPopover,
+		tooltip,
+		attentionHeadIdx,
+		blockIdx,
+		isOnBlockTransition
+	} from '~/store';
 	import * as d3 from 'd3';
 	import { onMount, tick } from 'svelte';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
-	import { gsap, Flip } from '~/utils/gsap';
 	import { gradientMap } from '~/constants/gradient';
 	import {
 		ATTENTION_HEAD_1,
@@ -15,6 +23,7 @@
 		MLP,
 		TRANSFORMER_BLOCKS
 	} from '~/constants/opacity';
+	import { textPages } from '~/utils/textbookPages';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -38,56 +47,65 @@
 			curve?: number;
 			type?: 'stroke' | 'shape';
 			id?: string;
-			pathGenerator?: (source: DOMRect, target: DOMRect, curveOffset: number) => string;
+			pathGenerator?: (source: DOMRect, target: DOMRect, curve: number) => string;
 		}[]
 	>;
 
+	const backPaths = [
+		{
+			from: '.qkv .qkv-column .query',
+			to: '.head-block .query .vector',
+			// fill: theme.colors.blue[defaultGradientBrightness],
+			gradientId: 'blue-blue2',
+			opacity: ATTENTION_HEAD_BACK
+		},
+		{
+			from: '.qkv .qkv-column .key',
+			to: '.head-block .key .vector',
+			// fill: theme.colors.red[defaultGradientBrightness],
+			gradientId: 'red-red2',
+			opacity: ATTENTION_HEAD_BACK
+		},
+		{
+			from: '.qkv .qkv-column .value',
+			to: '.head-block .value .vector',
+			gradientId: 'green-green2',
+			// fill: theme.colors.green[defaultGradientBrightness],
+			opacity: ATTENTION_HEAD_BACK
+		},
+		{
+			from: '.attention .head-out .vector',
+			to: '.mlp .initial .vector',
+			gradientId: 'transparent-purple',
+			opacity: ATTENTION_HEAD_BACK
+		}
+	];
 	const backPathMap: PathMap = {
-		attention: [
-			{
-				from: '.attention .query .head-rest',
-				to: '.head-block .query .vector',
-				// fill: theme.colors.blue[defaultGradientBrightness],
-				gradientId: 'blue-blue2',
-				opacity: ATTENTION_HEAD_BACK
-			},
-			{
-				from: '.attention .key .head-rest',
-				to: '.head-block .key .vector',
-				// fill: theme.colors.red[defaultGradientBrightness],
-				gradientId: 'red-red2',
-				opacity: ATTENTION_HEAD_BACK
-			},
-			{
-				from: '.attention .value .head-rest',
-				to: '.head-block .value .vector',
-				gradientId: 'green-green2',
-				// fill: theme.colors.green[defaultGradientBrightness],
-				opacity: ATTENTION_HEAD_BACK
-			},
-			{
-				from: '.attention .head-out .vector',
-				to: '.mlp .initial .vector .head-rest',
-				gradientId: 'transparent-purple',
-				opacity: ATTENTION_HEAD_BACK
-			}
-		]
+		attention: backPaths.map((d) => ({
+			...d,
+			from: `.block-steps.main ${d.from}`,
+			to: `.block-steps.main ${d.to}`
+		})),
+		nextAttention: backPaths.map((d) => ({
+			...d,
+			from: `.block-steps.next ${d.from}`,
+			to: `.block-steps.next ${d.to}`
+		}))
 	};
-	$: pathMap = {
-		embedding: [
-			{
-				hoverable: true,
-				from: '.embedding .vector-column .column.vectors .vector',
-				to: '.attention .vector',
-				gradientId: 'gray-blue',
-				opacity: EMBEDDING,
-				pathGenerator: (source, target, curveOffset: number) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
 
-					const rightOffset = 30;
+	$: qkvPaths = [
+		{
+			from: '.qkv .vector-column .column.vectors .vector',
+			to: '.qkv .qkv-column .vector',
+			gradientId: $blockIdx === 0 ? 'gray-blue' : 'transparent-blue',
+			opacity: EMBEDDING,
+			pathGenerator: (source, target, curve: number) => {
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
 
-					return `
+				const rightOffset = 30;
+				const { curveOffset } = pathAdjustor(source, target, curve);
+				return `
 					M ${source.right + scrollLeft},${source.top + scrollTop}
 					L ${source.right + rightOffset + scrollLeft},${source.top + scrollTop}
 					C ${source.right + rightOffset + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
@@ -96,144 +114,210 @@
 					L ${source.right + scrollLeft},${source.bottom + scrollTop}
 					Z
 				`;
-				}
+			},
+			onMouseOver: () => {
+				const paths = d3.select(`g.qkv`).selectAll('path');
+				paths.transition().duration(100).style('opacity', 1);
+				tooltip.set('click to see QKV calculation');
+			},
+			onMouseOut: () => {
+				const paths = d3.select(`g.qkv`).selectAll('path');
+				paths.transition().duration(100).style('opacity', EMBEDDING);
+				tooltip.set(null);
+			},
+			onMouseClick: (e, d) => {
+				e.stopPropagation();
+				textPages.find((page) => page.id === 'qkv')?.complete();
+
+				if ($weightPopover === 'qkv') weightPopover.set(null);
+				else weightPopover.set('qkv');
 			}
-		],
-		attention: [
-			{
-				from: '.attention .query .sub-vector.head1',
-				to: '.head-block .query .vector',
-				// fill: theme.colors.blue[200]
-				gradientId: 'blue-blue',
-				opacity: ATTENTION_HEAD_1
-			},
-			{
-				from: '.attention .key .sub-vector.head1',
-				to: '.head-block .key .vector',
-				// fill: theme.colors.red[200]
-				gradientId: 'red-red',
-				opacity: ATTENTION_HEAD_1
-			},
-			{
-				from: '.attention .value .sub-vector.head1',
-				to: '.head-block .value .vector',
-				// fill: theme.colors.green[200]
-				gradientId: 'green-green',
-				opacity: ATTENTION_HEAD_1
-			},
-			{
-				from: '.attention .head-out .vector',
-				to: '.mlp .initial .head1',
-				gradientId: 'purple-purple',
-				opacity: ATTENTION_HEAD_1
-				// fill: theme.colors.purple[200]
-			},
-			{
-				from: '.head-block .head1.key .vector',
-				to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} rect`,
-				id: 'key-to-attention',
-				type: 'stroke',
-				gradientId: 'red-purple',
-				opacity: ATTENTION_HEAD_1,
-				unique: true,
-				curve: 20,
-				pathGenerator: (source, target, curveOffset) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
+		}
+	];
+	$: attentionPaths = [
+		{
+			from: '.qkv .qkv-column .query .sub-vector.head1',
+			to: '.head-block .query .vector',
+			// fill: theme.colors.blue[200]
+			gradientId: 'blue-blue',
+			opacity: ATTENTION_HEAD_1
+		},
+		{
+			from: '.qkv .qkv-column .key .sub-vector.head1',
+			to: '.head-block .key .vector',
+			// fill: theme.colors.red[200]
+			gradientId: 'red-red',
+			opacity: ATTENTION_HEAD_1
+		},
+		{
+			from: '.qkv .qkv-column .value .sub-vector.head1',
+			to: '.head-block .value .vector',
+			// fill: theme.colors.green[200]
+			gradientId: 'green-green',
+			opacity: ATTENTION_HEAD_1
+		},
+		{
+			from: '.attention .head-out .vector',
+			to: '.mlp .initial .head1',
+			gradientId: 'purple-purple',
+			opacity: ATTENTION_HEAD_1
+			// fill: theme.colors.purple[200]
+		},
+		{
+			from: '.head-block .head1.key .vector',
+			to: `.attention-matrix.attention-initial .main g.g-row-${$tokens.length - 1} rect`,
+			id: 'key-to-attention',
+			type: 'stroke',
+			gradientId: 'red-purple',
+			opacity: ATTENTION_HEAD_1,
+			unique: true,
+			curve: 20,
+			pathGenerator: (source, target, curve) => {
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
 
-					const sourceMiddleY = source.top + scrollTop + source.height / 2;
-					const targetMiddleX = target.left + scrollLeft + target.width / 2;
-
-					return `
+				const sourceMiddleY = source.top + scrollTop + source.height / 2;
+				const targetMiddleX = target.left + scrollLeft + target.width / 2;
+				// const { curveOffset } = pathAdjustor(source, target, curve);
+				let curveOffset = curve;
+				return `
 			    M ${source.right + scrollLeft},${sourceMiddleY}
 			    L ${targetMiddleX - curveOffset},${sourceMiddleY}
 			    A ${curveOffset},${curveOffset} 0 0 1 ${targetMiddleX},${sourceMiddleY + curveOffset}
 			    L ${targetMiddleX},${target.bottom + scrollTop}
 			`;
-				}
-			},
-			{
-				from: '.head-block .query .vector',
-				to: `.attention-initial .main g.g-row`,
-				gradientId: 'blue-purple',
-				id: 'query-to-attention',
-				unique: true,
-				type: 'stroke',
-				opacity: ATTENTION_HEAD_1,
-				curve: curveFactor * 30,
-				pathGenerator: (source, target, curveOffset) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
+			}
+		},
+		{
+			from: '.head-block .query .vector',
+			to: `.attention-initial .main g.g-row`,
+			gradientId: 'blue-purple',
+			id: 'query-to-attention',
+			unique: true,
+			type: 'stroke',
+			opacity: ATTENTION_HEAD_1,
+			curve: curveFactor * 30,
+			pathGenerator: (source, target, curve) => {
+				let curveOffset = curve;
 
-					const sourceMiddleY = source.top + scrollTop + source.height / 2;
-					const targetMiddleY = target.top + scrollTop + target.height / 2;
-					const controlPoint1X = source.right + scrollLeft + curveOffset;
-					const controlPoint2X = target.left + scrollLeft - curveOffset;
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
 
-					return `
+				const sourceMiddleY = source.top + scrollTop + source.height / 2;
+				const targetMiddleY = target.top + scrollTop + target.height / 2;
+				const controlPoint1X = source.right + scrollLeft + curveOffset;
+				const controlPoint2X = target.left + scrollLeft - curveOffset;
+
+				return `
 			    M ${source.right + scrollLeft},${sourceMiddleY}
 			    C ${controlPoint1X},${sourceMiddleY} ${controlPoint2X},${targetMiddleY} ${target.left + scrollLeft},${targetMiddleY}
 					L ${target.right + scrollLeft},${targetMiddleY}
 			`;
-				}
-			},
-			{
-				from: '.attention-matrix.attention-out .main svg',
-				to: '.attention .head-out',
-				gradientId: 'transparent-purple2',
-				id: 'to-attention-out',
-				unique: true,
-				opacity: ATTENTION_OUT,
-				curve: 20,
-				pathGenerator: (source, target, curveOffset) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
+			}
+		},
+		{
+			from: '.attention-matrix.attention-out .main svg',
+			to: '.attention .head-out',
+			gradientId: 'transparent-purple2',
+			id: 'to-attention-out',
+			unique: true,
+			opacity: ATTENTION_OUT,
+			curve: 20,
+			pathGenerator: (source, target, curve) => {
+				const { curveOffset } = pathAdjustor(source, target, curve);
 
-					return `
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
+
+				return `
 			    M ${source.right + scrollLeft},${source.top + scrollTop}
 			    C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
 			    L ${target.left + scrollLeft},${target.bottom + scrollTop}
 			    C ${target.left + scrollLeft - curveOffset},${target.bottom + scrollTop} ${source.right + scrollLeft + curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
 			    Z
 			`;
-				}
 			},
-			{
-				from: '.head-block .value',
-				to: '.attention .head-out',
-				gradientId: 'green-purple',
-				id: 'to-attention-out',
-				unique: true,
-				opacity: ATTENTION_OUT,
-				curve: curveFactor * 30,
-				pathGenerator: (source, target, curveOffset) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
+			onMouseOver: () => {
+				d3.select('path.value-to-out').transition().duration(100).style('opacity', 0.8);
+				d3.select('path.to-attention-out').transition().duration(100).style('opacity', 0.8);
 
-					return `
+				tooltip.set('click to see Attention Out calculation');
+			},
+			onMouseOut: () => {
+				d3.select('path.value-to-out').transition().duration(100).style('opacity', ATTENTION_OUT);
+				d3.select('path.to-attention-out')
+					.transition()
+					.duration(100)
+					.style('opacity', ATTENTION_OUT);
+
+				tooltip.set(null);
+			},
+			onMouseClick: (e, d) => {
+				e.stopPropagation();
+				textPages.find((page) => page.id === 'output-concatenation')?.complete();
+
+				if ($weightPopover === 'attention') weightPopover.set(null);
+				else weightPopover.set('attention');
+			}
+		},
+		{
+			from: '.head-block .value',
+			to: '.attention .head-out',
+			gradientId: 'green-purple',
+			id: 'to-attention-out value-to-out',
+			unique: true,
+			opacity: ATTENTION_OUT,
+			curve: curveFactor * 30,
+			pathGenerator: (source, target, curve) => {
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
+				const { curveOffset } = pathAdjustor(source, target, curve);
+				return `
         M ${source.right + scrollLeft},${source.top + scrollTop} 
         C ${target.left - curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${source.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
         L ${target.left + scrollLeft},${target.bottom + scrollTop}
         C ${target.left + scrollLeft - curveOffset},${source.bottom + scrollTop} ${target.left - curveOffset},${source.bottom + scrollTop} ${source.right + scrollLeft},${source.bottom + scrollTop}
         Z
     `;
-				}
+			},
+			onMouseOver: () => {
+				d3.select('path.value-to-out').transition().duration(100).style('opacity', 0.8);
+				d3.select('path.to-attention-out').transition().duration(100).style('opacity', 0.8);
+
+				tooltip.set('click to see Attention Out calculation');
+			},
+			onMouseOut: () => {
+				d3.select('path.value-to-out').transition().duration(100).style('opacity', ATTENTION_OUT);
+				d3.select('path.to-attention-out')
+					.transition()
+					.duration(100)
+					.style('opacity', ATTENTION_OUT);
+
+				tooltip.set(null);
+			},
+			onMouseClick: (e, d) => {
+				e.stopPropagation();
+				textPages.find((page) => page.id === 'output-concatenation')?.complete();
+
+				if ($weightPopover === 'attention') weightPopover.set(null);
+				else weightPopover.set('attention');
 			}
-		],
-		mlp: [
-			{
-				from: '.mlp .column.initial .vector',
-				to: '.mlp .projections .vector',
-				gradientId: 'purple-indigo',
-				curve: 50 + (curveFactor - 1) * 20,
-				opacity: MLP,
-				pathGenerator: (source, target, curveOffset: number) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
+		}
+	];
+	$: mlpUpPaths = [
+		{
+			from: '.mlp .column.initial .vector',
+			to: '.mlp .second-layer .vector',
+			gradientId: 'purple-indigo',
+			curve: 50 + (curveFactor - 1) * 20,
+			opacity: MLP,
+			pathGenerator: (source, target, curve: number) => {
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
 
-					const rightOffset = rootRem * 3;
-
-					return `
+				const rightOffset = rootRem * 3;
+				const { curveOffset } = pathAdjustor(source, target, curve);
+				return `
 					M ${source.right + scrollLeft},${source.top + scrollTop}
 					L ${source.right + rightOffset + scrollLeft},${source.top + scrollTop}
 					C ${source.right + rightOffset + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
@@ -242,21 +326,39 @@
 					L ${source.right + scrollLeft},${source.bottom + scrollTop}
 					Z
 				`;
-				}
 			},
-			{
-				from: '.mlp .projections .vector',
-				to: '.mlp .column.out .vector',
-				gradientId: 'indigo-blue',
-				curve: 50 + (curveFactor - 1) * 20,
-				opacity: MLP,
-				pathGenerator: (source, target, curveOffset: number) => {
-					const scrollTop = window.scrollY;
-					const scrollLeft = window.scrollX;
+			onMouseOver: () => {
+				const paths = d3.select(`g.mlpUp`).selectAll('path');
+				paths.transition().duration(100).style('opacity', 0.6);
+				tooltip.set('click to see MLP process');
+			},
+			onMouseOut: () => {
+				const paths = d3.select(`g.mlpUp`).selectAll('path');
+				paths.transition().duration(100).style('opacity', MLP);
+				tooltip.set(null);
+			},
+			onMouseClick: (e, d) => {
+				e.stopPropagation();
 
-					const leftOffset = rootRem * 1.5;
+				if ($weightPopover === 'mlpUp') weightPopover.set(null);
+				else weightPopover.set('mlpUp');
+			}
+		}
+	];
+	$: mlpDownPaths = [
+		{
+			from: '.mlp .second-layer .vector',
+			to: '.mlp .column.out .vector',
+			gradientId: 'indigo-blue',
+			curve: 50 + (curveFactor - 1) * 20,
+			opacity: MLP,
+			pathGenerator: (source, target, curve: number) => {
+				const scrollTop = window.scrollY;
+				const scrollLeft = window.scrollX;
 
-					return `
+				const leftOffset = rootRem * 1.5;
+				const { curveOffset } = pathAdjustor(source, target, curve);
+				return `
 					M ${source.right + scrollLeft},${source.top + scrollTop}
 					C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left - leftOffset + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left - leftOffset + scrollLeft},${target.top + scrollTop}
 					L ${target.left + scrollLeft},${target.top + scrollTop}
@@ -266,19 +368,85 @@
 					L ${source.right + scrollLeft},${source.bottom + scrollTop}
 					Z
 				`;
-				}
+			},
+			onMouseOver: () => {
+				const paths = d3.select(`g.mlpDown`).selectAll('path');
+				paths.transition().duration(100).style('opacity', 0.6);
+				tooltip.set('click to see MLP process');
+			},
+			onMouseOut: () => {
+				const paths = d3.select(`g.mlpDown`).selectAll('path');
+				paths.transition().duration(100).style('opacity', MLP);
+				tooltip.set(null);
+			},
+			onMouseClick: (e, d) => {
+				e.stopPropagation();
+
+				if ($weightPopover === 'mlpDown') weightPopover.set(null);
+				else weightPopover.set('mlpDown');
+			}
+		}
+	];
+
+	$: pathMap = {
+		embedding: [
+			{
+				from: '.embedding .vector-column .column.vectors .vector',
+				to: '.block-steps.main .qkv .vector-column .column.vectors .vector',
+				gradientId: 'gray-white-blue',
+				opacity: TRANSFORMER_BLOCKS
 			}
 		],
+		qkv: qkvPaths.map((d) => ({
+			...d,
+			from: `.block-steps.main ${d.from}`,
+			to: `.block-steps.main ${d.to}`
+		})),
+		nextQkv: qkvPaths.map((d) => ({
+			...d,
+			from: `.block-steps.next ${d.from}`,
+			to: `.block-steps.next ${d.to}`
+		})),
+		attention: attentionPaths.map((d) => ({
+			...d,
+			from: `.block-steps.main ${d.from}`,
+			to: `.block-steps.main ${d.to}`
+		})),
+		nextAttention: attentionPaths.map((d) => ({
+			...d,
+			from: `.block-steps.next ${d.from}`,
+			to: `.block-steps.next ${d.to}`
+		})),
+		mlpUp: mlpUpPaths.map((d) => ({
+			...d,
+			from: `.block-steps.main ${d.from}`,
+			to: `.block-steps.main ${d.to}`
+		})),
+		mlpDown: mlpDownPaths.map((d) => ({
+			...d,
+			from: `.block-steps.main ${d.from}`,
+			to: `.block-steps.main ${d.to}`
+		})),
+		nextMlpUp: mlpUpPaths.map((d) => ({
+			...d,
+			from: `.block-steps.next ${d.from}`,
+			to: `.block-steps.next ${d.to}`
+		})),
+		nextMlpDown: mlpDownPaths.map((d) => ({
+			...d,
+			from: `.block-steps.next ${d.from}`,
+			to: `.block-steps.next ${d.to}`
+		})),
 		'transformer-blocks': [
 			{
-				from: '.mlp .out .vector',
+				from: `.block-steps.${$isOnBlockTransition ? 'next' : 'main'} .mlp .column.out .vector`,
 				to: '.transformer-blocks .column.final .vector',
-				gradientId: 'blue-white-blue',
-				opacity: TRANSFORMER_BLOCKS,
-				pathGenerator: (source, target, curveOffset) => {
+				gradientId: $blockIdx === $modelMeta.layer_num - 1 ? 'blue' : 'blue-white-blue',
+				opacity: $blockIdx === $modelMeta.layer_num - 1 ? MLP : TRANSFORMER_BLOCKS,
+				pathGenerator: (source, target, curve) => {
 					const scrollTop = window.scrollY;
 					const scrollLeft = window.scrollX;
-
+					const { curveOffset } = pathAdjustor(source, target, curve);
 					return `
         M ${source.right + scrollLeft},${source.top + scrollTop}
         C ${source.right + scrollLeft + curveOffset},${source.top + scrollTop} ${target.left + scrollLeft - curveOffset},${target.top + scrollTop} ${target.left + scrollLeft},${target.top + scrollTop}
@@ -289,13 +457,32 @@
 				}
 			}
 		],
-		'linear-softmax': [
+		softmax: [
 			{
-				from: '.transformer-blocks .final .vector.last-token ',
+				from: '.transformer-blocks .final .vector.last-token',
 				to: '.softmax .content .vector',
 				gradientId: 'blue-gray',
 				opacity: LOGIT,
-				unique: true
+				unique: true,
+				onMouseOver: () => {
+					const paths = d3.select(`g.softmax`).selectAll('path');
+					paths.transition().duration(100).style('opacity', 1);
+					tooltip.set('click to see Logits calculation');
+					// showTooltip('');
+				},
+				onMouseOut: () => {
+					const paths = d3.select(`g.softmax`).selectAll('path');
+					paths.transition().duration(100).style('opacity', LOGIT);
+					// hideTooltip();
+					tooltip.set(null);
+				},
+				onMouseClick: (e, d) => {
+					e.stopPropagation();
+					textPages.find((page) => page.id === 'output-logit')?.complete();
+
+					if ($weightPopover === 'softmax') weightPopover.set(null);
+					else weightPopover.set('softmax');
+				}
 			}
 		]
 	};
@@ -349,35 +536,6 @@
 		});
 	};
 
-	let prevOpacity = 1;
-
-	let pathHoverTimeout;
-
-	const onMouseOverPathGroup = (e, d) => {
-		clearTimeout(pathHoverTimeout);
-		hoveredPath.set(d);
-
-		if (pathMap[d]?.[0]?.hoverable) {
-			const paths = d3.select(`g.${d}`).selectAll('path');
-			prevOpacity = paths.nodes()[0].getAttribute('opacity');
-			paths
-				.transition()
-				.duration(200)
-				.style('opacity', Number(prevOpacity) + 0.3);
-		}
-	};
-
-	const onMouseOutPathGroup = (e, d) => {
-		pathHoverTimeout = setTimeout(() => {
-			hoveredPath.set(null);
-		}, 300);
-
-		if (pathMap[d]?.[0]?.hoverable) {
-			const paths = d3.select(`g.${d}`).selectAll('path');
-			paths.transition().duration(200).style('opacity', prevOpacity);
-		}
-	};
-
 	const drawPath = async () => {
 		await tick();
 		const svg = d3.select(svgEl);
@@ -391,34 +549,32 @@
 				.selectAll('g.path-group')
 				.data(Object.keys(dataMap))
 				.join('g')
-				.attr('class', (d) => `path-group ${d}`)
-				.on('mouseenter', onMouseOverPathGroup)
-				.on('mouseleave', onMouseOutPathGroup);
+				.attr('class', (d) => `path-group ${d}`);
 
 			g.selectAll('path.sankey-path')
 				.data((d) => {
 					const data = dataMap[d].map((item) => {
-						const sources = d3.selectAll(item.from).nodes() as Element[];
-						const targets = d3.selectAll(item.to).nodes() as Element[];
+						const { from, to, curve, pathGenerator, gradientId, unique, ...rest } = item;
+						const sources = d3.selectAll(from).nodes() as Element[];
+						const targets = d3.selectAll(to).nodes() as Element[];
 
 						return sources.map((src, i) => {
 							const source = src?.getBoundingClientRect();
 							const target = targets[i]?.getBoundingClientRect();
 
-							const curveOffset = item.curve || defaultCurveOffset;
+							const curveOffset = curve || defaultCurveOffset;
 
-							const generator = item.pathGenerator || pathGenerator;
+							const generator = pathGenerator || defaultPathGenerator;
 							const path = source && target ? generator(source, target, curveOffset) : '';
 
 							const isLast = targets.length > 1 && i === sources.length - 1;
-							let gradUrl = item.gradientId;
+							let gradUrl = gradientId;
 
-							if (isLast && !item.unique && document.getElementById(item.gradientId + '-last')) {
-								gradUrl = item.gradientId + '-last';
+							if (isLast && !unique && document.getElementById(gradientId + '-last')) {
+								gradUrl = gradientId + '-last';
 							}
 
 							return {
-								id: item.id,
 								isLast: i === sources.length - 1,
 								path,
 								fill:
@@ -433,7 +589,9 @@
 										? item.gradientId
 											? `url(#${item.gradientId})`
 											: item.fill
-										: 'none'
+										: 'none',
+								clickable: !!item.onMouseClick,
+								...rest
 							};
 						});
 					});
@@ -446,13 +604,18 @@
 				.attr('stroke', (d) => d.stroke)
 				.attr('stroke-width', 2)
 				.attr('opacity', (d) => d.opacity)
-				.attr('d', (d) => d.path);
+				.attr('cursor', (d) => d.clickable && 'pointer')
+				.attr('d', (d) => d.path)
+				.on('mouseenter', (e, d) => d.onMouseOver?.(d))
+				.on('mouseleave', (e, d) => d.onMouseOut?.(d))
+				.on('click', (e, d) => d.onMouseClick?.(e, d));
 		});
 	};
 
-	const pathGenerator = (source, target, curveOffset: number) => {
+	const defaultPathGenerator = (source, target, curve: number) => {
 		const scrollTop = window.scrollY;
 		const scrollLeft = window.scrollX;
+		const { curveOffset } = pathAdjustor(source, target, curve);
 
 		return `
         M ${source.right + scrollLeft},${source.top + scrollTop}
@@ -463,19 +626,41 @@
     `;
 	};
 
+	const pathAdjustor = (source, target, curve: number) => {
+		const distance = target.left - source.right;
+		const maxDistance = 100;
+
+		const curveOffset = distance > maxDistance ? curve : curve * (distance / maxDistance);
+
+		return { curveOffset };
+	};
+
 	onMount(() => {
 		createGradients();
 
-		resizeObserver = new ResizeObserver((entries) => {
+		const updateSvgs = () => {
 			drawPath();
 			drawResidualPath();
-		});
+		};
+
+		// animate during resizing
+		resizeObserver = new ResizeObserver(updateSvgs);
+
 		const elements = document?.querySelectorAll('.resize-watch');
 		elements.forEach((el) => resizeObserver.observe(el));
-		// animationTest();
+
+		const transition = document?.querySelector('.transition-watch');
+
+		resizeObserver.observe(transition);
+
+		// redraw when data updated
+		const unsubscribeAttnIdx = attentionHeadIdx.subscribe(async (newIdx) => {
+			drawPath();
+		});
 
 		return () => {
 			resizeObserver.disconnect();
+			unsubscribeAttnIdx();
 		};
 	});
 
@@ -517,20 +702,6 @@
 			.attr('stroke-dasharray', '8,4')
 			.style('opacity', 0);
 	};
-
-	const animationTest = () => {
-		const grad = document.querySelector('#gray-blue');
-		const stop = grad?.querySelectorAll('stop')[1];
-		gsap.fromTo(
-			stop,
-			{ attr: { offset: '0%', ['stop-color']: theme.colors.gray[100] } },
-			{
-				attr: { offset: '100%', ['stop-color']: theme.colors.blue[200] },
-				duration: 2,
-				repeat: 100
-			}
-		);
-	};
 </script>
 
 <svelte:window bind:innerWidth={screenWidth} />
@@ -548,9 +719,3 @@
 		style={`z-index:${$modelMeta.attention_head_num};`}
 	/>
 </div>
-
-<style lang="scss">
-	.sankey-top,
-	.sankey-back {
-	}
-</style>

@@ -1,36 +1,37 @@
 <script lang="ts">
-	import ButtonGroup from 'flowbite-svelte/ButtonGroup.svelte';
-	import Dropdown from 'flowbite-svelte/Dropdown.svelte';
-	import DropdownItem from 'flowbite-svelte/DropdownItem.svelte';
+	import { Dropdown, DropdownItem, ButtonGroup } from 'flowbite-svelte';
 	import Temperature from './Temperature.svelte';
-	import { ex0, ex1, ex2, ex3, ex4 } from '~/constants/examples';
 
-	import { ArrowRightOutline, ChevronDownOutline } from 'flowbite-svelte-icons';
+	import { ChevronDownOutline } from 'flowbite-svelte-icons';
 	import {
 		inputText,
-		selectedModel,
-		modelData,
 		isModelRunning,
-		temperature,
 		predictedToken,
 		inputTextExample,
 		isFetchingModel,
 		expandedBlock,
 		selectedExampleIdx,
-		tokens,
 		isLoaded,
-		modelSession,
 		isOnAnimation,
-		isMobile
+		isMobile,
+		weightPopover,
+		sampling,
+		attentionHeadIdx,
+		blockIdx,
+		temperature,
+		tokenIds,
+		userId
 	} from '~/store';
-	import { Spinner } from 'flowbite-svelte';
-	import LoadingDots from './LoadingDots.svelte';
+	import LoadingDots from './common/LoadingDots.svelte';
 	import classNames from 'classnames';
-	import { tick } from 'svelte';
-	import { ga } from '~/utils/event';
+	import Sampling from './Sampling.svelte';
+	import { completeCurrentAnimation } from '~/utils/animation';
+	import { textPages } from '~/utils/textbookPages';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
+
+	let useCustomInput = false;
 
 	$: inputTextTemp = $inputText || '';
 
@@ -56,13 +57,31 @@
 	};
 
 	const handleSubmit = (e) => {
-		onFocusInput();
-		inputText.set(inputTextTemp);
+		// Complete any running animation before starting new generation
+		completeCurrentAnimation();
 
-		ga('generate_btn_click', {
-			event_category: 'user_input'
-			// value: inputTextTemp
-		});
+		setTimeout(() => {
+			onFocusInput();
+			textPages.find((page) => page.id === 'how-transformers-work')?.complete();
+
+			inputText.set(inputTextTemp);
+
+			window.dataLayer?.push({
+				event: 'generate-next-token',
+				attn_head_num: $attentionHeadIdx,
+				transformer_block_num: $blockIdx,
+				sampling_type: $sampling.type,
+				sampling_value: $sampling.value,
+				temperature_value: $temperature,
+				current_token_length: $tokenIds.length,
+				input_word_count: inputTextTemp
+					.trim()
+					.split(/\s+/)
+					.filter((word) => word.length > 0).length,
+				use_custom_input: useCustomInput,
+				user_id: $userId
+			});
+		}, 0);
 	};
 
 	const handleKeyDown = (e) => {
@@ -70,31 +89,32 @@
 			e.preventDefault();
 			if (disabled || exceedLimit) return;
 			handleSubmit(e);
+			return;
 		}
+		useCustomInput = true;
 	};
 
 	// Example select box
 	let dropdownOpen = false;
-	const initialDataMap = [ex0, ex1, ex2, ex3, ex4];
 	const onSelectExample = (d, i) => {
+		if ($isFetchingModel) {
+			textPages.find((page) => page.id === 'how-transformers-work')?.complete();
+		}
+
 		dropdownOpen = false;
+
+		selectedExampleIdx.set(i);
+		predictedTokenTemp = '';
 
 		inputTextTemp = d;
 		inputRef.innerText = inputTextTemp;
-
-		predictedTokenTemp = '';
 		inputText.update((prev) => {
 			if (prev === d.trim()) {
 				return d + ' ';
 			}
 			return d.trim();
 		});
-		selectedExampleIdx.set(i);
-
-		ga('example_dropdown_click', {
-			event_category: 'user_input',
-			value: i
-		});
+		useCustomInput = false;
 	};
 
 	const moveCursorToEnd = (element) => {
@@ -108,27 +128,20 @@
 	};
 
 	$: isLoading = $isFetchingModel || $isModelRunning;
-	$: disabled = $isOnAnimation || $isFetchingModel || $isModelRunning || $expandedBlock.id !== null;
-	$: selectDisabled = $isOnAnimation || $isModelRunning || $expandedBlock.id !== null;
+	$: disabled =
+		$isFetchingModel ||
+		// $isModelRunning ||
+		$expandedBlock.id !== null ||
+		!!$weightPopover;
+	$: selectDisabled = $isModelRunning || $expandedBlock.id !== null || !!$weightPopover;
+	$: parameterDisabled = !!$weightPopover;
 </script>
 
-<div class="input-area">
-	<!-- <div class="flex items-center gap-1 whitespace-nowrap"> -->
-	<!-- <Label>Model</Label> -->
-	<!-- <Select
-			items={[
-				{ value: 'gpt2-sm', name: 'gpt2-sm' },
-				{ value: 'gpt2-md', name: 'gpt2-md' },
-				{ value: 'gpt2', name: 'gpt2' }
-			]}
-			bind:value={$selectedModel}
-			size="sm"
-		/> -->
-	<!-- </div> -->
-
-	<form class="input-form">
+<div class="input-area" data-click="input-area">
+	<form class="input-form" data-click="input-form">
 		<ButtonGroup class="input-btn-group" size="sm">
 			<button
+				data-click="dropdown-btn"
 				type="button"
 				disabled={selectDisabled}
 				class:selectDisabled
@@ -136,9 +149,10 @@
 			>
 				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
 			</button>
-			<Dropdown placement="bottom-start" bind:open={dropdownOpen} class="example-dropdown">
+			<Dropdown bind:open={dropdownOpen} class="example-dropdown">
 				{#each inputTextExample as text, index}
 					<DropdownItem
+						data-click={`dropdown-item-${index}`}
 						class={$selectedExampleIdx === index && 'active'}
 						on:click={() => {
 							onSelectExample(text, index);
@@ -148,12 +162,17 @@
 			</Dropdown>
 
 			<div
+				data-click="text-input"
 				class="input-container"
 				class:disabled
+				role="none"
+				on:keydown={(e) => {
+					e.stopPropagation();
+					inputRef.focus();
+				}}
 				on:click={(e) => {
 					e.stopPropagation();
 					inputRef.focus();
-					moveCursorToEnd(inputRef);
 				}}
 			>
 				<div class={`editable ${!$isModelRunning ? 'w-full' : ''}`}>
@@ -172,26 +191,28 @@
 					>
 						{inputTextTemp}
 					</div>
-					<div
-						bind:this={predictRef}
-						class="predicted"
-						role="none"
-						on:click={(e) => {
-							e.stopPropagation();
-							onFocusInput(e);
-							inputRef.focus();
-							moveCursorToEnd(inputRef);
-						}}
-					>
-						<span>{predictedTokenTemp}</span>
-					</div>
+					{#if !$isModelRunning}
+						<div
+							bind:this={predictRef}
+							class="predicted"
+							role="none"
+							on:click={(e) => {
+								e.stopPropagation();
+								onFocusInput(e);
+								inputRef.focus();
+								moveCursorToEnd(inputRef);
+							}}
+						>
+							<span>{predictedTokenTemp}</span>
+						</div>
+					{/if}
 				</div>
 				{#if $isModelRunning}
 					<div class="loading"><LoadingDots /></div>
 				{/if}
 				{#if $isMobile}
 					<span class="helper-text"
-						>Try the examples. Please access on a desktop computer to use GPT-2 model.</span
+						>Try the examples. Please use a desktop computer to input GPT-2 prompts directly.</span
 					>
 				{:else if $isLoaded && $isFetchingModel}
 					<span class="helper-text"
@@ -203,6 +224,7 @@
 			</div>
 		</ButtonGroup>
 		<button
+			data-click="generate-btn"
 			disabled={disabled || exceedLimit || exceedLimit}
 			class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
 				disabled: disabled || exceedLimit,
@@ -214,10 +236,17 @@
 			Generate
 		</button>
 	</form>
-	<Temperature disabled={$isOnAnimation} />
+	<div class="parameters" data-click="input-parameters">
+		<Temperature disabled={parameterDisabled} />
+		<Sampling disabled={parameterDisabled} />
+	</div>
 </div>
 
 <style lang="scss">
+	.parameters {
+		display: flex;
+		gap: 1rem;
+	}
 	.input-area {
 		width: 100%;
 		flex-shrink: 0;
@@ -250,7 +279,7 @@
 		border-left: none;
 		border-start-end-radius: 0.5rem;
 		border-end-end-radius: 0.5rem;
-		font-size: 0.9rem;
+		font-size: 1rem;
 		line-height: 1rem;
 		padding: 0.5rem;
 		white-space: pre-wrap;
@@ -278,7 +307,6 @@
 				}
 			}
 			.predicted {
-				// flex-shrink: 0;
 				flex: 1 0 0;
 				color: var(--predicted-color);
 				font-weight: 600;
@@ -299,7 +327,7 @@
 
 	.select-button {
 		flex-shrink: 0;
-		font-size: 0.8rem;
+		font-size: 0.9rem;
 		border: 1px solid theme('colors.gray.300');
 		color: theme('colors.gray.900');
 		&:hover {

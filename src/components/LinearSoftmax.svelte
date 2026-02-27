@@ -6,45 +6,56 @@
 	import { tick } from 'svelte';
 	import tailwindConfig from '../../tailwind.config';
 	import resolveConfig from 'tailwindcss/resolveConfig';
-	import { rootRem, temperature } from '~/store';
-	import { OriginalBarData } from '../utils/mock_data';
 	import {
-		expandedBlock,
-		predictedToken,
-		highlightedIndex,
-		isModelRunning,
-		modelData
+		rootRem,
+		temperature,
+		sampling,
+		isExpandOrCollapseRunning,
+		isTextbookOpen,
+		textbookCurrentPageId,
+		userId
 	} from '~/store';
+	import { expandedBlock, predictedToken, highlightedIndex, modelData } from '~/store';
 	import ProbabilityBars from './ProbabilityBars.svelte';
 	import Katex from '~/utils/Katex.svelte';
 	import { ga } from '~/utils/event';
+	import { EyeOutline, ZoomInOutline } from 'flowbite-svelte-icons';
+	import { fade } from 'svelte/transition';
+	import SoftmaxPopover from './popovers/SoftmaxPopover.svelte';
+	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
+	import { textPages } from '~/utils/textbookPages';
+	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 
 	export let className: string | undefined = undefined;
-
-	const { theme } = resolveConfig(tailwindConfig);
 
 	setContext('block-id', 'softmax');
 
 	const blockId = getContext('block-id');
 
 	let isSoftmaxExpanded = false;
+	let showLogitPopover = false;
 
 	// event handling
 	$: if ($expandedBlock.id !== blockId && isSoftmaxExpanded) {
 		isSoftmaxExpanded = false;
 		collapseSoftmax();
 	}
+	$: if ($expandedBlock.id === blockId && !isSoftmaxExpanded) {
+		isSoftmaxExpanded = true;
+		expandSoftmax();
+	}
 
 	const onClickSoftmax = () => {
 		if (!isSoftmaxExpanded) {
 			expandedBlock.set({ id: blockId });
-			expandSoftmax();
 		}
 	};
 
 	const onClickSoftmaxTitle = (e) => {
 		e.stopPropagation();
 		e.preventDefault();
+		textPages.find((page) => page.id === 'output-probabilities')?.out();
+
 		if (!isSoftmaxExpanded) {
 			expandedBlock.set({ id: blockId });
 			expandSoftmax();
@@ -61,9 +72,9 @@
 		}
 	}
 	onMount(() => {
-		document.body.addEventListener('click', handleOutsideClick);
+		document.querySelector('.main-section').addEventListener('click', handleOutsideClick);
 		return () => {
-			document.body.removeEventListener('click', handleOutsideClick);
+			document.querySelector('.main-section').removeEventListener('click', handleOutsideClick);
 		};
 	});
 
@@ -72,14 +83,15 @@
 
 	let drawBars: () => void;
 
-	const expandSoftmax = async () => {
-		ga('probability_expand', {
-			event_category: 'expansion'
-		});
+	// google analytics
+	let startTime = null;
 
+	const expandSoftmax = async () => {
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = true;
 		await tick();
+
+		isExpandOrCollapseRunning.set(true);
 
 		gsap.set('.steps', { justifyContent: 'end' });
 		gsap.set('.softmax-detail', { opacity: 0 });
@@ -89,6 +101,7 @@
 			ease: 'power2.inOut',
 			onComplete: () => {
 				drawBars?.();
+				isExpandOrCollapseRunning.set(false);
 			}
 		});
 		gsap.to('.softmax-detail', {
@@ -96,22 +109,42 @@
 			duration: 0.2,
 			delay: 0.5
 		});
+
+		startTime = performance.now();
+		window.dataLayer?.push({
+			event: 'visibility-show',
+			visible_name: 'prob-expansion',
+			start_time: startTime,
+			user_id: $userId
+		});
 	};
 
 	const collapseSoftmax = async () => {
-		ga('probability_collapse', {
-			event_category: 'expansion'
+		let endTime = performance.now();
+		let visibleDuration = endTime - startTime;
+
+		window.dataLayer?.push({
+			event: 'visibility-hide',
+			visible_name: 'prob-expansion',
+			end_time: endTime,
+			visible_duration: visibleDuration,
+			user_id: $userId
 		});
+
+		showLogitPopover = false;
 
 		containerState = Flip.getState('.softmax .softmax-detail.expandable');
 		isSoftmaxExpanded = false;
 		await tick();
+
+		isExpandOrCollapseRunning.set(true);
 
 		await Flip.from(containerState, {
 			duration: 0.5,
 			ease: 'power2.inOut',
 			onComplete: () => {
 				drawBars?.();
+				isExpandOrCollapseRunning.set(false);
 			}
 		});
 		gsap.to('.softmax-detail', {
@@ -127,11 +160,18 @@
 
 	let hoveredIndex: number | null = null;
 
-	$: data = $modelData?.prediction || [];
+	$: data = $modelData?.probabilities || [];
 	$: tokenIds = data?.map((d) => d.tokenId);
-	// $: logits = data?.map((d) => d.adjustedLogit) || [];
 	$: logits = data?.map((d) => d.logit) || [];
-	$: exponents = data?.map((d) => d.adjustedExp) || [];
+	$: scaledLogits = data?.map((d) => d.scaledLogit) || [];
+
+	// top-k
+	$: topKLogits = data?.map((d) => d.topKLogit) || [];
+
+	// top-p
+	$: topPProbabilities = data?.map((d) => d.topPProbability) || [];
+	$: cumulativeProbabilities = data?.map((d) => d.cumulativeProbability) || [];
+	$: cutoffIndex = data?.[0].cutoffIndex;
 
 	let isHovered = false;
 
@@ -142,14 +182,24 @@
 	function handleMouseLeave() {
 		isHovered = false;
 	}
+
+	const onClickLogits = (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		showLogitPopover = !showLogitPopover;
+	};
 </script>
 
 <div
-	class={classNames('softmax', className, { expanded: isSoftmaxExpanded })}
+	class={classNames('softmax', className, {
+		expanded: isSoftmaxExpanded,
+		'textbook-highlight': $isTextbookOpen && $textbookCurrentPageId === 'transformer-architecture'
+	})}
 	role="none"
 	bind:this={expandableEl}
 	on:click={onClickSoftmax}
 	on:keydown={onClickSoftmax}
+	data-click="prob-step"
 >
 	<div
 		class="title expandable"
@@ -158,9 +208,14 @@
 		on:keydown={onClickSoftmaxTitle}
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
+		data-click="prob-step-title"
 	>
-		<div>Probabilities</div>
+		<div class="title-text flex w-max items-center gap-1">
+			Probabilities
+			<ZoomInOutline></ZoomInOutline>
+		</div>
 	</div>
+
 	<div
 		class="content resize-watch relative"
 		style={`--softmax-row-height: ${rowHeight}px;--softmax-row-gap: ${rowGap}px`}
@@ -179,7 +234,7 @@
 						class:final_token_highlight={$predictedToken?.rank === idx}
 					>
 						<span>{item.token.trim() === '' ? '\u00A0' : item.token}</span>
-						<Tooltip class="popover" placement="left" type="light">
+						<Tooltip class="softmax-tooltip" type="light">
 							Token ID: <span class="number">{tokenIds[idx]}</span>
 						</Tooltip>
 					</div>
@@ -195,24 +250,30 @@
 						<div class="title-text">Tokens</div>
 					</div>
 					<div class="title-box logits">
-						<div class="title-text">Logits</div>
-						<Tooltip class="popover tooltip text-xs"
-							><Katex math={'\\text{logits} = \\text{hidden state} \\times \\text{LM Head Weights}'}
-							></Katex></Tooltip
+						<div
+							class="title-text btn shadow-sm"
+							on:click={onClickLogits}
+							data-click="prob-expansion-logit-btn"
+						>
+							Logits <EyeOutline class="icon text-gray-400" size="sm" />
+						</div>
+					</div>
+					<div class="title-box scaled">
+						<TextbookTooltip id="temperature"
+							><div class="title-text">Scaled logits</div></TextbookTooltip
 						>
 					</div>
-					<div class="title-box exponents">
-						<div class="title-text">Exponents</div>
-						<Tooltip class="popover tooltip"
-							><Katex math={'e^{logit_i / temperature}'}></Katex></Tooltip
+					<div class="title-box sampling">
+						<TextbookTooltip id="sampling"
+							><div class="title-text">
+								{$sampling.type === 'top-k' ? 'Top-k' : 'Softmax & Top-p'}
+							</div></TextbookTooltip
 						>
 					</div>
 					<div class="title-box probability">
-						<div class="title-text">Softmax</div>
-						<Tooltip class="popover tooltip">
-							<Katex math={'\\frac{e^{\\text{logit}_i / T}}{\\sum_{j} e^{\\text{logit}_j / T}}'}
-							></Katex>
-						</Tooltip>
+						<div class="title-text mr-1">
+							{$sampling.type === 'top-k' ? 'Softmax' : 'Normalization'}
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -231,56 +292,138 @@
 										class:sample_highlight={$highlightedIndex === idx}
 										class:final_token_highlight={$predictedToken?.rank === idx}
 									>
-										<span class="number">{logit.toFixed(2)}</span>
+										<span class="number">{logit?.toFixed(2)}</span>
 									</div>
-									<Tooltip class="popover" placement="left" type="light">
+									<Tooltip class="softmax-tooltip" type="light">
 										<Katex math={`\\text{logit}_{${tokenIds[idx]}}`}></Katex>
-										<!-- {(logit * $temperature).toFixed(2)} ÷ {$temperature} = {logit.toFixed(2)} -->
 									</Tooltip>
 								{/if}
 							{/each}
 						</div>
-						<div class="content-box vector-box exponents">
-							{#each exponents as exponent, idx}
-								<div
-									role="group"
-									class="text-box text-center"
-									on:mouseenter={() => (hoveredIndex = idx)}
-									on:mouseleave={() => (hoveredIndex = null)}
-									class:highlight={idx === hoveredIndex}
-									class:sample_highlight={$highlightedIndex === idx}
-									class:final_token_highlight={$predictedToken?.rank === idx}
-								>
-									<span class="number">{exponent.toExponential(2)}</span>
-
-									<!-- {#if exponent > 100000}
-										{exponent.toExponential(2)}
-									{:else if exponent < 10}
-										{exponent.toFixed(2)}
-									{:else}
-										{exponent.toFixed(0)}
-									{/if} -->
-								</div>
-								<Tooltip class="popover" placement="left" type="light">
-									<Katex math={`e^{${logits[idx]?.toFixed(2)} / ${$temperature}}`}></Katex>
-									<!-- exp({logits[idx].toFixed(2)}) = {exponent.toExponential(2)} -->
-								</Tooltip>
+						<div class="content-box vector-box scaled">
+							{#each scaledLogits as logit, idx}
+								{#if logit !== undefined}
+									<div
+										role="group"
+										class="text-box text-center"
+										on:mouseenter={() => (hoveredIndex = idx)}
+										on:mouseleave={() => (hoveredIndex = null)}
+										class:highlight={idx === hoveredIndex}
+										class:sample_highlight={$highlightedIndex === idx}
+										class:final_token_highlight={$predictedToken?.rank === idx}
+									>
+										<span class="number">{logit?.toFixed(2)}</span>
+									</div>
+									<Tooltip class="softmax-tooltip" type="light">
+										<Katex math={`${logits[idx]?.toFixed(2)} / ${$temperature}`}></Katex>
+									</Tooltip>
+								{/if}
 							{/each}
+						</div>
+						<div class="content-box vector-box sampling">
+							{#if $sampling.type === 'top-k'}
+								{#each topKLogits as logit, idx}
+									{#if logit !== undefined}
+										<div
+											role="group"
+											class="text-box text-center"
+											on:mouseenter={() => (hoveredIndex = idx)}
+											on:mouseleave={() => (hoveredIndex = null)}
+											class:highlight={idx === hoveredIndex}
+											class:sample_highlight={$highlightedIndex === idx}
+											class:final_token_highlight={$predictedToken?.rank === idx}
+											class:cutoff={$sampling.value === idx + 1}
+											class:filtered={$sampling.value > idx}
+										>
+											{#if logit === Infinity}
+												<span class="infinity"><Katex math={'\\infty'} /></span>
+											{:else if logit === -Infinity}
+												<span class="infinity"><Katex math={'-\\infty'} /></span>
+											{:else}
+												<span class="number">{logit?.toFixed(2)}</span>
+											{/if}
+										</div>
+									{/if}
+								{/each}
+							{:else}
+								{#each topPProbabilities as prob, idx}
+									{#if prob !== undefined}
+										<div
+											role="group"
+											class="text-box text-center"
+											on:mouseenter={() => (hoveredIndex = idx)}
+											on:mouseleave={() => (hoveredIndex = null)}
+											class:highlight={idx === hoveredIndex}
+											class:sample_highlight={$highlightedIndex === idx}
+											class:final_token_highlight={$predictedToken?.rank === idx}
+											class:cutoff={cutoffIndex === idx}
+											class:filtered={cutoffIndex >= idx}
+											class:zero={cutoffIndex < idx}
+										>
+											<span class="number" class:strike={cutoffIndex < idx}>{prob.toFixed(2)}</span>
+											{#if cutoffIndex === idx}
+												<span class="cutoff-label"
+													>sum={cumulativeProbabilities[idx]?.toFixed(2)}</span
+												>
+											{/if}
+										</div>
+										<Tooltip class="softmax-tooltip" type="light">
+											sum=<Katex math={`${cumulativeProbabilities[idx]?.toFixed(2)}`}></Katex>
+										</Tooltip>
+									{/if}
+								{/each}
+							{/if}
 						</div>
 					{/if}
 				</div>
 				<ProbabilityBars bind:hoveredIndex {rowGap} {rowHeight} bind:drawBars />
 			</div>
 		</div>
+		{#if isSoftmaxExpanded && !!$predictedToken}
+			<div class="softmax-popover">
+				<SoftmaxPopover bind:hoveredIndex />
+			</div>
+		{/if}
+		{#if isSoftmaxExpanded && showLogitPopover}
+			<div class="softmax-weight-popover weight-popover logit-popover" in:fade={{ duration: 300 }}>
+				<LogitWeightPopover bind:isOpen={showLogitPopover}></LogitWeightPopover>
+			</div>
+		{/if}
 	</div>
 </div>
 
 <style lang="scss">
+	.softmax-popover {
+		position: absolute;
+		top: 0;
+		right: calc(100% + 6rem);
+	}
+	.logit-popover {
+		z-index: $POPOVER_INDEX;
+		width: max-content !important;
+		position: absolute;
+		top: 15rem;
+		right: calc(100% + 6rem);
+	}
+	:global(.frac-line) {
+		border-color: black;
+	}
+
+	:global(.softmax-tooltip) {
+		z-index: $TOOLTIP_INDEX;
+	}
 	.softmax {
+		.top-k-line {
+			width: 100%;
+			height: 1px;
+			background: theme('colors.purple.500');
+			top: 1.5rem;
+			position: absolute;
+		}
 		&.expanded {
 			.title,
 			.content {
-				z-index: 900;
+				z-index: $EXPANDED_CONTENT_INDEX;
 			}
 		}
 
@@ -293,13 +436,11 @@
 				height: 100%;
 			}
 
-			// height: auto;
 			padding-right: 3rem;
 			display: grid;
 			grid-template-columns: 0 auto;
 
 			.content-box {
-				// position: absolute;
 				flex-shrink: 0;
 				display: flex;
 				flex-direction: column;
@@ -312,6 +453,8 @@
 				}
 
 				.text-box {
+					cursor: default;
+					position: relative;
 					flex-shrink: 0;
 					text-align: right;
 					font-size: 0.9rem;
@@ -322,9 +465,17 @@
 					width: 100%;
 					height: var(--softmax-row-height);
 
+					&.zero {
+						color: theme('colors.gray.300');
+					}
+
+					&.filtered {
+						background-color: theme('colors.purple.100');
+						color: theme('colors.gray.500');
+					}
+
 					&.highlight {
 						color: theme('colors.purple.600');
-						cursor: pointer;
 						transition: background-color 0.2s;
 					}
 
@@ -336,8 +487,23 @@
 					&.final_token_highlight {
 						color: var(--predicted-color);
 						font-weight: 600;
-						// background-color: theme('colors.blue.200');
 						transition: background-color 1s;
+					}
+
+					&.cutoff {
+						position: relative;
+
+						.cutoff-label {
+							position: absolute;
+							color: theme('colors.purple.500');
+							top: 1rem;
+							transform: translate(0, 50%);
+							font-size: 0.9rem;
+							font-weight: 600;
+							font-family: serif;
+							line-height: 1;
+							background-color: theme('colors.gray.50');
+						}
 					}
 				}
 			}
@@ -355,25 +521,24 @@
 			}
 
 			.token-string {
-				width: 6rem;
-				z-index: 201;
+				width: 5rem;
 
 				.text-box {
 					justify-content: end;
 
 					span {
+						z-index: $COLUMN_TITLE_INDEX;
 					}
 				}
 			}
-			.logits {
-				width: 6rem;
-				// z-index: 200;
+			.logits,
+			.scaled,
+			.sampling {
+				width: 5rem;
 			}
-			.exponents {
-				width: 6rem;
-				// z-index: 200;
+			.strike {
+				text-decoration: line-through;
 			}
-
 			.current {
 				transform: translateY(0);
 			}
@@ -381,7 +546,7 @@
 			.softmax-subtitle {
 				gap: 0.5rem;
 				position: absolute;
-				left: -6rem;
+				left: -5rem;
 				top: 0;
 				transform: translateY(calc(-100% - 1rem));
 
@@ -391,15 +556,26 @@
 					justify-content: center;
 					border-radius: 0.5rem;
 					top: 0;
-
-					&:hover {
-						background-color: theme('colors.gray.50');
-					}
+					align-items: end;
 
 					.title-text {
 						display: flex;
 						align-items: end;
+						gap: 2px;
 						color: theme('colors.gray.400');
+
+						&:hover {
+							background-color: theme('colors.gray.50');
+						}
+
+						&.btn {
+							color: theme('colors.gray.500');
+							height: max-content;
+							border: 1px solid theme('colors.gray.300');
+							border-radius: 0.3rem;
+							padding: 0.1rem 0.3rem;
+							cursor: pointer;
+						}
 					}
 				}
 			}
@@ -409,11 +585,12 @@
 			position: relative;
 
 			.dim {
+				user-select: none;
 				position: absolute;
 				bottom: 0;
 				width: 100%;
 				height: 50vh;
-				z-index: 300;
+				z-index: $EXPANDED_DIM_INDEX;
 				background-color: white;
 				background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 70%);
 			}

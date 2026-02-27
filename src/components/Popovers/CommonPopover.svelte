@@ -2,8 +2,8 @@
 	import classNames from 'classnames';
 	import { Popover } from 'flowbite-svelte';
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
-	import { fade } from 'svelte/transition';
-	import { ga } from '~/utils/event';
+	import { userId } from '~/store';
+	import { onClickReadMore } from '~/utils/event';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
@@ -14,42 +14,55 @@
 	export let goTo: string | undefined = undefined;
 	export let reference: PopoverProps['reference'] | undefined = undefined;
 
-	function scrollToDiv(e) {
-		e.stopPropagation();
-		if (!goTo) return;
-		const targetDiv = document.getElementById(goTo);
-		if (targetDiv) {
-			const targetPosition = targetDiv.getBoundingClientRect().top + window.scrollY;
-			const offsetPosition = targetPosition - 50;
-			window.scrollTo({
-				top: offsetPosition,
-				behavior: 'smooth'
-			});
-		}
-	}
-
-	function onClickReadMore(e) {
-		scrollToDiv(e);
-		ga('readmore_btn_click', {
-			value: title
+	let startTime;
+	const onShow = (e) => {
+		startTime = e.timeStamp;
+		window.dataLayer?.push({
+			event: 'visibility-show',
+			visible_name: `help-popover-${className}`,
+			start_time: e.timeStamp,
+			user_id: $userId
 		});
-	}
+	};
+	const onHide = (e) => {
+		window.dataLayer?.push({
+			event: 'visibility-hide',
+			visible_name: `help-popover-${className}`,
+			end_time: e.timeStamp,
+			visible_duration: e.timeStamp - (startTime || 0),
+			user_id: $userId
+		});
+	};
 </script>
 
+<!-- bug: {triggeredBy} prop triggers show event twice -->
 <Popover
 	class={classNames('popover text-sm', className)}
 	{title}
-	{triggeredBy}
-	{trigger}
 	{placement}
 	{reference}
 	offset={1}
 	arrow={false}
+	data-click={`popover-${className}`}
+	on:show={(e) => {
+		if (e.detail) {
+			onShow(e);
+		} else {
+			onHide(e);
+		}
+	}}
 >
 	<div class="content">
 		<slot></slot>
 		{#if goTo}
-			<div class="more-btn mt-1 text-blue-600 hover:underline" on:click={onClickReadMore}>
+			<div
+				class="more-btn mt-1 text-blue-600 hover:underline"
+				on:click={(e) =>
+					onClickReadMore(e, goTo, {
+						value: title
+					})}
+				data-click={`read-more-btn-${className}`}
+			>
 				Read more
 			</div>
 		{/if}
