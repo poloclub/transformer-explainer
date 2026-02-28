@@ -9,16 +9,16 @@
 		<h1>What is a Transformer?</h1>
 
 		<p>
-			Transformer is a neural network architecture that has fundamentally changed the approach to
-			Artificial Intelligence. Transformer was first introduced in the seminal paper
+			The Transformer is a neural network architecture that has fundamentally changed the approach to
+			Artificial Intelligence. Transformers were first introduced in the seminal paper
 			<a
 				href="https://dl.acm.org/doi/10.5555/3295222.3295349"
 				title="ACM Digital Library"
 				target="_blank">"Attention is All You Need"</a
 			>
-			in 2017 and has since become the go-to architecture for deep learning models, powering text-generative
+			in 2017 and have since become the go-to architecture for deep learning models, powering text-generative
 			models like OpenAI's <strong>GPT</strong>, Meta's <strong>Llama</strong>, and Google's
-			<strong>Gemini</strong>. Beyond text, Transformer is also applied in
+			<strong>Gemini</strong>. Beyond text, Transformers are also applied in
 			<a
 				href="https://huggingface.co/learn/audio-course/en/chapter3/introduction"
 				title="Hugging Face"
@@ -36,10 +36,10 @@
 				href="https://www.deeplearning.ai/the-batch/reinforcement-learning-plus-transformers-equals-efficiency/"
 				title="Deep Learning AI"
 				target="_blank">game playing</a
-			>, demonstrating its versatility across numerous domains.
+			>, demonstrating their versatility across numerous domains.
 		</p>
 		<p>
-			Fundamentally, text-generative Transformer models operate on the principle of <strong
+			Fundamentally, generative Transformer models are based on the Decoder-Only Transformer architechture and operate on the principle of <strong
 				>next-token prediction</strong
 			>: given a text prompt from the user, what is the
 			<em>most probable next token (a word or part of a word)</em> that will follow this input? The core
@@ -311,10 +311,11 @@
 					between all input tokens.
 				</li>
 				<li>
-					<strong>Scaling · Mask</strong>: The attention scores are scaled and a mask is applied to
+					<strong>Scaling · Mask</strong>: The attention scores are scaled and a (causal) mask is applied to
 					the upper triangle of the attention matrix to prevent the model from accessing future
 					tokens, setting these values to negative infinity. The model needs to learn how to predict
-					the next token without “peeking” into the future.
+					the next token without “peeking” into the future. GPTs often use a padding-mask in addition to the 
+					decoder causal mask to ignore padding tokens.
 				</li>
 				<li>
 					<strong>Softmax · Dropout</strong>: After masking and scaling, the attention scores are
