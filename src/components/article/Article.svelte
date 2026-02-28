@@ -311,10 +311,11 @@
 					between all input tokens.
 				</li>
 				<li>
-					<strong>Scaling · Mask</strong>: The attention scores are scaled and a mask is applied to
+					<strong>Scaling · Mask</strong>: The attention scores are scaled and a (causal) mask is applied to
 					the upper triangle of the attention matrix to prevent the model from accessing future
 					tokens, setting these values to negative infinity. The model needs to learn how to predict
-					the next token without “peeking” into the future.
+					the next token without “peeking” into the future. GPTs often use a padding-mask in addition to the 
+					decoder causal mask to ignore padding tokens.
 				</li>
 				<li>
 					<strong>Softmax · Dropout</strong>: After masking and scaling, the attention scores are
