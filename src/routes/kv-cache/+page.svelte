@@ -18,7 +18,8 @@
 		isOnBlockTransition,
 		blockIdx,
 		isModelRunning,
-		attentionHeadIdx
+		attentionHeadIdx,
+		predictedToken
 	} from '~/store';
 	import { PreTrainedTokenizer } from '@xenova/transformers';
 	import Sankey from '~/components/Sankey.svelte';
@@ -158,6 +159,23 @@
 		});
 	}
 
+	// Show the predicted next token in the LinearSoftmax panel
+	function setPredictedNextToken(kvData: typeof kvEx0, afterStepIdx: number) {
+		// afterStepIdx: 0-indexed step just processed; next predicted = decodeSteps[afterStepIdx+1].inputToken
+		const next = kvData.decodeSteps[afterStepIdx + 1];
+		if (next) {
+			predictedToken.set({
+				rank: 0,
+				tokenId: next.inputTokenId,
+				token: next.inputToken,
+				logit: 0,
+				scaledLogit: 0,
+				expLogit: 1,
+				probability: 1
+			});
+		}
+	}
+
 	// Advance to next decode step
 	function nextStep() {
 		if (!kvReady) return;
@@ -172,6 +190,12 @@
 		kvCache.set(entries);
 		currentDecodeData.set(stepData as DecodeStepData);
 
+		// Show only the current decode token in QKV/MLP/Embedding columns
+		tokens.set([stepData.inputToken]);
+
+		// Update predicted token in LinearSoftmax to the next generated token
+		setPredictedNextToken(kvData, nextIdx);
+
 		decodeStep.set(nextIdx + 1);
 	}
 
@@ -184,7 +208,9 @@
 		decodeStep.set(newStep);
 
 		if (newStep === 0) {
-			// Back to prefill: clear decode state but keep prefill data
+			// Back to prefill: restore all prompt tokens and prefill predictions
+			const prefillData = cachedDataMap[pendingKvExIdx];
+			tokens.set(prefillData.tokens);
 			kvCache.set([]);
 			currentDecodeData.set(null);
 			if (tokenizer && $modelData?.logits) {
@@ -207,6 +233,8 @@
 		promptTokenCount.set(kvData.promptTokens.length);
 		kvCache.set(entries);
 		currentDecodeData.set(stepData as DecodeStepData);
+		tokens.set([stepData.inputToken]);
+		setPredictedNextToken(kvData, prevIdx);
 	}
 
 	// Visual elements

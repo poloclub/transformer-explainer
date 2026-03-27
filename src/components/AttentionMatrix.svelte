@@ -50,6 +50,11 @@
 			`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn_dropout`
 		]?.data || [[]];
 
+	// Normalize to [0, max] so low-entropy distributions remain visible
+	$: decodeMax = Math.max(...(decodeSoftmaxed[0] ?? []), 0.01);
+	$: decodeColorScale = (d: number) =>
+		d3.interpolate('white', theme.colors['purple'][700])(d / decodeMax);
+
 	let factor = 1; //todo
 	let maxCellSize = 20 * factor;
 	let minCellSize = 10 * factor;
@@ -343,7 +348,7 @@
 				rowGap={3}
 				colGap={3}
 				shape={'circle'}
-				colorScale={softmaxColorScale}
+				colorScale={decodeColorScale}
 				{onMouseOverCell}
 				{onMouseOutCell}
 				{showTooltip}
