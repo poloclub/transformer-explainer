@@ -68,6 +68,12 @@ def run_prefill(model, tokenizer, prompt):
         "past_key_values": output.past_key_values,
     }
 
+def extract_top_logits(logits_tensor, n=50):
+    """Return top-N [tokenId, logit] pairs sorted by logit descending."""
+    logits = logits_tensor.tolist()
+    indexed = sorted(enumerate(logits), key=lambda x: -x[1])[:n]
+    return [[int(i), round(v, 4)] for i, v in indexed]
+
 def run_decode_step(model, tokenizer, token_id, past_key_values):
     input_ids = torch.tensor([[token_id]])
     with torch.no_grad():
@@ -78,15 +84,15 @@ def run_decode_step(model, tokenizer, token_id, past_key_values):
             use_cache=True
         )
     next_token_id = int(output.logits[0, -1, :].argmax().item())
-    logits = output.logits[0, -1, :].tolist()
     new_past = output.past_key_values
     kv_snapshot = extract_head_vectors(new_past)
     attention_outputs = extract_attention_scores(output.attentions)
+    top_logits = extract_top_logits(output.logits[0, -1, :])
     return {
         "input_token": tokenizer.decode([token_id]),
         "input_token_id": token_id,
         "next_token_id": next_token_id,
-        "logits": logits,
+        "top_logits": top_logits,
         "kv_snapshot": kv_snapshot,
         "attention_outputs": attention_outputs,
         "past_key_values": new_past,
@@ -110,7 +116,7 @@ def build_example(model, tokenizer, prompt):
             "inputTokenId": result["input_token_id"],
             "kvSnapshot": result["kv_snapshot"],
             "attentionOutputs": result["attention_outputs"],
-            # logits omitted — prefill logits shown in LinearSoftmax panel
+            "topLogits": result["top_logits"],
         })
         past = result["past_key_values"]
         current_token_id = result["next_token_id"]

@@ -22,6 +22,7 @@ export type DecodeStepData = {
 		values: number[][][]; // [12 heads, seq_len, 64]
 	};
 	attentionOutputs: Record<string, { data: number[][]; dims: number[]; size: number }>;
+	topLogits?: [number, number][];  // [[tokenId, logit], ...] top-50 by raw logit
 	logits?: number[];
 };
 

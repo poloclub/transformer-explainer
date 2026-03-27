@@ -27,6 +27,14 @@
 	import Sampling from './Sampling.svelte';
 	import { completeCurrentAnimation } from '~/utils/animation';
 	import { textPages } from '~/utils/textbookPages';
+	import { afterUpdate } from 'svelte';
+
+	afterUpdate(() => {
+		// Sync contenteditable DOM when the store updates programmatically (e.g. during KV decode)
+		if (inputRef && document.activeElement !== inputRef) {
+			inputRef.innerText = inputTextTemp;
+		}
+	});
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;

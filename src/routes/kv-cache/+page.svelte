@@ -38,7 +38,7 @@
 	import QKV from '~/components/QKV.svelte';
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
 
-	import { adjustTemperature, fakeRunWithCachedData } from '~/utils/data';
+	import { adjustTemperature, fakeRunWithCachedData, getProbabilities } from '~/utils/data';
 	import {
 		decodeStep,
 		kvCache,
@@ -60,6 +60,8 @@
 	// Track which KV example to use after prefill animation finishes
 	let pendingKvExIdx = 0;
 	let kvReady = false; // true after prefill animation done
+	let prefillText = ''; // inputText captured at end of prefill
+	let ignoreInputTextChange = false; // guard against re-triggering prefill when we programmatically set inputText
 
 	onMount(async () => {
 		const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
@@ -77,6 +79,21 @@
 		if (prevModelRunning && !running) {
 			// prefill animation just finished
 			kvReady = true;
+			prefillText = $inputText;
+			// Override sampled token with the greedy first decode token
+			const kvData = kvExamples[pendingKvExIdx];
+			const firstStep = kvData.decodeSteps[0];
+			if (firstStep) {
+				predictedToken.set({
+					rank: 0,
+					tokenId: firstStep.inputTokenId,
+					token: firstStep.inputToken,
+					logit: 0,
+					scaledLogit: 0,
+					expLogit: 1,
+					probability: 1
+				});
+			}
 		}
 		prevModelRunning = running;
 	}
@@ -97,6 +114,10 @@
 		};
 
 		const unsubscribeInputText = inputText.subscribe(() => {
+			if (ignoreInputTextChange) {
+				ignoreInputTextChange = false;
+				return;
+			}
 			runPrefill();
 		});
 
@@ -106,13 +127,15 @@
 				initialTemperature = false;
 				return;
 			}
-			if ($modelData?.logits) {
-				adjustTemperature({
-					tokenizer: tok,
-					logits: $modelData.logits,
-					temperature: value,
-					sampling: $sampling
-				});
+			if ($isDecoding) {
+				const step = $currentDecodeData;
+				const kvData = kvExamples[pendingKvExIdx];
+				const greedyNext = kvData.decodeSteps[$decodeStep];
+				if (step?.topLogits) {
+					updateDecodeStepProbabilities(tok, step, greedyNext);
+				}
+			} else if ($modelData?.logits) {
+				adjustTemperature({ tokenizer: tok, logits: $modelData.logits, temperature: value, sampling: $sampling });
 			}
 		});
 
@@ -122,13 +145,15 @@
 				initialSampling = false;
 				return;
 			}
-			if ($modelData?.logits) {
-				adjustTemperature({
-					tokenizer: tok,
-					logits: $modelData.logits,
-					temperature: $temperature,
-					sampling: value
-				});
+			if ($isDecoding) {
+				const step = $currentDecodeData;
+				const kvData = kvExamples[pendingKvExIdx];
+				const greedyNext = kvData.decodeSteps[$decodeStep];
+				if (step?.topLogits) {
+					updateDecodeStepProbabilities(tok, step, greedyNext);
+				}
+			} else if ($modelData?.logits) {
+				adjustTemperature({ tokenizer: tok, logits: $modelData.logits, temperature: $temperature, sampling: value });
 			}
 		});
 
@@ -138,6 +163,46 @@
 			unsubscribeSampling();
 		};
 	};
+
+	// Reconstruct a full-length sparse logit array from top-N pairs
+	function reconstructLogits(topLogits: [number, number][], vocabSize = 50257): number[] {
+		const logits = new Array(vocabSize).fill(-Infinity);
+		for (const [id, logit] of topLogits) {
+			logits[id] = logit;
+		}
+		return logits;
+	}
+
+	// Update modelData probabilities for a decode step using its topLogits
+	function updateDecodeStepProbabilities(
+		tok: PreTrainedTokenizer,
+		stepData: DecodeStepData,
+		greedyNextToken: { inputTokenId: number; inputToken: string } | undefined
+	) {
+		if (!stepData.topLogits || !tok) return;
+		const logits = reconstructLogits(stepData.topLogits);
+		const { probabilities } = getProbabilities({
+			tokenizer: tok,
+			logits,
+			temperature: $temperature,
+			sampling: $sampling
+		});
+		// Find (or fake) the greedy next token entry to use as "sampled"
+		const greedyProb = greedyNextToken
+			? probabilities.find((p) => p.tokenId === greedyNextToken.inputTokenId) ?? {
+					rank: 0,
+					tokenId: greedyNextToken.inputTokenId,
+					token: greedyNextToken.inputToken,
+					logit: logits[greedyNextToken.inputTokenId] ?? 0,
+					scaledLogit: (logits[greedyNextToken.inputTokenId] ?? 0) / $temperature,
+					expLogit: 1,
+					probability: 1
+				}
+			: probabilities[0];
+
+		modelData.update((d) => ({ ...d, logits, probabilities, sampled: greedyProb }));
+		predictedToken.set(greedyProb);
+	}
 
 	// Build kvCache entries for a given decode step (0-indexed)
 	function buildKVCacheEntries(kvData: typeof kvEx0, stepIdx: number): KVCacheEntry[] {
@@ -164,7 +229,7 @@
 		// afterStepIdx: 0-indexed step just processed; next predicted = decodeSteps[afterStepIdx+1].inputToken
 		const next = kvData.decodeSteps[afterStepIdx + 1];
 		if (next) {
-			predictedToken.set({
+				predictedToken.set({
 				rank: 0,
 				tokenId: next.inputTokenId,
 				token: next.inputToken,
@@ -193,8 +258,21 @@
 		// Show only the current decode token in QKV/MLP/Embedding columns
 		tokens.set([stepData.inputToken]);
 
-		// Update predicted token in LinearSoftmax to the next generated token
-		setPredictedNextToken(kvData, nextIdx);
+		// Accumulate decoded tokens in the text box without re-triggering prefill
+		const decodedSoFar = kvData.decodeSteps
+			.slice(0, nextIdx + 1)
+			.map((s) => s.inputToken)
+			.join('');
+		ignoreInputTextChange = true;
+		inputText.set(prefillText + decodedSoFar);
+
+		// Update probabilities panel with this step's distribution + highlight greedy next token
+		const greedyNext = kvData.decodeSteps[nextIdx + 1];
+		if (tokenizer && stepData.topLogits) {
+			updateDecodeStepProbabilities(tokenizer, stepData as DecodeStepData, greedyNext);
+		} else {
+			setPredictedNextToken(kvData, nextIdx);
+		}
 
 		decodeStep.set(nextIdx + 1);
 	}
@@ -213,6 +291,8 @@
 			tokens.set(prefillData.tokens);
 			kvCache.set([]);
 			currentDecodeData.set(null);
+			ignoreInputTextChange = true;
+			inputText.set(prefillText);
 			if (tokenizer && $modelData?.logits) {
 				adjustTemperature({
 					tokenizer,
@@ -234,7 +314,21 @@
 		kvCache.set(entries);
 		currentDecodeData.set(stepData as DecodeStepData);
 		tokens.set([stepData.inputToken]);
-		setPredictedNextToken(kvData, prevIdx);
+
+		// Restore accumulated text to match this step
+		const decodedSoFar = kvData.decodeSteps
+			.slice(0, prevIdx + 1)
+			.map((s: { inputToken: string }) => s.inputToken)
+			.join('');
+		ignoreInputTextChange = true;
+		inputText.set(prefillText + decodedSoFar);
+
+		const greedyNext = kvData.decodeSteps[prevIdx + 1];
+		if (tokenizer && stepData.topLogits) {
+			updateDecodeStepProbabilities(tokenizer, stepData as DecodeStepData, greedyNext);
+		} else {
+			setPredictedNextToken(kvData, prevIdx);
+		}
 	}
 
 	// Visual elements
@@ -260,6 +354,7 @@
 
 <div
 	class:active
+	class:decode-mode={$isDecoding}
 	class="main-section h-full w-full"
 	style={`--vector-height: ${$vectorHeight}px;--title-height: ${titleHeight}px;--content-height:${vizHeight - titleHeight}px;`}
 >
@@ -609,6 +704,10 @@
 		position: absolute;
 		left: -0.8rem;
 		transform: translateX(-100%);
+	}
+
+	:global(.decode-mode .mlp .label) {
+		display: none;
 	}
 	:global(.label.float-right) {
 		position: absolute;
