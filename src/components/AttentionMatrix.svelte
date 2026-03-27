@@ -8,7 +8,8 @@
 		hoveredMatrixCell,
 		blockIdx,
 		isExpandOrCollapseRunning,
-		userId
+		userId,
+		headContentHeight
 	} from '~/store';
 	import classNames from 'classnames';
 	import Matrix from '~/components/common/Matrix.svelte';
@@ -22,12 +23,13 @@
 	import { Tooltip } from 'flowbite-svelte';
 	import { ATTENTION_OUT } from '~/constants/opacity';
 	import { ga } from '~/utils/event';
-	import { ZoomInOutline } from 'flowbite-svelte-icons';
+	import { ZoomInOutline, CloseOutline } from 'flowbite-svelte-icons';
 	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 	import { textPages } from '~/utils/textbookPages';
 	import { highlightAttentionPath, removeAttentionPathHighlight } from '~/utils/textbook';
-	import { isDecoding, currentDecodeData } from '~/store/kvcache';
+	import { isDecoding, currentDecodeData, kvCache } from '~/store/kvcache';
 	import KVCacheTable from '~/components/KVCacheTable.svelte';
+	import VectorCanvas from '~/components/common/VectorCanvas.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -54,6 +56,33 @@
 	$: decodeMax = Math.max(...(decodeSoftmaxed[0] ?? []), 0.01);
 	$: decodeColorScale = (d: number) =>
 		d3.interpolate('white', theme.colors['purple'][700])(d / decodeMax);
+
+	// Derive pre-softmax stages from softmax via log-space inversion
+	const EPS = 1e-9;
+	$: decodeScaled = [decodeSoftmaxed[0].map((p: number) => Math.log(p + EPS))];
+	$: decodeQK = [decodeSoftmaxed[0].map((p: number) => Math.log(p + EPS) * 8)]; // *sqrt(64)
+	$: decodeQKDomain = d3.extent(decodeQK[0].filter(Number.isFinite)) as [number, number];
+	$: decodeQKColorScale = (d: number) =>
+		d3.scaleLinear<string>().domain(decodeQKDomain).range(['white', theme.colors['purple'][700]])(d);
+	const decodeScaledColorScale = (d: number) =>
+		d3.scaleLinear<string>().domain([-3, 3]).range(['white', theme.colors['purple'][700]])(d);
+
+	// Compute attention output: sum_i(attn[i] * value[i][j]) for each dim j
+	$: decodeOutValues = (() => {
+		const weights = decodeSoftmaxed[0];
+		const values = $kvCache.map((e) => e.values[$attentionHeadIdx] ?? e.values[0]);
+		if (!weights.length || !values.length) return new Array(64).fill(0);
+		const out = new Array(64).fill(0);
+		for (let j = 0; j < 64; j++) {
+			for (let i = 0; i < weights.length; i++) {
+				out[j] += (weights[i] ?? 0) * (values[i]?.[j] ?? 0);
+			}
+		}
+		const absMax = Math.max(...out.map(Math.abs), 0.01);
+		return out.map((v) => (v + absMax) / (2 * absMax));
+	})();
+
+	let decodeOutOpen = false;
 
 	let factor = 1; //todo
 	let maxCellSize = 20 * factor;
@@ -86,6 +115,7 @@
 	}
 	// When switching back to prefill, reset decode state
 	$: if (!$isDecoding) decodeExpanded = false;
+	$: if (!decodeExpanded) decodeOutOpen = false;
 
 	const onClickAttention = (e) => {
 		e.stopPropagation();
@@ -350,6 +380,7 @@
 		bind:this={decodeExpandableEl}
 		on:click={onClickAttention}
 		on:keydown={onClickAttention}
+		style={`min-height: ${$headContentHeight}px`}
 	>
 		<!-- Collapsed: compact attention strip -->
 		{#if !decodeExpanded}
@@ -378,32 +409,157 @@
 				</div>
 			</div>
 		{:else}
-			<!-- Expanded: attention weights + KV cache columns -->
-			<div class="decode-expanded-inner">
-				<div class="decode-panel">
-					<Matrix
-						data={decodeSoftmaxed}
-						showSize={false}
-						cellHeight={cellSize}
-						cellWidth={cellSize}
-						rowGap={3}
-						colGap={3}
-						shape={'circle'}
-						colorScale={decodeColorScale}
-						{onMouseOverCell}
-						{onMouseOutCell}
-						{showTooltip}
-					/>
-					<div class="matrix-label">
-						Softmax
+			<!-- Expanded: 3-panel attention pipeline + Out -->
+			<div class="decode-expanded-inner" role="none" on:click|stopPropagation={() => {}}>
+				<!-- Step-by-step panels: Dot Product → Scaling·Mask → Softmax -->
+				<div class="decode-panels">
+					<!-- Dot Product -->
+					<div class="decode-panel">
+						<Matrix
+							data={decodeQK}
+							showSize={false}
+							cellHeight={cellSize}
+							cellWidth={cellSize}
+							rowGap={3}
+							colGap={3}
+							shape={'circle'}
+							colorScale={decodeQKColorScale}
+							{onMouseOverCell}
+							{onMouseOutCell}
+							{showTooltip}
+						/>
+						<div class="matrix-label">Dot product</div>
+						<div class="color-scale">
+							<span class="val">{decodeQKDomain[0]?.toFixed(1)}</span>
+							<div class="bar"></div>
+							<span class="val">{decodeQKDomain[1]?.toFixed(1)}</span>
+						</div>
 					</div>
-					<div class="color-scale">
-						<span class="val">0.0</span>
-						<div class="bar"></div>
-						<span class="val">1.0</span>
+					<!-- Arrow -->
+					<svg class="panel-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/>
+					</svg>
+					<!-- Scaling · Mask -->
+					<div class="decode-panel">
+						<Matrix
+							data={decodeScaled}
+							showSize={false}
+							cellHeight={cellSize}
+							cellWidth={cellSize}
+							rowGap={3}
+							colGap={3}
+							shape={'circle'}
+							colorScale={decodeScaledColorScale}
+							{onMouseOverCell}
+							{onMouseOutCell}
+							{showTooltip}
+						/>
+						<div class="matrix-label">Scaling · Mask</div>
+						<div class="color-scale">
+							<span class="val">-3.0</span>
+							<div class="bar"></div>
+							<span class="val">3.0</span>
+						</div>
+					</div>
+					<!-- Arrow -->
+					<svg class="panel-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/>
+					</svg>
+					<!-- Softmax -->
+					<div class="decode-panel">
+						<Matrix
+							data={decodeSoftmaxed}
+							showSize={false}
+							cellHeight={cellSize}
+							cellWidth={cellSize}
+							rowGap={3}
+							colGap={3}
+							shape={'circle'}
+							colorScale={decodeColorScale}
+							{onMouseOverCell}
+							{onMouseOutCell}
+							{showTooltip}
+						/>
+						<div class="matrix-label">Softmax</div>
+						<div class="color-scale">
+							<span class="val">0.0</span>
+							<div class="bar"></div>
+							<span class="val">1.0</span>
+						</div>
+					</div>
+					<!-- Out trigger -->
+					<div
+						class="decode-out-trigger"
+						role="button"
+						tabindex="0"
+						on:click|stopPropagation={() => (decodeOutOpen = !decodeOutOpen)}
+						on:keydown|stopPropagation={(e) => e.key === 'Enter' && (decodeOutOpen = !decodeOutOpen)}
+					>
+						Out <ZoomInOutline size="sm" />
 					</div>
 				</div>
+
+				<!-- KV cache table -->
 				<KVCacheTable />
+
+				<!-- Inline Attention × Value = Out modal -->
+				{#if decodeOutOpen}
+					<div class="decode-out-modal" role="none" on:click|stopPropagation={() => {}}>
+						<div class="decode-out-header">
+							<span>Attention Head {$attentionHeadIdx + 1} Out</span>
+							<button
+								class="decode-out-close"
+								on:click|stopPropagation={() => (decodeOutOpen = false)}
+							><CloseOutline class="h-4 w-4 text-gray-500" /></button>
+						</div>
+						<div class="decode-out-content">
+							<!-- Attention 1×N -->
+							<div class="out-col">
+								<div class="out-title">Attention</div>
+								<Matrix
+									data={decodeSoftmaxed}
+									showSize={false}
+									cellHeight={12}
+									cellWidth={12}
+									rowGap={3}
+									colGap={3}
+									shape={'circle'}
+									colorScale={decodeColorScale}
+								/>
+								<div class="out-size">(1, {decodeSoftmaxed[0].length})</div>
+							</div>
+							<span class="out-op">&times;</span>
+							<!-- Value: N token strips -->
+							<div class="out-col">
+								<div class="out-title">Value</div>
+								<div class="value-strips">
+									{#each $kvCache as entry}
+										<div class="vec-strip">
+											<VectorCanvas
+												data={entry.values[$attentionHeadIdx] ?? entry.values[0] ?? []}
+												colorScale="green"
+												active={true}
+											/>
+										</div>
+									{/each}
+								</div>
+								<div class="out-size">({$kvCache.length}, 64)</div>
+							</div>
+							<span class="out-op">=</span>
+							<!-- Out: 1×64 -->
+							<div class="out-col">
+								<div class="out-title">Out</div>
+								<div class="vec-strip out-vec">
+									<VectorCanvas data={decodeOutValues} colorScale="purple" active={true} />
+								</div>
+								<div class="out-size">(1, 64)</div>
+							</div>
+						</div>
+						<div class="out-formula">
+							<Katex displayMode math={`\\sum_{k=1}^{${decodeSoftmaxed[0].length}} Attention_{1,k} \\cdot Value_{k,j} = Out_{1,j}`} />
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -630,9 +786,15 @@
 		border-radius: 0.5rem;
 		padding: 0.5rem;
 		transition: background-color 0.2s;
+		overflow: visible;
 
 		&:hover {
 			background-color: theme('colors.gray.50');
+		}
+
+		&.expanded {
+			background-color: transparent;
+			overflow: visible;
 		}
 
 		.decode-collapsed {
@@ -668,6 +830,17 @@
 			display: flex;
 			flex-direction: column;
 			gap: 1rem;
+			cursor: default;
+			overflow: visible;
+		}
+
+		.decode-panels {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			gap: 0.5rem;
+			flex-wrap: nowrap;
+			overflow: visible;
 
 			.decode-panel {
 				display: flex;
@@ -676,6 +849,118 @@
 				gap: 0.25rem;
 				position: relative;
 				padding-bottom: 1.5rem;
+				flex-shrink: 0;
+			}
+
+			.panel-arrow {
+				color: theme('colors.gray.300');
+				flex-shrink: 0;
+			}
+		}
+
+		.decode-out-trigger {
+			cursor: pointer;
+			color: theme('colors.purple.400');
+			font-size: 0.85rem;
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+			padding: 0.4rem 0.6rem;
+			border-radius: 0.4rem;
+			transition: background-color 0.15s;
+			margin-top: -1rem;
+
+			&:hover {
+				background-color: theme('colors.purple.50');
+				color: theme('colors.purple.600');
+			}
+		}
+
+		.decode-out-modal {
+			background: white;
+			border: 1px solid theme('colors.gray.200');
+			border-radius: 0.5rem;
+			padding: 1rem 1.5rem 0.75rem;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+			.decode-out-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-weight: 600;
+				font-size: 0.85rem;
+				color: theme('colors.gray.800');
+				margin-bottom: 1rem;
+			}
+
+			.decode-out-close {
+				background: none;
+				border: none;
+				cursor: pointer;
+				padding: 0.1rem;
+				display: flex;
+				align-items: center;
+			}
+
+			.decode-out-content {
+				display: flex;
+				align-items: flex-start;
+				gap: 1rem;
+			}
+
+			.out-col {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.4rem;
+				position: relative;
+
+				.out-title {
+					font-size: 0.75rem;
+					color: theme('colors.gray.700');
+					font-weight: 500;
+					white-space: nowrap;
+				}
+
+				.out-size {
+					font-size: 0.7rem;
+					color: theme('colors.gray.400');
+					font-family: monospace;
+					margin-top: 0.25rem;
+				}
+			}
+
+			.out-op {
+				font-size: 1.2rem;
+				color: theme('colors.gray.700');
+				align-self: center;
+				margin-top: 1.2rem;
+			}
+
+			.value-strips {
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+			}
+
+			.vec-strip {
+				position: relative;
+				width: 24px;
+				height: 12px;
+				flex-shrink: 0;
+			}
+
+			.out-vec {
+				height: 120px;
+			}
+
+			.out-formula {
+				margin-top: 0.75rem;
+				text-align: center;
+				:global(.katex-display) {
+					margin: 0 !important;
+					font-size: 0.85rem;
+				}
 			}
 		}
 	}
