@@ -26,6 +26,8 @@
 	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 	import { textPages } from '~/utils/textbookPages';
 	import { highlightAttentionPath, removeAttentionPathHighlight } from '~/utils/textbook';
+	import { isDecoding, currentDecodeData } from '~/store/kvcache';
+	import KVCacheTable from '~/components/KVCacheTable.svelte';
 
 	const { theme } = resolveConfig(tailwindConfig);
 
@@ -41,6 +43,12 @@
 	$: softmaxed =
 		$modelData?.outputs?.[`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn_dropout`]?.data ||
 		placeHolderData;
+
+	// Decode mode: 1×N attention strip from currentDecodeData
+	$: decodeSoftmaxed =
+		$currentDecodeData?.attentionOutputs?.[
+			`block_${$blockIdx}_attn_head_${$attentionHeadIdx}_attn_dropout`
+		]?.data || [[]];
 
 	let factor = 1; //todo
 	let maxCellSize = 20 * factor;
@@ -317,6 +325,34 @@
 	};
 </script>
 
+{#if $isDecoding}
+	<div class="decode-attention px-5">
+		<div class="decode-strip-wrapper">
+			<div class="decode-labels">
+				{#if $currentDecodeData}
+					<span class="label-kvcache">KV Cache</span>
+					<span class="label-new">New: {$currentDecodeData.inputToken}</span>
+				{/if}
+			</div>
+			<Matrix
+				className="decode-strip"
+				data={decodeSoftmaxed}
+				showSize={false}
+				cellHeight={cellSize}
+				cellWidth={cellSize}
+				rowGap={3}
+				colGap={3}
+				shape={'circle'}
+				colorScale={softmaxColorScale}
+				{onMouseOverCell}
+				{onMouseOutCell}
+				{showTooltip}
+			/>
+			<div class="matrix-label">Attention (decode)</div>
+		</div>
+		<KVCacheTable />
+	</div>
+{:else}
 <div
 	class="flex items-center gap-8 px-5"
 	style={`--attention-matrix-width: ${attentionMatrixWidth}px;`}
@@ -528,8 +564,42 @@
 		</div>
 	</div>
 </div>
+{/if}
 
 <style lang="scss">
+	.decode-attention {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+
+		.decode-strip-wrapper {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+
+			.decode-labels {
+				display: flex;
+				justify-content: space-between;
+				width: 100%;
+				font-size: 0.7rem;
+				color: theme('colors.gray.400');
+				padding: 0 0.5rem;
+			}
+
+			.label-new {
+				color: theme('colors.blue.400');
+				font-weight: 500;
+			}
+
+			.matrix-label {
+				color: theme('colors.gray.400');
+				font-size: 0.8rem;
+				white-space: nowrap;
+			}
+		}
+	}
+
 	.attention-matrix-container {
 		cursor: pointer;
 		border-radius: 0.5rem;

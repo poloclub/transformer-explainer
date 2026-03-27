@@ -110,7 +110,7 @@ def build_example(model, tokenizer, prompt):
             "inputTokenId": result["input_token_id"],
             "kvSnapshot": result["kv_snapshot"],
             "attentionOutputs": result["attention_outputs"],
-            "logits": result["logits"],
+            # logits omitted — prefill logits shown in LinearSoftmax panel
         })
         past = result["past_key_values"]
         current_token_id = result["next_token_id"]
