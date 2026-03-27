@@ -16,6 +16,8 @@
 	import { gsap } from '~/utils/gsap';
 	import { maskArray } from '~/utils/array';
 	import { getContext, onMount } from 'svelte';
+	import { fly, fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import resolveConfig from 'tailwindcss/resolveConfig';
 	import tailwindConfig from '../../tailwind.config';
 	import * as d3 from 'd3';
@@ -67,20 +69,39 @@
 	const decodeScaledColorScale = (d: number) =>
 		d3.scaleLinear<string>().domain([-3, 3]).range(['white', theme.colors['purple'][700]])(d);
 
-	// Compute attention output: sum_i(attn[i] * value[i][j]) for each dim j
-	$: decodeOutValues = (() => {
+	// Compute attention output and normalize value vectors for display
+	$: {
 		const weights = decodeSoftmaxed[0];
-		const values = $kvCache.map((e) => e.values[$attentionHeadIdx] ?? e.values[0]);
-		if (!weights.length || !values.length) return new Array(64).fill(0);
-		const out = new Array(64).fill(0);
-		for (let j = 0; j < 64; j++) {
-			for (let i = 0; i < weights.length; i++) {
-				out[j] += (weights[i] ?? 0) * (values[i]?.[j] ?? 0);
+		const rawValues = $kvCache.map((e) => e.values[$attentionHeadIdx] ?? e.values[0] ?? []);
+
+		// Global min/max across all tokens + all dims for consistent color scale
+		const allNums = rawValues.flat().filter(Number.isFinite);
+		const vMin = allNums.length ? Math.min(...allNums) : -1;
+		const vMax = allNums.length ? Math.max(...allNums) : 1;
+		const vRange = vMax - vMin || 1;
+
+		// Normalize each token's value vector to [0, 1]
+		decodeValueNorm = rawValues.map((vec) => vec.map((v) => (v - vMin) / vRange));
+
+		// Compute out = attention @ values (raw), then normalize to [0, 1]
+		if (!weights.length || !rawValues.length) {
+			decodeOutValues = new Array(64).fill(0.5);
+		} else {
+			const out = new Array(64).fill(0);
+			for (let j = 0; j < 64; j++) {
+				for (let i = 0; i < weights.length; i++) {
+					out[j] += (weights[i] ?? 0) * (rawValues[i]?.[j] ?? 0);
+				}
 			}
+			const oMin = Math.min(...out);
+			const oMax = Math.max(...out);
+			const oRange = oMax - oMin || 1;
+			decodeOutValues = out.map((v) => (v - oMin) / oRange);
 		}
-		const absMax = Math.max(...out.map(Math.abs), 0.01);
-		return out.map((v) => (v + absMax) / (2 * absMax));
-	})();
+	}
+
+	let decodeValueNorm: number[][] = [];
+	let decodeOutValues: number[] = new Array(64).fill(0.5);
 
 	let decodeOutOpen = false;
 
@@ -384,7 +405,7 @@
 	>
 		<!-- Collapsed: compact attention strip -->
 		{#if !decodeExpanded}
-			<div class="decode-collapsed">
+			<div class="decode-collapsed" in:fade={{ duration: 250, easing: cubicOut }}>
 				{#if $currentDecodeData}
 					<div class="decode-labels">
 						<span class="label-kvcache">KV Cache</span>
@@ -410,7 +431,13 @@
 			</div>
 		{:else}
 			<!-- Expanded: 3-panel attention pipeline + Out -->
-			<div class="decode-expanded-inner" role="none" on:click|stopPropagation={() => {}}>
+			<div
+				class="decode-expanded-inner"
+				role="none"
+				on:click|stopPropagation={() => {}}
+				in:fly={{ x: -24, duration: 400, easing: cubicOut }}
+				out:fade={{ duration: 150 }}
+			>
 				<!-- Step-by-step panels: Dot Product → Scaling·Mask → Softmax -->
 				<div class="decode-panels">
 					<!-- Dot Product -->
@@ -487,7 +514,7 @@
 							<span class="val">1.0</span>
 						</div>
 					</div>
-					<!-- Out trigger -->
+					<!-- Out trigger — styled like prefill Out column label -->
 					<div
 						class="decode-out-trigger"
 						role="button"
@@ -495,7 +522,9 @@
 						on:click|stopPropagation={() => (decodeOutOpen = !decodeOutOpen)}
 						on:keydown|stopPropagation={(e) => e.key === 'Enter' && (decodeOutOpen = !decodeOutOpen)}
 					>
-						Out <ZoomInOutline size="sm" />
+						<span class="out-label">Out</span>
+						<ZoomInOutline size="sm" />
+						<Tooltip class="popover" placement="bottom">click to see Attention Out calculation</Tooltip>
 					</div>
 				</div>
 
@@ -504,7 +533,13 @@
 
 				<!-- Inline Attention × Value = Out modal -->
 				{#if decodeOutOpen}
-					<div class="decode-out-modal" role="none" on:click|stopPropagation={() => {}}>
+					<div
+						class="decode-out-modal"
+						role="none"
+						on:click|stopPropagation={() => {}}
+						in:fly={{ y: 8, duration: 300, easing: cubicOut }}
+						out:fade={{ duration: 150 }}
+					>
 						<div class="decode-out-header">
 							<span>Attention Head {$attentionHeadIdx + 1} Out</span>
 							<button
@@ -533,10 +568,10 @@
 							<div class="out-col">
 								<div class="out-title">Value</div>
 								<div class="value-strips">
-									{#each $kvCache as entry}
+									{#each decodeValueNorm as normVec}
 										<div class="vec-strip">
 											<VectorCanvas
-												data={entry.values[$attentionHeadIdx] ?? entry.values[0] ?? []}
+												data={normVec}
 												colorScale="green"
 												active={true}
 											/>
@@ -861,17 +896,22 @@
 		.decode-out-trigger {
 			cursor: pointer;
 			color: theme('colors.purple.400');
-			font-size: 0.85rem;
 			display: flex;
+			flex-direction: column;
 			align-items: center;
-			gap: 0.25rem;
-			padding: 0.4rem 0.6rem;
-			border-radius: 0.4rem;
-			transition: background-color 0.15s;
-			margin-top: -1rem;
+			gap: 0.2rem;
+			padding: 0.25rem 0.5rem;
+			flex-shrink: 0;
+			transition: color 0.15s;
+			align-self: flex-start;
+
+			.out-label {
+				font-size: 0.9rem;
+				font-weight: 500;
+				white-space: nowrap;
+			}
 
 			&:hover {
-				background-color: theme('colors.purple.50');
 				color: theme('colors.purple.600');
 			}
 		}
@@ -946,12 +986,12 @@
 			.vec-strip {
 				position: relative;
 				width: 24px;
-				height: 12px;
+				height: 32px;
 				flex-shrink: 0;
 			}
 
 			.out-vec {
-				height: 120px;
+				height: 64px;
 			}
 
 			.out-formula {
