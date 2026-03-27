@@ -161,7 +161,8 @@
 		}
 		&.expanded {
 			.title,
-			:global(.head-content) {
+			:global(.head-content),
+			:global(.multi-head .head-title) {
 				z-index: $EXPANDED_CONTENT_INDEX;
 			}
 			:global(.multi-head .head-card:first-child) {

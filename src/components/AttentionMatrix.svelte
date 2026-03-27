@@ -71,34 +71,45 @@
 	let attentionMatrixWidth = 0;
 
 	let isAttentionExpanded = false;
+	let decodeExpanded = false; // separate from prefill expand — no animation DOM deps
 
 	const blockId = getContext('block-id');
 
-	// event handling
-
-	$: if ($expandedBlock.id !== blockId && isAttentionExpanded) {
+	// event handling — only run prefill expand/collapse when NOT in decode mode
+	$: if ($expandedBlock.id !== blockId && isAttentionExpanded && !$isDecoding) {
 		isAttentionExpanded = false;
 		collapseAttention();
 	}
-	$: if ($expandedBlock.id === blockId && !isAttentionExpanded) {
+	$: if ($expandedBlock.id === blockId && !isAttentionExpanded && !$isDecoding) {
 		isAttentionExpanded = true;
 		expandAttention();
 	}
+	// When switching back to prefill, reset decode state
+	$: if (!$isDecoding) decodeExpanded = false;
 
 	const onClickAttention = (e) => {
 		e.stopPropagation();
 		e.preventDefault();
 		textPages.find((page) => page.id === 'masked-self-attention')?.complete();
 
-		if (!isAttentionExpanded) {
+		if ($isDecoding) {
+			// Decode mode: toggle expand without running the prefill animation
+			decodeExpanded = !decodeExpanded;
+			expandedBlock.set({ id: decodeExpanded ? blockId : null });
+		} else if (!isAttentionExpanded) {
 			expandedBlock.set({ id: blockId });
 		}
 	};
 
 	let expandableEl: HTMLDivElement;
+	let decodeExpandableEl: HTMLDivElement;
 
 	function handleOutsideClick(e) {
-		if (isAttentionExpanded && !expandableEl.contains(e.target)) {
+		if (isAttentionExpanded && expandableEl && !expandableEl.contains(e.target)) {
+			expandedBlock.set({ id: null });
+		}
+		if (decodeExpanded && decodeExpandableEl && !decodeExpandableEl.contains(e.target)) {
+			decodeExpanded = false;
 			expandedBlock.set({ id: null });
 		}
 	}
@@ -331,31 +342,70 @@
 </script>
 
 {#if $isDecoding}
-	<div class="decode-attention px-5">
-		<div class="decode-strip-wrapper">
-			<div class="decode-labels">
+	<div
+		class="decode-attention px-5"
+		class:expanded={decodeExpanded}
+		role="button"
+		tabindex="0"
+		bind:this={decodeExpandableEl}
+		on:click={onClickAttention}
+		on:keydown={onClickAttention}
+	>
+		<!-- Collapsed: compact attention strip -->
+		{#if !decodeExpanded}
+			<div class="decode-collapsed">
 				{#if $currentDecodeData}
-					<span class="label-kvcache">KV Cache</span>
-					<span class="label-new">New: {$currentDecodeData.inputToken}</span>
+					<div class="decode-labels">
+						<span class="label-kvcache">KV Cache</span>
+						<span class="label-new">New: {$currentDecodeData.inputToken}</span>
+					</div>
 				{/if}
+				<Matrix
+					data={decodeSoftmaxed}
+					showSize={false}
+					cellHeight={cellSize}
+					cellWidth={cellSize}
+					rowGap={3}
+					colGap={3}
+					shape={'circle'}
+					colorScale={decodeColorScale}
+					{onMouseOverCell}
+					{onMouseOutCell}
+					{showTooltip}
+				/>
+				<div class="matrix-label">
+					Attention <ZoomInOutline />
+				</div>
 			</div>
-			<Matrix
-				className="decode-strip"
-				data={decodeSoftmaxed}
-				showSize={false}
-				cellHeight={cellSize}
-				cellWidth={cellSize}
-				rowGap={3}
-				colGap={3}
-				shape={'circle'}
-				colorScale={decodeColorScale}
-				{onMouseOverCell}
-				{onMouseOutCell}
-				{showTooltip}
-			/>
-			<div class="matrix-label">Attention (decode)</div>
-		</div>
-		<KVCacheTable />
+		{:else}
+			<!-- Expanded: attention weights + KV cache columns -->
+			<div class="decode-expanded-inner">
+				<div class="decode-panel">
+					<Matrix
+						data={decodeSoftmaxed}
+						showSize={false}
+						cellHeight={cellSize}
+						cellWidth={cellSize}
+						rowGap={3}
+						colGap={3}
+						shape={'circle'}
+						colorScale={decodeColorScale}
+						{onMouseOverCell}
+						{onMouseOutCell}
+						{showTooltip}
+					/>
+					<div class="matrix-label">
+						Softmax
+					</div>
+					<div class="color-scale">
+						<span class="val">0.0</span>
+						<div class="bar"></div>
+						<span class="val">1.0</span>
+					</div>
+				</div>
+				<KVCacheTable />
+			</div>
+		{/if}
 	</div>
 {:else}
 <div
@@ -575,32 +625,57 @@
 	.decode-attention {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0.5rem;
+		cursor: pointer;
+		border-radius: 0.5rem;
+		padding: 0.5rem;
+		transition: background-color 0.2s;
 
-		.decode-strip-wrapper {
+		&:hover {
+			background-color: theme('colors.gray.50');
+		}
+
+		.decode-collapsed {
 			display: flex;
 			flex-direction: column;
 			align-items: flex-start;
 			gap: 0.25rem;
+		}
 
-			.decode-labels {
+		.decode-labels {
+			display: flex;
+			justify-content: space-between;
+			width: 100%;
+			font-size: 0.7rem;
+			color: theme('colors.gray.400');
+		}
+
+		.label-new {
+			color: theme('colors.blue.400');
+			font-weight: 500;
+		}
+
+		.matrix-label {
+			color: theme('colors.gray.400');
+			font-size: 0.8rem;
+			white-space: nowrap;
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+		}
+
+		.decode-expanded-inner {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+
+			.decode-panel {
 				display: flex;
-				justify-content: space-between;
-				width: 100%;
-				font-size: 0.7rem;
-				color: theme('colors.gray.400');
-				padding: 0 0.5rem;
-			}
-
-			.label-new {
-				color: theme('colors.blue.400');
-				font-weight: 500;
-			}
-
-			.matrix-label {
-				color: theme('colors.gray.400');
-				font-size: 0.8rem;
-				white-space: nowrap;
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 0.25rem;
+				position: relative;
+				padding-bottom: 1.5rem;
 			}
 		}
 	}

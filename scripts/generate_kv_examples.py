@@ -138,7 +138,8 @@ def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     print("Loading GPT-2...")
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    model = GPT2LMHeadModel.from_pretrained("gpt2")
+    # eager required so output_attentions=True works during decode (past_key_values) steps
+    model = GPT2LMHeadModel.from_pretrained("gpt2", attn_implementation="eager")
     model.eval()
 
     for i, prompt in enumerate(PROMPTS):
