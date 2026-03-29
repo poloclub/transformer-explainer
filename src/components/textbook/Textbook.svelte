@@ -510,6 +510,27 @@
 		background: var(--textbook-highlight-background) !important;
 	}
 
+	// kv-cache pages
+	:global(.decode-controls.textbook-highlight) {
+		box-shadow: var(--textbook-highlight-shadow-out) !important;
+		border-color: var(--textbook-highlight-color) !important;
+		position: relative;
+
+		&::after {
+			content: '👆';
+			display: block;
+			white-space: nowrap;
+			position: absolute;
+			bottom: -2.5rem;
+			left: 50%;
+			transform: translateX(-50%);
+			color: var(--textbook-highlight-color);
+			font-size: 2rem;
+			pointer-events: none;
+			animation: finger-poke 1.5s ease-in-out infinite;
+		}
+	}
+
 	// animation
 	@keyframes finger-poke {
 		0%,

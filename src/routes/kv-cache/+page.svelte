@@ -19,7 +19,9 @@
 		blockIdx,
 		isModelRunning,
 		attentionHeadIdx,
-		predictedToken
+		predictedToken,
+		isTextbookOpen,
+		textbookCurrentPage
 	} from '~/store';
 	import { PreTrainedTokenizer } from '@xenova/transformers';
 	import Sankey from '~/components/Sankey.svelte';
@@ -37,8 +39,10 @@
 	import BlockTransition from '~/components/BlockTransition.svelte';
 	import QKV from '~/components/QKV.svelte';
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
+	import Textbook from '~/components/textbook/Textbook.svelte';
 
 	import { adjustTemperature, fakeRunWithCachedData, getProbabilities } from '~/utils/data';
+	import { textPages } from '~/utils/textbookPages';
 	import {
 		decodeStep,
 		kvCache,
@@ -62,6 +66,12 @@
 	let kvReady = false; // true after prefill animation done
 	let prefillText = ''; // inputText captured at end of prefill
 	let ignoreInputTextChange = false; // guard against re-triggering prefill when we programmatically set inputText
+
+	// Set textbook to kv-cache pages immediately (before async tokenizer load)
+	const kvInferenceIdx = textPages.findIndex((p) => p.id === 'kv-inference');
+	if (kvInferenceIdx >= 0) {
+		textbookCurrentPage.set(kvInferenceIdx);
+	}
 
 	onMount(async () => {
 		const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
@@ -425,6 +435,10 @@
 		<BlockTransition />
 	</div>
 </div>
+
+{#if !$isMobile}
+	<Textbook showTextCard={$isTextbookOpen} />
+{/if}
 
 <style lang="scss">
 	.main-section {

@@ -561,12 +561,103 @@ export const textPages: TextbookPage[] = [
 		out: () => {
 			removeHighlightFromElements(['.operation-col.dropout']);
 		}
+	},
+	// ── KV Cache Explainer pages ──────────────────────────────────────────
+	{
+		id: 'kv-inference',
+		title: 'What is Inference?',
+		content: `<p>After training, the model's weights are fixed. <strong>Inference</strong> is using those weights to generate text — one token at a time, each pass predicting the next most probable word.</p>
+<figure class="tb-figure">
+  <img src="https://miro.medium.com/0*sexO6adGhaKr7aH0.gif" alt="GPT-2 generating tokens autoregressively" class="tb-img" loading="lazy" />
+  <figcaption>GPT-2 generating tokens one-by-one autoregressively.</figcaption>
+</figure>
+<p>KV caching makes this ~<strong>5× faster</strong> — benchmarks on a T4 GPU show 12s vs 61s for 1,000 tokens.</p>
+<p class="tb-citation">João Lages, <a href="https://medium.com/@joaolages/kv-caching-explained-276520203249" target="_blank" rel="noopener" class="tb-cite-link">"KV Caching Explained"</a>, <em>Medium</em>, Oct 2023.</p>`,
+		on: () => {
+			highlightElements(['.input-form']);
+		},
+		out: () => {
+			removeHighlightFromElements(['.input-form']);
+		}
+	},
+	{
+		id: 'kv-prefill',
+		title: 'Prefill Phase',
+		content: `<p>When you submit a prompt, all tokens flow through every block in a single pass — the <strong>prefill</strong> phase. Each token's <span class="red">Key</span> and <span class="green">Value</span> are computed and saved.</p>
+<figure class="tb-figure">
+  <img src="https://developer-blogs.nvidia.com/wp-content/uploads/2023/11/key-value-caching_.png" alt="KV caching: prefill and decode phases" class="tb-img" loading="lazy" />
+  <figcaption>Prefill processes all prompt tokens at once; decode reuses the stored K/V.</figcaption>
+</figure>
+<p class="tb-citation">S. Verma &amp; N. Vaidya, <a href="https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/" target="_blank" rel="noopener" class="tb-cite-link">"Mastering LLM Techniques: Inference Optimization"</a>, <em>NVIDIA</em>, Nov 2023.</p>`,
+		on: () => {
+			highlightElements(['.step.embedding', '.step.attention']);
+		},
+		out: () => {
+			removeHighlightFromElements(['.step.embedding', '.step.attention']);
+		}
+	},
+	{
+		id: 'kv-cache-intro',
+		title: 'The KV Cache',
+		content: `<p>The <strong>KV cache</strong> stores <span class="red">Key</span> and <span class="green">Value</span> vectors for every token × head × layer. GPT-2: 12 layers × 12 heads × 64 dims = 9,216 stored values per token, reused on every decode step.</p>
+<figure class="tb-figure">
+  <img src="https://cdn-uploads.huggingface.co/production/uploads/6527e89a8808d80ccff88b7a/DbL2RbXFRoMWA5CrOaGB8.png" alt="K/V pairs accumulating in the cache" class="tb-img" loading="lazy" />
+  <figcaption>Each new token appends its K/V pair to the growing cache.</figcaption>
+</figure>
+<p class="tb-citation">Not Lain, <a href="https://huggingface.co/blog/not-lain/kv-caching" target="_blank" rel="noopener" class="tb-cite-link">"KV Caching"</a>, <em>Hugging Face Blog</em>, Jan 2025.</p>`,
+		on: () => {
+			highlightElements(['.step.attention .decode-attention']);
+		},
+		out: () => {
+			removeHighlightFromElements(['.step.attention .decode-attention']);
+		}
+	},
+	{
+		id: 'kv-decode',
+		title: 'Decode Phase',
+		content: `<p>In the <strong>decode</strong> phase only the new token passes through the network. Its K and V are appended to the cache; all prior pairs are reused — no recomputation. Click <strong>Next →</strong> to step through it.</p>
+<figure class="tb-figure">
+  <img src="https://miro.medium.com/1*uyuyOW1VBqmF5Gtv225XHQ.gif" alt="Comparison: with and without KV caching" class="tb-img" loading="lazy" />
+  <figcaption>Without caching every token is recomputed from scratch (top); with caching only the new token is processed (bottom).</figcaption>
+</figure>
+<p class="tb-citation">João Lages, <a href="https://medium.com/@joaolages/kv-caching-explained-276520203249" target="_blank" rel="noopener" class="tb-cite-link">"KV Caching Explained"</a>, <em>Medium</em>, Oct 2023.</p>`,
+		on: () => {
+			highlightElements(['.decode-controls']);
+		},
+		out: () => {
+			removeHighlightFromElements(['.decode-controls']);
+		}
+	},
+	{
+		id: 'kv-attention-decode',
+		title: 'Attention During Decode',
+		content: `<p>During decode, attention has one <span class="blue">Query</span> but N cached <span class="red">Keys</span> and <span class="green">Values</span>. The single Q dot-products with all cached K → 1×N weights → weighted sum of V → output.</p>
+<figure class="tb-figure">
+  <img src="https://miro.medium.com/1*8xqD4AYTwn6mQXNw0uhDCg.gif" alt="Attention computation step-by-step during decode" class="tb-img" loading="lazy" />
+  <figcaption>The new token's Query attends to all cached Keys; no causal mask needed.</figcaption>
+</figure>
+<p class="tb-citation">João Lages, <a href="https://medium.com/@joaolages/kv-caching-explained-276520203249" target="_blank" rel="noopener" class="tb-cite-link">"KV Caching Explained"</a>, <em>Medium</em>, Oct 2023.</p>`,
+		on: () => {
+			highlightElements(['.step.attention .decode-attention']);
+		},
+		out: () => {
+			removeHighlightFromElements(['.step.attention .decode-attention']);
+		}
+	},
+	{
+		id: 'kv-autoregressive',
+		title: 'Autoregressive Loop',
+		content: `<p>Each decoded token feeds back as the next input — the <strong>autoregressive loop</strong>. The cache grows one column per step. Memory per token: <code>2 × layers × (heads × dim) × bytes</code>.</p>
+<figure class="tb-figure">
+  <img src="https://developer-blogs.nvidia.com/wp-content/uploads/2023/11/comparison-attention-mechanisms.png" alt="MHA, GQA, and MQA attention variants" class="tb-img" loading="lazy" />
+  <figcaption>At scale, MQA and GQA share K/V across heads to reduce cache size without sacrificing quality.</figcaption>
+</figure>
+<p class="tb-citation">S. Verma &amp; N. Vaidya, <a href="https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/" target="_blank" rel="noopener" class="tb-cite-link">"Mastering LLM Techniques: Inference Optimization"</a>, <em>NVIDIA</em>, Nov 2023.</p>`,
+		on: () => {
+			highlightElements(['.decode-controls', '.step.softmax']);
+		},
+		out: () => {
+			removeHighlightFromElements(['.decode-controls', '.step.softmax']);
+		}
 	}
-	// {
-	// 	id: 'final',
-	// 	title: `Let's explore!`,
-	// 	content: '',
-	// 	on: () => {},
-	// 	out: () => {}
-	// }
 ];

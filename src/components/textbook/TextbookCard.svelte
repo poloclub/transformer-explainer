@@ -452,4 +452,57 @@
 		flex: 1;
 		line-height: 1.4;
 	}
+
+	/* Image and citation styles */
+	:global(.textbook-content .tb-figure) {
+		margin: 0.5rem 0;
+		text-align: center;
+	}
+
+	:global(.textbook-content .tb-img) {
+		max-width: 100%;
+		max-height: 140px;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		border-radius: 4px;
+		border: 1px solid theme('colors.gray.200');
+	}
+
+	:global(.textbook-content figcaption) {
+		font-size: 0.75rem;
+		color: theme('colors.gray.500');
+		margin-top: 0.2rem;
+		font-style: italic;
+		line-height: 1.3;
+	}
+
+	:global(.textbook-content .tb-citation) {
+		font-size: 0.75rem;
+		color: theme('colors.gray.500');
+		border-top: 1px solid theme('colors.gray.100');
+		padding-top: 0.35rem;
+		margin-top: 0.4rem;
+	}
+
+	:global(.textbook-content .tb-cite-link) {
+		color: var(--textbook-highlight-color);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	:global(.textbook-content code) {
+		font-family: ui-monospace, monospace;
+		font-size: 0.8rem;
+		background: theme('colors.gray.100');
+		padding: 0.1rem 0.3rem;
+		border-radius: 3px;
+		color: theme('colors.gray.700');
+	}
+
+	/* Scrollable content area */
+	:global(.carousel-slide .textbook-content) {
+		height: 100%;
+		overflow-y: auto;
+	}
 </style>
