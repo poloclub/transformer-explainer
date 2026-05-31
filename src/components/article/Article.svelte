@@ -328,11 +328,12 @@
 			<h4>Step 4: Output and Concatenation</h4>
 			<p>
 				The model uses the masked self-attention scores and multiplies them with the
-				<span class="v-color">Value</span> matrix to get the
-				<span class="purple-color">final output</span>
-				of the self-attention mechanism. GPT-2 has <code>12</code> self-attention heads, each capturing
-				different relationships between tokens. The outputs of these heads are concatenated and passed
-				through a linear projection.
+				<span class="v-color">Value</span> matrix to get each head's attention output. GPT-2 has
+				<code>12</code> self-attention heads, each capturing different relationships between tokens.
+				The outputs of these heads are concatenated into one vector and then passed through the
+				attention block's learned output projection matrix (<code>c_proj</code>) before the result
+				flows to the next layer. The projection matrix is part of the model computation, but it is
+				not drawn as a separate matrix in this visualization.
 			</p>
 		</div>
 	</div>

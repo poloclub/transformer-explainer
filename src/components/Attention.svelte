@@ -139,8 +139,8 @@
 								</div>
 							{/each}
 							<Tooltip class="popover" triggeredBy={'.step.attention .out .cell'} placement="right"
-								>Attention Out, Head 1, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+								>Attention Out before concatenation and projection, Head {$attentionHeadIdx + 1},
+								vector({$modelMeta.dimension / $modelMeta.attention_head_num})</Tooltip
 							>
 						</div>
 					</div>

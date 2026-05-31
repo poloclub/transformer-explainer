@@ -333,7 +333,7 @@ export const textPages: TextbookPage[] = [
 		id: 'output-concatenation',
 		title: 'Attention Output & Concatenation',
 		content:
-			'<p>Each head <span class="highlight">multiplies its <span class="purple">attention scores</span> with the <span class="green">Value</span> embeddings to produce its attention output</span>—a refined representation of each token after considering context.</p><p>GPT-2 (small) has 12 such outputs, which are concatenated to form a single vector of the original size (768 numbers).</p>',
+			'<p>Each head <span class="highlight">multiplies its <span class="purple">attention scores</span> with the <span class="green">Value</span> embeddings to produce a head-specific attention output</span>—a refined representation of each token after considering context.</p><p>GPT-2 (small) concatenates the 12 head outputs, then applies the attention block\'s learned output projection matrix (<code>c_proj</code>) before sending the result to the next layer. This projection is part of the computation even though it is not drawn as a separate matrix here.</p>',
 		on: function () {
 			this.timeoutId = setTimeout(
 				() => {
