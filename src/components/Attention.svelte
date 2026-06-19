@@ -54,7 +54,7 @@
 		data-click="attention-step-title"
 	>
 		<div class="w-max">
-			<TextbookTooltip id="self-attention">Multi-head Self Attention</TextbookTooltip>
+			<TextbookTooltip id="self-attention">多头自注意力</TextbookTooltip>
 		</div>
 	</div>
 	<div class="content relative">

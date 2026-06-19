@@ -27,6 +27,7 @@
 	import Sampling from './Sampling.svelte';
 	import { completeCurrentAnimation } from '~/utils/animation';
 	import { textPages } from '~/utils/textbookPages';
+	import { zhCN } from '~/utils/i18n';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
@@ -144,10 +145,13 @@
 				data-click="dropdown-btn"
 				type="button"
 				disabled={selectDisabled}
+				aria-label="示例"
 				class:selectDisabled
 				class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
 			>
-				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
+				{zhCN.controls.examples}<ChevronDownOutline
+					class="pointer-events-none h-4 w-4 text-gray-500"
+				/>
 			</button>
 			<Dropdown bind:open={dropdownOpen} class="example-dropdown">
 				{#each inputTextExample as text, index}
@@ -180,7 +184,8 @@
 						bind:this={inputRef}
 						contenteditable={!disabled}
 						class="text-box"
-						placeholder="Test your own input text"
+						placeholder={zhCN.controls.inputPlaceholder}
+						aria-label="输入你自己的英文提示词"
 						on:focus={onFocusInput}
 						on:input={onInput}
 						on:keydown={handleKeyDown}
@@ -211,15 +216,11 @@
 					<div class="loading"><LoadingDots /></div>
 				{/if}
 				{#if $isMobile}
-					<span class="helper-text"
-						>Try the examples. Please use a desktop computer to input GPT-2 prompts directly.</span
-					>
+					<span class="helper-text">{zhCN.controls.mobileExampleOnly}</span>
 				{:else if $isLoaded && $isFetchingModel}
-					<span class="helper-text"
-						>Try the examples while GPT-2 model is being downloaded (600MB)</span
-					>
+					<span class="helper-text">{zhCN.controls.modelDownloading}</span>
 				{:else if exceedLimit}
-					<span class="helper-text">You can enter up to {wordLimit} words.</span>
+					<span class="helper-text">{zhCN.controls.wordLimit(wordLimit)}</span>
 				{/if}
 			</div>
 		</ButtonGroup>
@@ -232,8 +233,9 @@
 			})}
 			type="submit"
 			on:click={handleSubmit}
+			aria-label="生成"
 		>
-			Generate
+			{zhCN.controls.generate}
 		</button>
 	</form>
 	<div class="parameters" data-click="input-parameters">

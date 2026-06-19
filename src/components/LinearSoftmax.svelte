@@ -211,7 +211,7 @@
 		data-click="prob-step-title"
 	>
 		<div class="title-text flex w-max items-center gap-1">
-			Probabilities
+			输出概率
 			<ZoomInOutline></ZoomInOutline>
 		</div>
 	</div>
@@ -260,7 +260,7 @@
 					</div>
 					<div class="title-box scaled">
 						<TextbookTooltip id="temperature"
-							><div class="title-text">Scaled logits</div></TextbookTooltip
+							><div class="title-text">缩放后的 logits</div></TextbookTooltip
 						>
 					</div>
 					<div class="title-box sampling">
@@ -272,7 +272,7 @@
 					</div>
 					<div class="title-box probability">
 						<div class="title-text mr-1">
-							{$sampling.type === 'top-k' ? 'Softmax' : 'Normalization'}
+							{$sampling.type === 'top-k' ? 'Softmax' : '归一化（Normalization）'}
 						</div>
 					</div>
 				</div>

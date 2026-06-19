@@ -353,7 +353,7 @@
 				{showTooltip}
 			/>
 			<TextbookTooltip id="masked-self-attention">
-				<div class="matrix-label">Dot product</div>
+				<div class="matrix-label">点积（Dot Product）</div>
 			</TextbookTooltip>
 
 			<Tooltip class="popover tooltip">
@@ -419,7 +419,7 @@
 				/>
 			</div>
 			<TextbookTooltip id="masked-self-attention">
-				<div class="matrix-label">Scaling · Mask</div>
+				<div class="matrix-label">缩放 · Mask</div>
 			</TextbookTooltip>
 
 			<Tooltip class="popover tooltip">

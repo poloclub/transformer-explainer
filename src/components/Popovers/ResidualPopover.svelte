@@ -20,9 +20,7 @@
 	{reference}
 	goTo="article-residual"
 >
-	<div class="residual-content">
-		Adds layer input to output to help preserve information.
-	</div></CommonPopover
+	<div class="residual-content">把层输入加回输出，帮助保留信息。</div></CommonPopover
 >
 
 <style lang="scss">

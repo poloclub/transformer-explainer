@@ -196,7 +196,8 @@
 				<!-- token id and embedding -->
 				<div class="column token-embedding embedding-detail">
 					<div class="subtitle flex items-center gap-1">
-						<TextbookTooltip id="token-embedding"><span>Token<br />Embedding</span></TextbookTooltip
+						<TextbookTooltip id="token-embedding"
+							><span aria-label="Token Embedding">Token<br />Embedding</span></TextbookTooltip
 						>
 						<!-- <HelpPopover
 							id="token-embedding"

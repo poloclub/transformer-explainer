@@ -18,9 +18,7 @@
 	{placement}
 	goTo="article-ln"
 >
-	<div class="ln-content">
-		Normalizes layer input to have a standard distribution for stability.
-	</div></CommonPopover
+	<div class="ln-content">对层输入做归一化，让分布更稳定。</div></CommonPopover
 >
 
 <style lang="scss">

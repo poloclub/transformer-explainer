@@ -19,7 +19,7 @@
 	goTo="article-activation"
 >
 	<div class="activation-content">
-		Applies non-linear transformation to linearly transformed output to learn complex patterns.
+		对线性变换后的输出施加非线性变换，帮助模型学习更复杂的模式。
 	</div></CommonPopover
 >
 

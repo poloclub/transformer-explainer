@@ -52,6 +52,7 @@
 				<button
 					class="play-control forward"
 					data-click="matrix-calc-forward-btn"
+					aria-label="跳到动画结尾"
 					on:click={(e) => {
 						e.stopPropagation();
 						timeline.progress(1);
@@ -77,6 +78,7 @@
 				<button
 					class="play-control restart"
 					data-click="matrix-calc-restart-btn"
+					aria-label="重新播放动画"
 					on:click={(e) => {
 						e.stopPropagation();
 						isAnimationActive = true;
@@ -105,6 +107,7 @@
 			<button
 				class="close"
 				data-click="matrix-calc-close-btn"
+				aria-label="关闭弹窗"
 				on:click={(e) => {
 					e.stopPropagation();
 					weightPopover.set(null);
