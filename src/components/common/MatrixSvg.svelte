@@ -1,9 +1,6 @@
 <script lang="ts">
-	import * as d3 from 'd3';
-	import tailwindConfig from '../../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import * as d3 from '~/utils/d3';
+	import { theme } from '~/utils/theme';
 
 	export let data: (number | null)[][];
 	export let cellHeight: number;

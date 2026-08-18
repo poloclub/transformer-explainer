@@ -1,11 +1,11 @@
 <script lang="ts">
 	import classNames from 'classnames';
 	import Operation from './Operation.svelte';
-	import DropoutPopover from './popovers/DropoutPopover.svelte';
+	import DropoutPopover from './Popovers/DropoutPopover.svelte';
 	import { tokens } from '~/store';
-	import LayerNormPopover from './popovers/LayerNormPopover.svelte';
-	import ActivationPopover from './popovers/ActivationPopover.svelte';
-	import ResidualPopover from './popovers/ResidualPopover.svelte';
+	import LayerNormPopover from './Popovers/LayerNormPopover.svelte';
+	import ActivationPopover from './Popovers/ActivationPopover.svelte';
+	import ResidualPopover from './Popovers/ResidualPopover.svelte';
 	import { onClickReadMore } from '~/utils/event';
 	import { drawResidualLine } from '~/utils/animation';
 	import {

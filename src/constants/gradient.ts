@@ -1,6 +1,4 @@
-import resolveConfig from 'tailwindcss/resolveConfig';
-import tailwindConfig from '../../tailwind.config';
-const { theme } = resolveConfig(tailwindConfig);
+import { theme } from '~/utils/theme';
 
 const defaultGradientBrightness = 200;
 export const gradientMap = {

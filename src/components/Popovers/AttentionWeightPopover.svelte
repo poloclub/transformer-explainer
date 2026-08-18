@@ -1,16 +1,13 @@
 <script lang="ts">
 	import { modelMeta, tokens, rootRem, modelData, attentionHeadIdx, blockIdx } from '~/store';
-	import * as d3 from 'd3';
+	import * as d3 from '~/utils/d3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import { maskArray } from '~/utils/array';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { theme } from '~/utils/theme';
 
 	const tokenGap = 6;
 
@@ -257,13 +254,13 @@
 
 <WeightPopoverCard
 	id="attention"
-	title={`Attention Head ${$attentionHeadIdx + 1} Out`}
+	title={`第 ${$attentionHeadIdx + 1} 个注意力头输出`}
 	bind:isAnimationActive
 	{timeline}
 >
 	<div class="attention-weight-poover weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
-			<div class="title">Attention</div>
+			<div class="title">Attention 注意力</div>
 			<Matrix
 				className="attention-matrix"
 				data={maskArray(softmaxed)}
@@ -287,7 +284,7 @@
 			</div>
 		</div>
 		<div class="matrix flex flex-col items-center">
-			<div class="title flex items-center gap-1">Value</div>
+			<div class="title flex items-center gap-1">Value 值向量</div>
 			<div class="flex gap-0">
 				<Matrix
 					className="value-matrix"
@@ -315,7 +312,7 @@
 			</div>
 		</div>
 		<div class="matrix flex flex-col items-center">
-			<div class="title">Out</div>
+			<div class="title">输出 Out</div>
 			<div class="flex">
 				<Matrix
 					className="head-out-matrix"

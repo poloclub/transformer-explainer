@@ -1,11 +1,9 @@
 import { writable, derived, readable } from 'svelte/store';
 import * as ort from 'onnxruntime-web';
-import tailwindConfig from '../../tailwind.config';
-import resolveConfig from 'tailwindcss/resolveConfig';
 import { ex0 } from '~/constants/examples';
 import { textPages } from '~/utils/textbookPages';
-
-const { theme } = resolveConfig(tailwindConfig);
+import type { PreTrainedTokenizer } from '@xenova/transformers';
+import { theme } from '~/utils/theme';
 
 export const attentionHeadIdxTemp = writable(0);
 export const attentionHeadIdx = writable(0);
@@ -26,6 +24,15 @@ export const isTextbookOpen = writable<boolean>(true);
 export const isModelRunning = writable(false);
 export const isFetchingModel = writable(true);
 export const isLoaded = writable(false);
+export type ModelLoadStatus =
+	| 'preparing'
+	| 'downloading'
+	| 'loading-cache'
+	| 'ready'
+	| 'error'
+	| 'mobile-preview';
+export const modelLoadStatus = writable<ModelLoadStatus>('preparing');
+export const gpt2Tokenizer = writable<PreTrainedTokenizer | null>(null);
 
 export const inputTextExample = [
 	'Data visualization empowers users to',
@@ -111,11 +118,18 @@ export const tooltip = writable();
 
 export const isMobile = readable(false, (set) => {
 	if (typeof window !== 'undefined') {
-		// Only run in browser environment
-		const userAgent = navigator.userAgent.toLowerCase();
-		set(/android|iphone|ipad|ipod/i.test(userAgent));
+		const compactViewport = window.matchMedia('(max-width: 640px)');
+		const update = () => {
+			const userAgent = navigator.userAgent.toLowerCase();
+			set(/android|iphone|ipad|ipod/i.test(userAgent) || compactViewport.matches);
+		};
+
+		update();
+		compactViewport.addEventListener('change', update);
+
+		return () => compactViewport.removeEventListener('change', update);
 	}
-	return () => {}; // Cleanup function
+	return () => {};
 });
 
 // User identification

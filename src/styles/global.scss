@@ -21,3 +21,27 @@ button {
 		font-size: 18px;
 	}
 }
+
+body {
+	font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial,
+		sans-serif;
+	line-height: 1.6;
+	letter-spacing: 0.01em;
+	color: #1f2937; // slate-800
+	background-color: #fff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-weight: 700;
+	line-height: 1.3;
+	letter-spacing: 0.01em;
+}
+
+p {
+	margin: 0 0 0.8rem 0;
+}

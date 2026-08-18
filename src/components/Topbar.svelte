@@ -14,7 +14,8 @@
 
 <div class="top-bar flex w-full items-center gap-4 px-10 py-2 pb-3" class:active={isActive}>
 	<div class="logo text-bold text-gray-700" data-click="logo">
-		T<span class="small">RANSFORMER</span> E<span class="small">XPLAINER</span>
+		<span class="en">Transformer</span>
+		<span class="cn">解释器</span>
 	</div>
 	<div class="inputs flex grow items-center">
 		<div class="input-wrapper w-full" class:active={isActive}>
@@ -29,6 +30,7 @@
 			href="https://dl.acm.org/doi/pdf/10.1145/3772318.3791725"
 			target="_blank"
 			data-click="pdf-btn"
+			aria-label="查看 CHI 2026 论文"
 		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
@@ -47,7 +49,12 @@
 			</svg>
 		</a>
 		<!-- video -->
-		<a href="https://www.youtube.com/watch?v=ECR4oAwocjs" target="_blank" data-click="ytb-btn">
+		<a
+			href="https://www.youtube.com/watch?v=ECR4oAwocjs"
+			target="_blank"
+			data-click="ytb-btn"
+			aria-label="观看视频教程"
+		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
 				aria-hidden="true"
@@ -66,9 +73,10 @@
 		</a>
 		<!-- repo -->
 		<a
-			href="https://github.com/poloclub/transformer-explainer"
+			href="https://github.com/Jian1202/transformer-explainer-cn"
 			target="_blank"
 			data-click="github_btn"
+			aria-label="查看中文版 GitHub 仓库"
 		>
 			<svg
 				class="h-6 w-6 text-gray-800 dark:text-white"
@@ -103,31 +111,72 @@
 		}
 		.logo {
 			flex-shrink: 0;
+			display: inline-flex;
+			align-items: baseline;
+			gap: 0.4rem;
 			white-space: nowrap;
-			font-family: 'Jersey 10', sans-serif;
+			font-family: 'Jersey 10', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 
 			font-optical-sizing: auto;
 			font-style: normal;
-
 			font-size: 2rem;
-			// color: theme('colors.blue.800');
 
-			background: linear-gradient(
-				to right,
-				theme('colors.blue.500') 0%,
-				theme('colors.purple.500') 60%
-			);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-
-			.small {
-				font-size: 1.8rem;
+			.en {
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				background: linear-gradient(
+					to right,
+					theme('colors.blue.500') 0%,
+					theme('colors.purple.500') 60%
+				);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+			}
+			.cn {
+				font-size: 1.3rem;
+				font-weight: 600;
+				color: theme('colors.gray.700');
+				line-height: 1;
 			}
 		}
 		.icons {
 			flex-shrink: 0;
 			svg {
 				fill: theme('colors.gray.600');
+			}
+		}
+	}
+
+	@media (max-width: 1180px) {
+		.top-bar {
+			flex-wrap: wrap;
+			gap: 0.5rem 1rem;
+			padding: 0.5rem 1rem 0.9rem;
+
+			.inputs {
+				order: 3;
+				flex-basis: 100%;
+				min-width: 0;
+			}
+
+			.icons {
+				margin-left: auto;
+			}
+		}
+	}
+
+	@media (max-width: 640px) {
+		.top-bar {
+			.logo {
+				font-size: 1.55rem;
+
+				.cn {
+					font-size: 1.05rem;
+				}
+			}
+
+			.icons {
+				gap: 0.5rem;
 			}
 		}
 	}

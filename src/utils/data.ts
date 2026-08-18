@@ -290,7 +290,8 @@ function topPSampling(
 }
 
 function softmax(logits: number[]): { expLogits: number[]; probabilities: number[] } {
-	const maxLogit = Math.max(...logits);
+	// Use reduce instead of spread to avoid stack overflow on large arrays
+	const maxLogit = logits.reduce((max, val) => (val > max ? val : max), -Infinity);
 	const expLogits = logits.map((logit) => (logit === -Infinity ? 0 : Math.exp(logit - maxLogit)));
 	const sumExpLogits = expLogits.reduce((sum, val) => sum + val, 0);
 	const probabilities = expLogits.map((val) => val / sumExpLogits);

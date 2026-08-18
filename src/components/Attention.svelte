@@ -54,7 +54,7 @@
 		data-click="attention-step-title"
 	>
 		<div class="w-max">
-			<TextbookTooltip id="self-attention">Multi-head Self Attention</TextbookTooltip>
+			<TextbookTooltip id="self-attention">多头自注意力</TextbookTooltip>
 		</div>
 	</div>
 	<div class="content relative">
@@ -71,7 +71,7 @@
 				>
 					<div class="qkv flex h-full flex-col justify-center gap-[5rem] pl-[6rem]">
 						<div class="column key">
-							<div class="head1 title"><TextbookTooltip id="qkv">Key</TextbookTooltip></div>
+							<div class="head1 title"><TextbookTooltip id="qkv">键</TextbookTooltip></div>
 
 							{#each $tokens as token, index}
 								<div
@@ -84,12 +84,14 @@
 								</div>
 							{/each}
 							<Tooltip class="popover" triggeredBy={'.step.attention .key .cell'} placement="right"
-								>Key, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+								>键，注意力头 {$attentionHeadIdx + 1}，向量（{$modelMeta.dimension /
+									$modelMeta.attention_head_num} 维）</Tooltip
 							>
 						</div>
 						<div class="column query">
-							<div class="head1 title"><TextbookTooltip id="qkv">Query</TextbookTooltip></div>
+							<div class="head1 title">
+								<TextbookTooltip id="qkv">查询</TextbookTooltip>
+							</div>
 							{#each $tokens as token, index}
 								<div
 									class="head1 cell x1-12 query text-xs"
@@ -104,12 +106,12 @@
 								class="popover"
 								triggeredBy={'.step.attention .query .cell'}
 								placement="right"
-								>Query, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+								>查询，注意力头 {$attentionHeadIdx + 1}，向量（{$modelMeta.dimension /
+									$modelMeta.attention_head_num} 维）</Tooltip
 							>
 						</div>
 						<div class="column value">
-							<div class="head1 title"><TextbookTooltip id="qkv">Value</TextbookTooltip></div>
+							<div class="head1 title"><TextbookTooltip id="qkv">值</TextbookTooltip></div>
 							{#each $tokens as token, index}
 								<div class="head1 cell x1-12 text-xs" class:last={index === $tokens.length - 1}>
 									<span class="label float">{token}</span>
@@ -120,8 +122,8 @@
 								class="popover"
 								triggeredBy={'.step.attention .value .cell'}
 								placement="right"
-								>Value, Head {$attentionHeadIdx + 1}, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+								>值，注意力头 {$attentionHeadIdx + 1}，向量（{$modelMeta.dimension /
+									$modelMeta.attention_head_num} 维）</Tooltip
 							>
 						</div>
 					</div>
@@ -131,7 +133,7 @@
 					<div class="head-out mx-[2rem]">
 						<div class="column out">
 							<div class="head1 title">
-								<TextbookTooltip id="output-concatenation">Out</TextbookTooltip>
+								<TextbookTooltip id="output-concatenation">输出</TextbookTooltip>
 							</div>
 							{#each $tokens as token, index}
 								<div class="head1 cell x1-12" class:last={index === $tokens.length - 1}>
@@ -139,8 +141,7 @@
 								</div>
 							{/each}
 							<Tooltip class="popover" triggeredBy={'.step.attention .out .cell'} placement="right"
-								>Attention Out, Head 1, vector({$modelMeta.dimension /
-									$modelMeta.attention_head_num})</Tooltip
+								>注意力输出，向量（{$modelMeta.dimension / $modelMeta.attention_head_num} 维）</Tooltip
 							>
 						</div>
 					</div>
@@ -187,6 +188,10 @@
 				top: -1.7rem;
 				left: 50%;
 				transform: translateX(-50%);
+				display: inline-flex;
+				gap: 0.15rem;
+				align-items: center;
+				white-space: nowrap;
 				font-size: 0.9rem;
 				transition: none;
 			}

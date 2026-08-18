@@ -1,16 +1,13 @@
 <script lang="ts">
 	import { modelMeta, tokens, rootRem } from '~/store';
-	import * as d3 from 'd3';
+	import * as d3 from '~/utils/d3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { theme } from '~/utils/theme';
 
 	const tokenGap = 6;
 
@@ -308,7 +305,7 @@
 	// };
 </script>
 
-<WeightPopoverCard id="qkv" title={'Query Key Value'} bind:isAnimationActive {timeline}>
+<WeightPopoverCard id="qkv" title={'Query / Key / Value'} bind:isAnimationActive {timeline}>
 	<div class="weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="tokens" style={`gap:${tokenGap}px`}>
@@ -319,8 +316,8 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1 self-end">
-				Embeddings<HelpPopover id="qkv-emgeddings" 
-					>{`Embeddings originate from tokens \nbut evolve through blocks, becoming \nabstract representations.`}</HelpPopover
+				嵌入向量<HelpPopover id="qkv-emgeddings" 
+					>{`嵌入向量源自词元，但在各个块中不断演化，逐渐成为更抽象的表示。`}</HelpPopover
 				>
 			</div>
 			<!-- (tokenLen, 768) -->
@@ -339,8 +336,8 @@
 		<div class="operator"><div class="symbol mul">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Q·K·V Weights<HelpPopover id="qkv-weights" 
-					>{`Transforms embedding vectors into Query, Key, and Value vectors. \nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				Q·K·V 权重<HelpPopover id="qkv-weights" 
+					>{`把嵌入向量映射成 Query、Key、Value 三类向量。\n这些参数在训练中学习，推理时固定。`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
@@ -362,8 +359,8 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Q·K·V Bias<HelpPopover id="qkv-bias" 
-					>{`Offsets added after transformation. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
+				Q·K·V 偏置<HelpPopover id="qkv-bias" 
+					>{`变换后的偏置项。\n这些参数在训练中学习，推理时固定。`}</HelpPopover
 				>
 			</div>
 			<Matrix

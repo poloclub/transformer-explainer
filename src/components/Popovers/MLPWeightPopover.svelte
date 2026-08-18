@@ -1,16 +1,13 @@
 <script lang="ts">
 	import { modelMeta, tokens, rootRem } from '~/store';
-	import * as d3 from 'd3';
+	import * as d3 from '~/utils/d3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { theme } from '~/utils/theme';
 
 	const tokenGap = 6;
 
@@ -310,7 +307,7 @@
 	};
 </script>
 
-<WeightPopoverCard id="mlp-up" title={'MLP Expansion'} bind:isAnimationActive {timeline}>
+<WeightPopoverCard id="mlp-up" title={'MLP 扩展'} bind:isAnimationActive {timeline}>
 	<div class="mlp-weight-popover weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="tokens" style={`gap:${tokenGap}px`}>
@@ -321,8 +318,8 @@
 		</div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Embeddings<HelpPopover id="mlp-emgeddings" 
-					>{`Embeddings transformed through attention mechanism.`}</HelpPopover
+				嵌入向量<HelpPopover id="mlp-emgeddings" 
+					>{`经过注意力机制变换后的嵌入表示。`}</HelpPopover
 				>
 			</div>
 			<Matrix
@@ -340,8 +337,8 @@
 		<div class="operator"><div class="symbol mul">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Weights<HelpPopover id="mlp-weights" 
-					>{`Projects embedding vectors to expanded latent space. \nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				扩展权重<HelpPopover id="mlp-weights" 
+					>{`把嵌入向量投射到更高维的潜在空间。\n这些参数在训练中学习，推理时固定。`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
@@ -363,8 +360,8 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Expansion Bias <HelpPopover id="mlp-bias" 
-					>{`Offsets added after expansion. \nParameters that learned in training, fixed in prediction.`}</HelpPopover
+				扩展偏置<HelpPopover id="mlp-bias" 
+					>{`扩展后的偏置项。\n这些参数在训练中学习，推理时固定。`}</HelpPopover
 				>
 			</div>
 			<Matrix
@@ -392,7 +389,7 @@
 			</div>
 		</div> -->
 		<div class="matrix flex flex-col items-center">
-			<div class="title">Expanded <br />Embeddings</div>
+			<div class="title">扩展后的<br />嵌入</div>
 			<div class="flex">
 				<Matrix
 					className="mlp-out"

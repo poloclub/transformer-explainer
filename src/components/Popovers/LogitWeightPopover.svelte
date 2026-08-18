@@ -1,18 +1,15 @@
 <script lang="ts">
 	import { modelMeta, tokens, rootRem } from '~/store';
-	import * as d3 from 'd3';
+	import * as d3 from '~/utils/d3';
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
+	import { theme } from '~/utils/theme';
 
 	export let isOpen = true;
-
-	const { theme } = resolveConfig(tailwindConfig);
 
 	const tokenGap = 6;
 
@@ -317,13 +314,13 @@
 	};
 </script>
 
-<WeightPopoverCard id="logits" title={'Logits'} bind:isAnimationActive {timeline} bind:isOpen>
+<WeightPopoverCard id="logits" title={'Logits（未归一化分数）'} bind:isAnimationActive {timeline} bind:isOpen>
 	<div class="weight-popover-content flex items-center justify-start">
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				<span>Output<br />Embedding</span>
+				<span>输出词元<br />嵌入</span>
 				<HelpPopover id="hidden-states" 
-					>{`After passing through all blocks, \nthe final token's embedding vector \ncontains all the contextual information \nfrom the preceding tokens.`}</HelpPopover
+					>{`经过所有 Transformer 块后，最后一个词元的嵌入向量已经汇集了前面所有词元的上下文信息。`}</HelpPopover
 				>
 			</div>
 			<Matrix
@@ -341,9 +338,9 @@
 		<div class="operator"><div class="symbol mul pl-3">&times;</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Output Projection Weights
+				输出映射权重
 				<HelpPopover id="lm-head-weights" 
-					>{`Transforms the final embedding into a vocabulary distribution.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
+					>{`把最终嵌入转换成词表分布。\n这些参数在训练中学习，推理时固定。`}</HelpPopover
 				>
 			</div>
 			<div class="flex gap-0">
@@ -365,8 +362,8 @@
 		<div class="operator"><div class="symbol plus">+</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Output Projection Bias<HelpPopover id="lm-head-bias" 
-					>{`Offsets added after the transformation.\nParameters were learned in training, fixed in prediction.`}</HelpPopover
+				输出映射偏置<HelpPopover id="lm-head-bias" 
+					>{`映射后的偏置项。\n这些参数在训练中学习，推理时固定。`}</HelpPopover
 				>
 			</div>
 			<Matrix
@@ -385,9 +382,9 @@
 		<div class="operator"><div class="symbol equal">=</div></div>
 		<div class="matrix flex flex-col items-center">
 			<div class="title flex items-center gap-1">
-				Logits
+				Logits（未归一化分数）
 				<HelpPopover id="logits" 
-					>{`Raw scores representing the model’s preference \nfor each vocabulary token before applying softmax.`}</HelpPopover
+					>{`在应用 softmax 之前，表示模型对每个词元偏好的原始分数。`}</HelpPopover
 				>
 			</div>
 			<div class="flex">

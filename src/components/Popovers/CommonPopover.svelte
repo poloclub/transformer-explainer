@@ -4,6 +4,7 @@
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
 	import { userId } from '~/store';
 	import { onClickReadMore } from '~/utils/event';
+	import { uiText } from '~/locales/zh-CN/ui';
 
 	export let offset: PopoverProps['offset'] = undefined;
 	export let className: PopoverProps['class'] = undefined;
@@ -55,7 +56,8 @@
 	<div class="content">
 		<slot></slot>
 		{#if goTo}
-			<div
+			<button
+				type="button"
 				class="more-btn mt-1 text-blue-600 hover:underline"
 				on:click={(e) =>
 					onClickReadMore(e, goTo, {
@@ -63,8 +65,8 @@
 					})}
 				data-click={`read-more-btn-${className}`}
 			>
-				Read more
-			</div>
+				{uiText.actions.readMore}
+			</button>
 		{/if}
 	</div></Popover
 >

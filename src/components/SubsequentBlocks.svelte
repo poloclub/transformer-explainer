@@ -29,8 +29,8 @@
 			>
 				<div class="text" class:highlight={$isBoundingBoxActive}>
 					<TextbookTooltip id="blocks">
-						<span class="strong">{$modelMeta.layer_num - $blockIdx - 1}</span> more identical<br
-						/><span class="strong">Transformer<br />Blocks</span>
+						还剩 <span class="strong">{$modelMeta.layer_num - $blockIdx - 1}</span> 个相同的<br
+						/><span class="strong">Transformer<br />块</span>
 					</TextbookTooltip>
 				</div>
 
@@ -59,7 +59,7 @@
 				</div>
 			{/each}
 			<Tooltip class="popover" triggeredBy={'.transformer-blocks .vector'} placement="right"
-				>vector({$modelMeta.dimension})</Tooltip
+				>向量（{$modelMeta.dimension} 维）</Tooltip
 			>
 		</div>
 		<div class="second-column">

@@ -11,7 +11,6 @@
 	import { page } from '$app/stores';
 
 	let topBarHeight = 0;
-	let scrollLeft = 0;
 
 	let minScreenWidth = 1300;
 	let minColumWidth = Math.floor(minScreenWidth / 24) - rootRem * 2;
@@ -43,11 +42,8 @@
 		if (target) {
 			intersectionObserver.observe(target);
 		}
-		window.addEventListener('scroll', handleMobileScrollX);
-
 		return () => {
 			intersectionObserver.disconnect();
-			window.removeEventListener('scroll', handleMobileScrollX);
 		};
 	});
 
@@ -60,10 +56,6 @@
 			}
 		});
 	}
-
-	const handleMobileScrollX = () => {
-		scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-	};
 </script>
 
 <GTM />
@@ -72,7 +64,7 @@
 	style={`--min-screen-width:${minScreenWidth}px;--min-column-width:${minColumWidth}px;--predicted-color:${predictedColor};`}
 >
 	<div id="landing">
-		<header bind:offsetHeight={topBarHeight} style="transform: translateX({-1 * scrollLeft}px);">
+		<header bind:offsetHeight={topBarHeight}>
 			<Topbar isActive={tobBarActive} />
 		</header>
 		<main id="main" style={`padding-top:${topBarHeight}px`} bind:this={target}>
@@ -102,17 +94,18 @@
 
 	#app {
 		height: 100vh;
-		min-width: 900px;
+		width: 100%;
+		min-width: 0;
 	}
 
 	#landing {
 		height: 100%;
 		width: 100%;
-		min-width: var(--min-screen-width);
+		min-width: 0;
 	}
 
 	header {
-		min-width: var(--min-screen-width);
+		min-width: 0;
 		width: 100%;
 		position: fixed;
 		z-index: $TOP_BAR_INDEX;
@@ -123,7 +116,9 @@
 		width: 100%;
 		display: flex;
 		justify-content: start;
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		overscroll-behavior-x: contain;
 	}
 	.article {
 		padding-top: 2rem;

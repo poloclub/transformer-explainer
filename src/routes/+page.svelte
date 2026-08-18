@@ -19,7 +19,10 @@
 		isOnBlockTransition,
 		blockIdx,
 		isTextbookOpen,
-		userId
+		userId,
+		gpt2Tokenizer,
+		modelLoadStatus,
+		modelMeta
 	} from '~/store';
 	import { PreTrainedTokenizer } from '@xenova/transformers';
 	import Sankey from '~/components/Sankey.svelte';
@@ -35,7 +38,7 @@
 	import * as ort from 'onnxruntime-web';
 
 	import { adjustTemperature, runModel, fakeRunWithCachedData } from '~/utils/data';
-	import { fetchAndMergeChunks } from '~/utils/fetchChunks';
+	import { areModelChunksCached, fetchAndMergeChunks } from '~/utils/fetchChunks';
 	import WeightPopovers from '~/components/WeightPopovers.svelte';
 	import { fade } from 'svelte/transition';
 	import { AutoTokenizer } from '@xenova/transformers';
@@ -50,26 +53,53 @@
 	let active = false;
 	let appStartTime = Date.now();
 
-	// fetch model
-	onMount(async () => {
-		const gpt2Tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
-		active = true;
+	// 初始化分词器和模型。移动端保留预计算示例，避免自动下载约 600 MB 的模型。
+	onMount(() => {
+		let unsubscribe = () => {};
+		let disposed = false;
 
-		const unsubscribe = subscribeInputs(gpt2Tokenizer);
+		const initialize = async () => {
+			try {
+				modelLoadStatus.set('preparing');
+				const tokenizer = await AutoTokenizer.from_pretrained('Xenova/gpt2');
+				if (disposed) return;
 
-		if (!$isMobile) {
-			await fetchModel();
-		}
+				gpt2Tokenizer.set(tokenizer);
+				active = true;
+				unsubscribe = subscribeInputs(tokenizer);
 
-		return unsubscribe;
+				if ($isMobile) {
+					modelLoadStatus.set('mobile-preview');
+					return;
+				}
+
+				await fetchModel();
+				if (!disposed) {
+					modelLoadStatus.set('ready');
+				}
+			} catch (error) {
+				console.error('GPT-2 Small 初始化失败：', error);
+				modelLoadStatus.set('error');
+			}
+		};
+
+		initialize();
+
+		return () => {
+			disposed = true;
+			unsubscribe();
+		};
 	});
 
 	// Fetch model onnx
 	const fetchModel = async () => {
-		const chunkNum = 63; //TODO: move to model meta
+		const chunkNum = $modelMeta.chunkTotal;
 		const chunkUrls = Array(chunkNum)
 			.fill(0)
 			.map((d, i) => `${base}/model-v2/gpt2.onnx.part${i}`);
+
+		const hasCompleteCache = await areModelChunksCached(chunkUrls);
+		modelLoadStatus.set(hasCompleteCache ? 'loading-cache' : 'downloading');
 
 		// Fetch from cache
 		const { hasCache, mergedArray } = await fetchAndMergeChunks(chunkUrls);
@@ -84,6 +114,7 @@
 		const session = await ort.InferenceSession.create(url, {
 			// logSeverityLevel: 0
 		});
+		URL.revokeObjectURL(url);
 
 		modelSession.set(session);
 
@@ -235,6 +266,7 @@
 
 <style lang="scss">
 	.main-section {
+		min-width: var(--min-screen-width);
 		opacity: 0;
 		&.active {
 			opacity: 1;
@@ -250,7 +282,6 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		position: relative;
 		display: grid;
 		grid-template-columns: auto 3.5fr 0.5fr 0.5fr;
 

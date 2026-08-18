@@ -29,7 +29,7 @@
 		<div class="sampling-type">
 			<div class="title flex items-center gap-[2px]">
 				<TextbookTooltip id="sampling">
-					<div>Sampling</div></TextbookTooltip
+					<div>采样方式</div></TextbookTooltip
 				>
 				<!-- <HelpPopover
 					id="sampling-help"
@@ -59,7 +59,7 @@
 					}}
 					checked={$sampling.type === 'top-k'}
 					{disabled}
-					color="purple">Top-k</Radio
+					color="purple">Top-k 截断</Radio
 				>
 				<Radio
 					class={`type-btn ${disabled ? 'disabled' : ''}`}
@@ -79,7 +79,7 @@
 						});
 					}}
 					{disabled}
-					color="purple">Top-p</Radio
+					color="purple">Top-p 累积概率</Radio
 				>
 			</div>
 		</div>

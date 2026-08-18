@@ -11,16 +11,14 @@
 
 <CommonPopover
 	className="dropout-popover"
-	title="Dropout"
+	title="随机失活（Dropout）"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
 	goTo="article-dropout"
 >
-	<div class="dropout-content">
-		Disables randomly selected neurons. Used only during training.
-	</div></CommonPopover
+	<div class="dropout-content">训练时随机将部分输出置零；推理时关闭。</div></CommonPopover
 >
 
 <style lang="scss">

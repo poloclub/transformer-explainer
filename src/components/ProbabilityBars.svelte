@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import * as d3 from 'd3';
+	import * as d3 from '~/utils/d3';
 	import { modelData, rootRem, predictedToken, predictedColor, temperature } from '~/store';
-
-	import tailwindConfig from '../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	const { theme } = resolveConfig(tailwindConfig);
+	import { theme } from '~/utils/theme';
 
 	export let rowHeight;
 	export let rowGap;

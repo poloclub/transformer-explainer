@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Dropdown, DropdownItem, ButtonGroup } from 'flowbite-svelte';
+	import { ButtonGroup } from 'flowbite-svelte';
 	import Temperature from './Temperature.svelte';
 
 	import { ChevronDownOutline } from 'flowbite-svelte-icons';
@@ -20,13 +20,16 @@
 		blockIdx,
 		temperature,
 		tokenIds,
-		userId
+		userId,
+		gpt2Tokenizer,
+		modelLoadStatus
 	} from '~/store';
 	import LoadingDots from './common/LoadingDots.svelte';
 	import classNames from 'classnames';
 	import Sampling from './Sampling.svelte';
 	import { completeCurrentAnimation } from '~/utils/animation';
 	import { textPages } from '~/utils/textbookPages';
+	import { uiText } from '~/locales/zh-CN/ui';
 
 	let inputRef: HTMLDivElement;
 	let predictRef: HTMLDivElement;
@@ -37,8 +40,13 @@
 
 	$: predictedTokenTemp = $predictedToken?.token || '';
 
-	const wordLimit = 12;
-	$: exceedLimit = inputTextTemp.split(' ').length >= wordLimit;
+	const tokenLimit = 12;
+	$: tokenCount = $gpt2Tokenizer
+		? inputTextTemp.trim().length > 0
+			? $gpt2Tokenizer.encode(inputTextTemp).length
+			: 0
+		: null;
+	$: exceedLimit = tokenCount !== null && tokenCount > tokenLimit;
 
 	// Text input
 	const onFocusInput = (e) => {
@@ -57,6 +65,8 @@
 	};
 
 	const handleSubmit = (e) => {
+		if (disabled || exceedLimit) return;
+
 		// Complete any running animation before starting new generation
 		completeCurrentAnimation();
 
@@ -138,103 +148,128 @@
 </script>
 
 <div class="input-area" data-click="input-area">
-	<form class="input-form" data-click="input-form">
-		<ButtonGroup class="input-btn-group" size="sm">
-			<button
-				data-click="dropdown-btn"
-				type="button"
-				disabled={selectDisabled}
-				class:selectDisabled
-				class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
-			>
-				Examples<ChevronDownOutline class="pointer-events-none h-4 w-4 text-gray-500" />
-			</button>
-			<Dropdown bind:open={dropdownOpen} class="example-dropdown">
-				{#each inputTextExample as text, index}
-					<DropdownItem
-						data-click={`dropdown-item-${index}`}
-						class={$selectedExampleIdx === index && 'active'}
-						on:click={() => {
-							onSelectExample(text, index);
-						}}>{text}</DropdownItem
-					>
-				{/each}
-			</Dropdown>
+	<form class="input-form" data-click="input-form" on:submit|preventDefault={handleSubmit}>
+		<div class="input-field">
+			<ButtonGroup class="input-btn-group" size="sm">
+				<button
+					data-click="dropdown-btn"
+					type="button"
+					disabled={selectDisabled}
+					class:selectDisabled
+					class="select-button inline-flex shrink-0 items-center justify-center border border-s-0 border-gray-200 bg-white px-3 py-2 text-center text-xs font-medium text-gray-900 first:rounded-s-lg first:border-s last:rounded-e-lg"
+					aria-haspopup="listbox"
+					aria-expanded={dropdownOpen}
+					on:click|stopPropagation={() => (dropdownOpen = !dropdownOpen)}
+					>{uiText.input.examples}<ChevronDownOutline
+						class="pointer-events-none h-4 w-4 text-gray-500"
+					/>
+				</button>
+				{#if dropdownOpen}
+					<ul class="example-dropdown" role="listbox" aria-label={uiText.input.examples}>
+						{#each inputTextExample as text, index}
+							<li>
+								<button
+									type="button"
+									role="option"
+									aria-selected={$selectedExampleIdx === index}
+									data-click={`dropdown-item-${index}`}
+									class:active={$selectedExampleIdx === index}
+									on:click={() => onSelectExample(text, index)}>{text}</button
+								>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 
-			<div
-				data-click="text-input"
-				class="input-container"
-				class:disabled
-				role="none"
-				on:keydown={(e) => {
-					e.stopPropagation();
-					inputRef.focus();
-				}}
-				on:click={(e) => {
-					e.stopPropagation();
-					inputRef.focus();
-				}}
-			>
-				<div class={`editable ${!$isModelRunning ? 'w-full' : ''}`}>
-					<div
-						bind:this={inputRef}
-						contenteditable={!disabled}
-						class="text-box"
-						placeholder="Test your own input text"
-						on:focus={onFocusInput}
-						on:input={onInput}
-						on:keydown={handleKeyDown}
-						on:click={(e) => {
-							e.stopPropagation();
-						}}
-						role="input"
-					>
-						{inputTextTemp}
-					</div>
-					{#if !$isModelRunning}
+				<div
+					data-click="text-input"
+					class="input-container"
+					class:disabled
+					role="none"
+					on:keydown={(e) => {
+						e.stopPropagation();
+						inputRef.focus();
+					}}
+					on:click={(e) => {
+						e.stopPropagation();
+						inputRef.focus();
+					}}
+				>
+					<div class={`editable ${!$isModelRunning ? 'w-full' : ''}`}>
 						<div
-							bind:this={predictRef}
-							class="predicted"
-							role="none"
+							bind:this={inputRef}
+							contenteditable={!disabled}
+							class="text-box"
+							placeholder={uiText.input.placeholder}
+							aria-label={uiText.input.ariaLabel}
+							tabindex="0"
+							on:focus={onFocusInput}
+							on:input={onInput}
+							on:keydown={handleKeyDown}
 							on:click={(e) => {
 								e.stopPropagation();
-								onFocusInput(e);
-								inputRef.focus();
-								moveCursorToEnd(inputRef);
 							}}
+							role="textbox"
 						>
-							<span>{predictedTokenTemp}</span>
+							{inputTextTemp}
 						</div>
+						{#if !$isModelRunning}
+							<div
+								bind:this={predictRef}
+								class="predicted"
+								role="none"
+								on:click={(e) => {
+									e.stopPropagation();
+									onFocusInput(e);
+									inputRef.focus();
+									moveCursorToEnd(inputRef);
+								}}
+							>
+								<span>{predictedTokenTemp}</span>
+							</div>
+						{/if}
+					</div>
+					{#if $isModelRunning}
+						<div class="loading"><LoadingDots /></div>
 					{/if}
 				</div>
-				{#if $isModelRunning}
-					<div class="loading"><LoadingDots /></div>
-				{/if}
-				{#if $isMobile}
-					<span class="helper-text"
-						>Try the examples. Please use a desktop computer to input GPT-2 prompts directly.</span
-					>
-				{:else if $isLoaded && $isFetchingModel}
-					<span class="helper-text"
-						>Try the examples while GPT-2 model is being downloaded (600MB)</span
-					>
-				{:else if exceedLimit}
-					<span class="helper-text">You can enter up to {wordLimit} words.</span>
-				{/if}
+			</ButtonGroup>
+			<div class="input-meta" aria-live="polite">
+				<span class:limit-exceeded={exceedLimit}>
+					{#if tokenCount === null}
+						{uiText.input.tokenCountWaiting}
+					{:else if exceedLimit}
+						{uiText.input.tokenLimitExceeded(tokenLimit)}
+					{:else}
+						{uiText.input.tokenCount(tokenCount, tokenLimit)}
+					{/if}
+				</span>
+				<span class="status">
+					{#if $isMobile}
+						{uiText.input.mobileHint}
+					{:else if $modelLoadStatus === 'preparing'}
+						{uiText.model.preparing}
+					{:else if $modelLoadStatus === 'downloading'}
+						{uiText.model.downloading}
+					{:else if $modelLoadStatus === 'loading-cache'}
+						{uiText.model.loadingCache}
+					{:else if $modelLoadStatus === 'ready'}
+						{uiText.model.ready}；{uiText.input.languageHint}
+					{:else if $modelLoadStatus === 'error'}
+						{uiText.model.error}
+					{/if}
+				</span>
 			</div>
-		</ButtonGroup>
+		</div>
 		<button
 			data-click="generate-btn"
-			disabled={disabled || exceedLimit || exceedLimit}
+			disabled={disabled || exceedLimit}
 			class={classNames('generate-button rounded-lg text-center text-sm shadow-sm', {
 				disabled: disabled || exceedLimit,
 				active: !(disabled || exceedLimit)
 			})}
-			type="submit"
-			on:click={handleSubmit}
+			type="submit">{uiText.input.generate}</button
 		>
-			Generate
-		</button>
 	</form>
 	<div class="parameters" data-click="input-parameters">
 		<Temperature disabled={parameterDisabled} />
@@ -259,12 +294,18 @@
 			width: 100%;
 			flex: 1 0 0;
 			display: flex;
-			align-items: center;
+			align-items: flex-start;
 			gap: 0.5rem;
 
-			:global(.input-btn-group) {
-				flex: 1 0 0;
-				display: flex;
+			.input-field {
+				min-width: 0;
+				flex: 1 1 auto;
+				position: relative;
+
+				:global(.input-btn-group) {
+					width: 100%;
+					display: flex;
+				}
 			}
 		}
 	}
@@ -298,8 +339,15 @@
 
 			.text-box {
 				white-space: nowrap;
+				min-width: 1px;
 				br {
 					display: none;
+				}
+
+				&:empty::before {
+					content: attr(placeholder);
+					color: theme('colors.gray.400');
+					pointer-events: none;
 				}
 
 				&:focus {
@@ -340,19 +388,49 @@
 			cursor: not-allowed;
 		}
 	}
-	:global(.example-dropdown) {
-		:global(.active) {
-			background-color: theme('colors.gray.100') !important;
+	.example-dropdown {
+		position: absolute;
+		z-index: 60;
+		top: 2.55rem;
+		left: 0;
+		min-width: 18rem;
+		padding: 0.25rem 0;
+		border: 1px solid theme('colors.gray.200');
+		border-radius: 0.5rem;
+		background: white;
+		box-shadow: 0 10px 24px rgb(15 23 42 / 0.12);
+
+		button {
+			width: 100%;
+			padding: 0.5rem 0.75rem;
+			text-align: left;
+			font-size: 0.82rem;
+			color: theme('colors.gray.700');
+
+			&:hover,
+			&:focus-visible,
+			&.active {
+				background-color: theme('colors.gray.100');
+				outline: none;
+			}
 		}
 	}
-	.helper-text {
-		position: absolute;
-		bottom: 0;
-		right: 0;
-		padding: 0.3rem 0;
-		transform: translate(0, 100%);
+	.input-meta {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding-top: 0.35rem;
 		color: theme('colors.gray.400');
-		font-size: 0.9rem;
+		font-size: 0.78rem;
+		line-height: 1.2;
+
+		.status {
+			text-align: right;
+		}
+
+		.limit-exceeded {
+			color: theme('colors.red.600');
+		}
 	}
 	:global(.generate-button) {
 		padding: 0.4rem 0.8rem;
@@ -377,5 +455,47 @@
 	:global(.generate-button):focus {
 		border: 1px solid var(--predicted-color);
 		color: var(--predicted-color);
+	}
+
+	@media (max-width: 1180px) {
+		.input-area {
+			padding: 0;
+			flex-wrap: wrap;
+			gap: 0.5rem 1rem;
+
+			.input-form {
+				min-width: min(100%, 34rem);
+			}
+
+			.parameters {
+				margin-left: auto;
+			}
+		}
+	}
+
+	@media (max-width: 700px) {
+		.input-area {
+			flex-direction: column;
+
+			.input-form {
+				width: 100%;
+				min-width: 0;
+			}
+
+			.parameters {
+				width: 100%;
+				margin-left: 0;
+				justify-content: flex-end;
+			}
+		}
+
+		.input-meta {
+			flex-direction: column;
+			gap: 0.2rem;
+
+			.status {
+				text-align: left;
+			}
+		}
 	}
 </style>

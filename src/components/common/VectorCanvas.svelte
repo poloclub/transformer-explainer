@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import * as d3 from 'd3';
-	import tailwindConfig from '../../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
+	import * as d3 from '~/utils/d3';
 	import { vectorHeight } from '~/store';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { theme } from '~/utils/theme';
 
 	let visibleDimension = Math.floor($vectorHeight * 3.5) * 4;
 	export let active: boolean = false;

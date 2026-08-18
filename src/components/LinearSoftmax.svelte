@@ -4,8 +4,6 @@
 	import classNames from 'classnames';
 	import { gsap, Flip } from '~/utils/gsap';
 	import { tick } from 'svelte';
-	import tailwindConfig from '../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
 	import {
 		rootRem,
 		temperature,
@@ -21,8 +19,8 @@
 	import { ga } from '~/utils/event';
 	import { EyeOutline, ZoomInOutline } from 'flowbite-svelte-icons';
 	import { fade } from 'svelte/transition';
-	import SoftmaxPopover from './popovers/SoftmaxPopover.svelte';
-	import LogitWeightPopover from './popovers/LogitWeightPopover.svelte';
+	import SoftmaxPopover from './Popovers/SoftmaxPopover.svelte';
+	import LogitWeightPopover from './Popovers/LogitWeightPopover.svelte';
 	import { textPages } from '~/utils/textbookPages';
 	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 
@@ -200,7 +198,7 @@
 	on:click={onClickSoftmax}
 	on:keydown={onClickSoftmax}
 	data-click="prob-step"
->
+	>
 	<div
 		class="title expandable"
 		role="none"
@@ -211,7 +209,7 @@
 		data-click="prob-step-title"
 	>
 		<div class="title-text flex w-max items-center gap-1">
-			Probabilities
+			概率分布
 			<ZoomInOutline></ZoomInOutline>
 		</div>
 	</div>
@@ -235,7 +233,7 @@
 					>
 						<span>{item.token.trim() === '' ? '\u00A0' : item.token}</span>
 						<Tooltip class="softmax-tooltip" type="light">
-							Token ID: <span class="number">{tokenIds[idx]}</span>
+							词元 ID：<span class="number">{tokenIds[idx]}</span>
 						</Tooltip>
 					</div>
 				{/each}
@@ -244,38 +242,38 @@
 		</div>
 
 		<div class="second-column flex flex-col">
-			{#if isSoftmaxExpanded}
-				<div class="softmax-subtitle softmax-detail flex text-center text-xs opacity-0">
-					<div class="title-box token-string !justify-end">
-						<div class="title-text">Tokens</div>
-					</div>
-					<div class="title-box logits">
-						<div
-							class="title-text btn shadow-sm"
-							on:click={onClickLogits}
-							data-click="prob-expansion-logit-btn"
-						>
-							Logits <EyeOutline class="icon text-gray-400" size="sm" />
+				{#if isSoftmaxExpanded}
+					<div class="softmax-subtitle softmax-detail flex text-center text-xs opacity-0">
+						<div class="title-box token-string !justify-end">
+							<div class="title-text">词元</div>
 						</div>
-					</div>
-					<div class="title-box scaled">
-						<TextbookTooltip id="temperature"
-							><div class="title-text">Scaled logits</div></TextbookTooltip
-						>
-					</div>
-					<div class="title-box sampling">
-						<TextbookTooltip id="sampling"
-							><div class="title-text">
-								{$sampling.type === 'top-k' ? 'Top-k' : 'Softmax & Top-p'}
+						<div class="title-box logits">
+							<div
+								class="title-text btn shadow-sm"
+								on:click={onClickLogits}
+								data-click="prob-expansion-logit-btn"
+							>
+								Logits 分数<EyeOutline class="icon text-gray-400" size="sm" />
+							</div>
+						</div>
+						<div class="title-box scaled">
+							<TextbookTooltip id="temperature"
+								><div class="title-text">温度缩放后的 logits</div></TextbookTooltip
+							>
+						</div>
+						<div class="title-box sampling">
+							<TextbookTooltip id="sampling"
+								><div class="title-text">
+								{$sampling.type === 'top-k' ? 'Top-k' : 'Softmax 与 Top-p'}
 							</div></TextbookTooltip
-						>
-					</div>
-					<div class="title-box probability">
-						<div class="title-text mr-1">
-							{$sampling.type === 'top-k' ? 'Softmax' : 'Normalization'}
+							>
+						</div>
+						<div class="title-box probability">
+							<div class="title-text mr-1">
+								{$sampling.type === 'top-k' ? 'Softmax 归一化' : '归一化'}
+							</div>
 						</div>
 					</div>
-				</div>
 			{/if}
 			<div class="content-row flex gap-2">
 				<div class="softmax-detail expandable flex gap-2 opacity-0">
@@ -363,12 +361,12 @@
 											<span class="number" class:strike={cutoffIndex < idx}>{prob.toFixed(2)}</span>
 											{#if cutoffIndex === idx}
 												<span class="cutoff-label"
-													>sum={cumulativeProbabilities[idx]?.toFixed(2)}</span
+													>累积={cumulativeProbabilities[idx]?.toFixed(2)}</span
 												>
 											{/if}
 										</div>
 										<Tooltip class="softmax-tooltip" type="light">
-											sum=<Katex math={`${cumulativeProbabilities[idx]?.toFixed(2)}`}></Katex>
+											累积=<Katex math={`${cumulativeProbabilities[idx]?.toFixed(2)}`}></Katex>
 										</Tooltip>
 									{/if}
 								{/each}

@@ -4,6 +4,7 @@
 	import { textbookCurrentPage } from '~/store';
 	import { textPages } from '~/utils/textbookPages';
 	import TextbookNavigation from './TextbookNavigation.svelte';
+	import { onMount } from 'svelte';
 
 	export let onClose: () => void;
 
@@ -13,7 +14,7 @@
 
 	// Draggable state
 	let isDragging = false;
-	let position = { x: window.innerWidth - 540 - 32, y: window.innerHeight - 300 - 32 };
+	let position = { x: 32, y: 32 };
 	let dragStart = { x: 0, y: 0 };
 
 	// Resizable state
@@ -27,6 +28,29 @@
 	const RESIZE_HANDLE_SIZE = 10;
 	const EDGE_MARGIN = 32; // 2rem
 	const SNAP_DISTANCE = 100; // pixels from corner to trigger snap
+
+	onMount(() => {
+		const keepCardInViewport = () => {
+			position = {
+				x: Math.max(
+					EDGE_MARGIN,
+					Math.min(position.x, window.innerWidth - size.width - EDGE_MARGIN)
+				),
+				y: Math.max(
+					EDGE_MARGIN,
+					Math.min(position.y, window.innerHeight - size.height - EDGE_MARGIN)
+				)
+			};
+		};
+
+		position = {
+			x: Math.max(EDGE_MARGIN, window.innerWidth - size.width - EDGE_MARGIN),
+			y: Math.max(EDGE_MARGIN, window.innerHeight - size.height - EDGE_MARGIN)
+		};
+		window.addEventListener('resize', keepCardInViewport);
+
+		return () => window.removeEventListener('resize', keepCardInViewport);
+	});
 
 	function handleClose() {
 		// Execute current page's out callback before closing
@@ -250,7 +274,8 @@
 		on:mouseenter={handleMouseEnter}
 		on:mouseleave={handleMouseLeave}
 		role="dialog"
-		aria-label="Textbook"
+		aria-label="交互教程"
+		tabindex="-1"
 		style="width: {size.width}px; height: {size.height}px;"
 	>
 		<div class="card-header">

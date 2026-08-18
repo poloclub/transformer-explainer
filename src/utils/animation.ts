@@ -1,10 +1,8 @@
 import { gsap } from 'gsap';
-import resolveConfig from 'tailwindcss/resolveConfig';
-import tailwindConfig from '../../tailwind.config';
 import { blockIdx, isOnAnimation, modelMeta } from '~/store';
 import { get } from 'svelte/store';
-import * as d3 from 'd3';
-const { theme } = resolveConfig(tailwindConfig);
+import * as d3 from '~/utils/d3';
+import { theme } from '~/utils/theme';
 
 const getGradientStops = (className: string, stopIdx = 1) => {
 	return Array.from(document.querySelectorAll(className)).map(

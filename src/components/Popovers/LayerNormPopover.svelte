@@ -11,16 +11,14 @@
 
 <CommonPopover
 	className="ln-popover"
-	title="Layer Normalization"
+	title="层归一化"
 	{offset}
 	{triggeredBy}
 	{trigger}
 	{placement}
 	goTo="article-ln"
 >
-	<div class="ln-content">
-		Normalizes layer input to have a standard distribution for stability.
-	</div></CommonPopover
+	<div class="ln-content">沿特征维度标准化输入，帮助稳定网络计算。</div></CommonPopover
 >
 
 <style lang="scss">

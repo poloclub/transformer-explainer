@@ -1,6 +1,14 @@
 const CACHE_PREFIX = 'onnx-model-cache';
 const CACHE_NAME = `${CACHE_PREFIX}-v2`;
 
+/** @param {string[]} chunkUrls */
+export async function areModelChunksCached(chunkUrls) {
+	const cache = await caches.open(CACHE_NAME);
+	const cachedResponses = await Promise.all(chunkUrls.map((url) => cache.match(url)));
+	return cachedResponses.every(Boolean);
+}
+
+/** @param {string[]} chunkUrls */
 async function fetchModelChunks(chunkUrls) {
 	await clearOldCaches();
 
@@ -31,6 +39,7 @@ async function fetchModelChunks(chunkUrls) {
 	return { hasCache, modelBuffers };
 }
 
+/** @param {string[]} urls */
 export async function fetchAndMergeChunks(urls) {
 	const { hasCache, modelBuffers: chunks } = await fetchModelChunks(urls);
 	const totalSize = chunks.reduce((acc, chunk) => acc + chunk.byteLength, 0);

@@ -2,6 +2,7 @@
 	import { Popover } from 'flowbite-svelte';
 	import { userId } from '~/store';
 	import { onClickReadMore } from '~/utils/event';
+	import { uiText } from '~/locales/zh-CN/ui';
 
 	export let id: string;
 	export let placement: string = 'bottom';
@@ -32,6 +33,7 @@
 <div {id} class="help" data-click={`help-icon`}>
 	<svg
 		class="h-4 w-4 text-gray-300"
+		aria-label="查看说明"
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 -960 960 960"
 		fill="currentColor"
@@ -62,18 +64,19 @@
 					data-click={`textbook-link-${id}`}
 					class="text-blue-600 hover:underline"
 				>
-					Open Textbook
+					{uiText.actions.openTextbook}
 				</a>
 			</div>
 		{/if}
 		{#if goTo}
-			<div
+			<button
+				type="button"
 				data-click={`read-more-btn-${id}`}
 				class="more-btn mt-1 text-blue-600 hover:underline"
 				on:click={(e) => onClickReadMore(e, goTo, { value: id })}
 			>
-				Read more
-			</div>
+				{uiText.actions.readMore}
+			</button>
 		{/if}
 	</div></Popover
 >
