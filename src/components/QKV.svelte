@@ -8,12 +8,12 @@
 
 	export let className: string | undefined = undefined;
 
-	const embeddingVectorColor = 'bg-gray-300';
+	const embeddingVectorColor = 'bg-gray-300 dark:bg-gray-600';
 
 	let vectorHoverIdx: number | null = null;
-	const queryVectorColor = 'bg-blue-300';
-	const keyVectorColor = 'bg-red-300';
-	const valVectorColor = 'bg-green-300';
+	const queryVectorColor = 'bg-blue-300 dark:bg-blue-600';
+	const keyVectorColor = 'bg-red-300 dark:bg-red-600';
+	const valVectorColor = 'bg-green-300 dark:bg-green-600';
 
 	const queryHeadVectorColor = 'bg-blue-500';
 	const keyHeadVectorColor = 'bg-red-500';
@@ -44,7 +44,7 @@
 			<div class="column vectors embedding-column">
 				{#each $tokens as token, index}
 					<div
-						class={`vector ${$blockIdx !== 0 ? 'bg-blue-200' : embeddingVectorColor}`}
+						class={`vector ${$blockIdx !== 0 ? 'bg-blue-200 dark:bg-blue-800' : embeddingVectorColor}`}
 						class:last={index === $tokens.length - 1}
 					>
 						<VectorCanvas colorScale={$blockIdx !== 0 ? 'blue' : 'gray'} />
@@ -146,13 +146,13 @@
 						opacity: 0.45;
 					}
 					&.query {
-						color: theme('colors.blue.600');
+						color: var(--accent-blue-600);
 					}
 					&.key {
-						color: theme('colors.red.600');
+						color: var(--accent-red-600);
 					}
 					&.value {
-						color: theme('colors.green.600');
+						color: var(--accent-green-600);
 					}
 
 					.head-rest {
@@ -162,10 +162,10 @@
 						align-items: center;
 						font-weight: 700;
 						text-shadow:
-							-1px -1px 0 white,
-							1px -1px 0 white,
-							-1px 1px 0 white,
-							1px 1px 0 white;
+							-1px -1px 0 var(--page),
+							1px -1px 0 var(--page),
+							-1px 1px 0 var(--page),
+							1px 1px 0 var(--page);
 					}
 				}
 			}

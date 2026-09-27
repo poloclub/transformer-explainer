@@ -15,8 +15,6 @@
 	import { gsap } from '~/utils/gsap';
 	import { maskArray } from '~/utils/array';
 	import { getContext, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../tailwind.config';
 	import * as d3 from 'd3';
 	import Katex from '~/utils/Katex.svelte';
 	import { Tooltip } from 'flowbite-svelte';
@@ -26,8 +24,7 @@
 	import TextbookTooltip from '~/components/common/TextbookTooltip.svelte';
 	import { textPages } from '~/utils/textbookPages';
 	import { highlightAttentionPath, removeAttentionPathHighlight } from '~/utils/textbook';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { themePalette } from '~/store/theme';
 
 	$: placeHolderData = Array($tokens.length)
 		.fill(0)
@@ -282,18 +279,22 @@
 	};
 
 	// color scale
+	$: palette = $themePalette;
 	$: qkColorScaleDomain = d3.extent(queryKey.flat());
 	$: qkColorScale = (d, i) => {
 		return d3
 			.scaleLinear()
 			.domain(qkColorScaleDomain)
-			.range(['white', theme.colors['purple'][700]])(d);
+			.range([palette.cell, palette.color('purple', 700)])(d);
 	};
 	const maskedColorScale = (d, i) => {
-		return d3.scaleLinear().domain([-3, 3]).range(['white', theme.colors['purple'][700]])(d);
+		return d3
+			.scaleLinear()
+			.domain([-3, 3])
+			.range([palette.cell, palette.color('purple', 700)])(d);
 	};
 	const softmaxColorScale = (d, i) => {
-		return d3.interpolate('white', theme.colors['purple'][700])(d);
+		return d3.interpolate(palette.cell, palette.color('purple', 700))(d);
 	};
 
 	const onMouseOverCell = (e, d, el) => {
@@ -301,13 +302,13 @@
 		const colIdx = d.colIndex;
 		hoveredMatrixCell.set({ row: rowIdx, col: colIdx });
 		if (Number.isFinite(d.cell)) {
-			d3.select(el).attr('stroke', theme.colors.gray[400]);
+			d3.select(el).attr('stroke', palette.color('gray', 400));
 		}
 	};
 	const onMouseOutCell = (e, d, el) => {
 		hoveredMatrixCell.set({ row: null, col: null });
 		if (Number.isFinite(d.cell)) {
-			d3.select(el).attr('stroke', !Number.isFinite(d.cell) ? 'none' : theme.colors.gray[200]);
+			d3.select(el).attr('stroke', palette.color('gray', 200));
 		}
 	};
 
@@ -550,11 +551,11 @@
 		}
 		.matrix-label {
 			white-space: nowrap;
-			color: theme('colors.gray.400');
+			color: var(--ink-faint);
 		}
 		.attention-result {
 			.matrix-label:hover {
-				color: theme('colors.gray.600');
+				color: var(--ink-secondary);
 			}
 		}
 		.arrow {
@@ -563,7 +564,7 @@
 			top: calc(var(--attention-matrix-width) / 2 - 0.5rem);
 			width: 1.2rem;
 			height: 1.2rem;
-			color: theme('colors.gray.300');
+			color: var(--ink-ghost);
 		}
 
 		.attention-matrix {
@@ -584,14 +585,14 @@
 		.bar {
 			height: 0.4rem;
 			flex: 1 0 0;
-			border: 1px solid theme('colors.gray.200');
-			background: linear-gradient(90deg, white 0%, theme('colors.purple.700') 100%);
+			border: 1px solid var(--line);
+			background: linear-gradient(90deg, var(--cell) 0%, var(--accent-purple-700) 100%);
 		}
 		.val {
 			flex-shrink: 0;
 			font-family: monospace;
 			font-size: 0.7rem;
-			color: theme('colors.gray.600');
+			color: var(--ink-secondary);
 		}
 	}
 </style>

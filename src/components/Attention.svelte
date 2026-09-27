@@ -179,7 +179,7 @@
 		.column {
 			.label {
 				font-size: 0.7rem;
-				color: theme('colors.gray.600');
+				color: var(--ink-secondary);
 			}
 			.title {
 				z-index: $COLUMN_TITLE_INDEX;
@@ -222,8 +222,8 @@
 				&.active {
 					&.query {
 						.label {
-							background-color: theme('colors.blue.100');
-							color: theme('colors.blue.700');
+							background-color: var(--accent-blue-100);
+							color: var(--accent-blue-700);
 							font-size: 1rem;
 							z-index: 100;
 							padding: 0.2rem;
@@ -231,8 +231,8 @@
 					}
 					&.key {
 						.label {
-							background-color: theme('colors.red.100');
-							color: theme('colors.red.700');
+							background-color: var(--accent-red-100);
+							color: var(--accent-red-700);
 							font-size: 1rem;
 							z-index: 100;
 							padding: 0.2rem;

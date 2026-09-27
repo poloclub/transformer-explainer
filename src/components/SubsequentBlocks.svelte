@@ -36,7 +36,7 @@
 
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6 text-gray-300"
+					class="h-6 w-6 text-gray-300 dark:text-gray-600"
 					viewBox="0 0 3 5"
 					fill="none"
 				>
@@ -50,7 +50,7 @@
 			{#each $tokens as token, index}
 				<div class="cell" class:last={index === $tokens.length - 1}>
 					<div
-						class={classNames(`vector shrink-0 bg-blue-200`, {
+						class={classNames(`vector shrink-0 bg-blue-200 dark:bg-blue-800`, {
 							'last-token': index === $tokens.length - 1
 						})}
 					>
@@ -84,7 +84,7 @@
 			top: 0;
 			left: calc(-50% - 0.5rem);
 			transform: translateY(-100%);
-			color: theme('colors.gray.400');
+			color: var(--ink-faint);
 
 			.text {
 				transition: opacity 0.5s;
@@ -98,7 +98,7 @@
 				&.highlight {
 					.strong {
 						transition: all 0.5s;
-						color: theme('colors.blue.500');
+						color: var(--accent-blue-500);
 						font-weight: 600;
 					}
 				}
@@ -135,8 +135,8 @@
 		width: 100%;
 		height: 30%;
 		z-index: $ABOVE_COLUMN;
-		background-color: white;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+		background-color: var(--page);
+		background: linear-gradient(180deg, var(--page-transparent) 0%, var(--page) 100%);
 
 		&.expanded {
 			z-index: $EXPANDED_DIM_INDEX;

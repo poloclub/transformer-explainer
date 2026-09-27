@@ -5,6 +5,8 @@
 	import InputForm from '~/components/InputForm.svelte';
 	import { ga } from '~/utils/event';
 	import Sampling from '~/components/Sampling.svelte';
+	import { MoonOutline, SunOutline } from 'flowbite-svelte-icons';
+	import { isDark, toggleTheme } from '~/store/theme';
 
 	export let isActive;
 
@@ -31,7 +33,7 @@
 			data-click="pdf-btn"
 		>
 			<svg
-				class="h-6 w-6 text-gray-800 dark:text-white"
+				class="h-6 w-6"
 				aria-hidden="true"
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
@@ -49,7 +51,7 @@
 		<!-- video -->
 		<a href="https://www.youtube.com/watch?v=ECR4oAwocjs" target="_blank" data-click="ytb-btn">
 			<svg
-				class="h-6 w-6 text-gray-800 dark:text-white"
+				class="h-6 w-6"
 				aria-hidden="true"
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
@@ -71,7 +73,7 @@
 			data-click="github_btn"
 		>
 			<svg
-				class="h-6 w-6 text-gray-800 dark:text-white"
+				class="h-6 w-6"
 				aria-hidden="true"
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"
@@ -86,12 +88,25 @@
 				/>
 			</svg>
 		</a>
+		<button
+			type="button"
+			class="theme-toggle"
+			aria-label={$isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+			title={$isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+			on:click={toggleTheme}
+		>
+			{#if $isDark}
+				<SunOutline class="h-5 w-5" />
+			{:else}
+				<MoonOutline class="h-5 w-5" />
+			{/if}
+		</button>
 	</div>
 </div>
 
 <style lang="scss">
 	.top-bar {
-		background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 60%, rgba(255, 255, 255, 0) 100%);
+		background: linear-gradient(to bottom, var(--page) 60%, var(--page-transparent) 100%);
 		.input-wrapper {
 			&.active {
 				opacity: 1;
@@ -127,7 +142,28 @@
 		.icons {
 			flex-shrink: 0;
 			svg {
-				fill: theme('colors.gray.600');
+				fill: var(--ink-secondary);
+			}
+			.theme-toggle {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				padding: 0.125rem;
+				border-radius: 0.375rem;
+				color: var(--ink-secondary);
+				transition:
+					color 0.2s,
+					background-color 0.2s;
+
+				&:hover {
+					color: var(--ink-strong);
+					background-color: var(--surface-muted);
+				}
+
+				&:focus-visible {
+					outline: 2px solid var(--accent-blue-600);
+					outline-offset: 2px;
+				}
 			}
 		}
 	}

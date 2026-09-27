@@ -16,7 +16,7 @@
 				We collect anonymous data for research.
 				<a
 					href="./consent-form.pdf"
-					class="font-semibold underline hover:text-blue-800 dark:hover:text-blue-900"
+					class="font-semibold underline hover:text-blue-800 dark:hover:text-blue-400"
 					target="_blank"
 				>
 					Learn more

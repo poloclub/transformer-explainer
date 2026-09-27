@@ -100,7 +100,7 @@
 	:global(.type-btn) {
 		font-size: 0.9rem;
 		cursor: pointer;
-		color: theme('colors.gray.900');
+		color: var(--ink-strong);
 		font-weight: 400;
 		line-height: 1.4;
 	}
@@ -141,6 +141,6 @@
 		flex-shrink: 0;
 		font-size: 0.9rem;
 		line-height: 0;
-		color: theme('colors.gray.600');
+		color: var(--ink-secondary);
 	}
 </style>

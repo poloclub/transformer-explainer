@@ -1,10 +1,8 @@
 import { gsap } from 'gsap';
-import resolveConfig from 'tailwindcss/resolveConfig';
-import tailwindConfig from '../../tailwind.config';
 import { blockIdx, isOnAnimation, modelMeta } from '~/store';
+import { themePalette } from '~/store/theme';
 import { get } from 'svelte/store';
 import * as d3 from 'd3';
-const { theme } = resolveConfig(tailwindConfig);
 
 const getGradientStops = (className: string, stopIdx = 1) => {
 	return Array.from(document.querySelectorAll(className)).map(
@@ -59,7 +57,6 @@ const generateGradientAnimation = (
 	);
 };
 
-const fadeOutColor = theme.colors.gray[100];
 const nodeFadeOutOpacity = 0.2;
 let flowTimeline: GSAPTimeline;
 
@@ -376,7 +373,7 @@ export const showFlowAnimation = async (tokenLength: number, isNextTokenOnly = t
 		const attentionMulrad = getGradientStops('.transparent-purple2');
 
 		generateGradientAnimation(tl, [attentionMulrad, valueMulGrad].flat(), {
-			color: isNextTokenOnly ? fadeOutColor : undefined,
+			color: isNextTokenOnly ? get(themePalette).color('gray', 100) : undefined,
 			position: '<50%'
 		});
 

@@ -4,13 +4,12 @@
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
+	import { themePalette } from '~/store/theme';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
 
-	const { theme } = resolveConfig(tailwindConfig);
+	$: palette = $themePalette;
 
 	const tokenGap = 6;
 
@@ -51,17 +50,21 @@
 		);
 
 	// color scale
-	const embeddingColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['purple'][100], theme.colors['purple'][400])(d);
+	let embeddingColorScale;
+	$: embeddingColorScale = (d, i) => {
+		return d3.interpolate(palette.color('purple', 100), palette.color('purple', 400))(d);
 	};
-	const weightColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['gray'][100], theme.colors['gray'][400])(d);
+	let weightColorScale;
+	$: weightColorScale = (d, i) => {
+		return d3.interpolate(palette.color('gray', 100), palette.color('gray', 400))(d);
 	};
-	const out1ColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['indigo'][100], theme.colors['indigo'][400])(d);
+	let out1ColorScale;
+	$: out1ColorScale = (d, i) => {
+		return d3.interpolate(palette.color('indigo', 100), palette.color('indigo', 400))(d);
 	};
-	const out2ColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['blue'][100], theme.colors['blue'][400])(d);
+	let out2ColorScale;
+	$: out2ColorScale = (d, i) => {
+		return d3.interpolate(palette.color('blue', 100), palette.color('blue', 400))(d);
 	};
 
 	// animation

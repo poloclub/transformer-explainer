@@ -56,7 +56,7 @@
 		<slot></slot>
 		{#if goTo}
 			<div
-				class="more-btn mt-1 text-blue-600 hover:underline"
+				class="more-btn mt-1 text-blue-600 hover:underline dark:text-blue-400"
 				on:click={(e) =>
 					onClickReadMore(e, goTo, {
 						value: title

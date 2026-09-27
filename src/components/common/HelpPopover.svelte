@@ -31,7 +31,7 @@
 
 <div {id} class="help" data-click={`help-icon`}>
 	<svg
-		class="h-4 w-4 text-gray-300"
+		class="h-4 w-4 text-gray-300 dark:text-gray-600"
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 -960 960 960"
 		fill="currentColor"
@@ -60,7 +60,7 @@
 					href={`https://transformer-explainer.github.io/textbook/${textbook}`}
 					target="_blank"
 					data-click={`textbook-link-${id}`}
-					class="text-blue-600 hover:underline"
+					class="text-blue-600 hover:underline dark:text-blue-400"
 				>
 					Open Textbook
 				</a>
@@ -69,7 +69,7 @@
 		{#if goTo}
 			<div
 				data-click={`read-more-btn-${id}`}
-				class="more-btn mt-1 text-blue-600 hover:underline"
+				class="more-btn mt-1 text-blue-600 hover:underline dark:text-blue-400"
 				on:click={(e) => onClickReadMore(e, goTo, { value: id })}
 			>
 				Read more

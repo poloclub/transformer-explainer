@@ -585,21 +585,21 @@
 
 <style lang="scss">
 	a {
-		color: theme('colors.blue.500');
+		color: var(--accent-blue-500);
 
 		&:hover {
-			color: theme('colors.blue.700');
+			color: var(--accent-blue-700);
 		}
 	}
 
 	.bold-purple {
-		color: theme('colors.purple.700');
+		color: var(--accent-purple-700);
 		font-weight: bold;
 	}
 
 	code {
-		color: theme('colors.gray.500');
-		background-color: theme('colors.gray.50');
+		color: var(--ink-muted);
+		background-color: var(--surface-subtle);
 		font-family: theme('fontFamily.mono');
 	}
 
@@ -616,7 +616,7 @@
 	}
 
 	.purple-color {
-		color: theme('colors.purple.500');
+		color: var(--accent-purple-500);
 	}
 
 	.article-section {
@@ -650,7 +650,7 @@
 	}
 
 	#description h1 {
-		color: theme('colors.purple.700');
+		color: var(--accent-purple-700);
 		font-size: 2.2rem;
 		font-weight: 300;
 		padding-top: 1rem;
@@ -658,21 +658,21 @@
 
 	#description h2 {
 		// color: #444;
-		color: theme('colors.purple.700');
+		color: var(--accent-purple-700);
 		font-size: 2rem;
 		font-weight: 300;
 		padding-top: 1rem;
 	}
 
 	#description h3 {
-		color: theme('colors.gray.700');
+		color: var(--ink-body);
 		font-size: 1.6rem;
 		font-weight: 200;
 		padding-top: 1rem;
 	}
 
 	#description h4 {
-		color: theme('colors.gray.700');
+		color: var(--ink-body);
 		font-size: 1.6rem;
 		font-weight: 200;
 		padding-top: 1rem;
@@ -705,7 +705,7 @@
 	#description p,
 	#description div,
 	#description li {
-		color: theme('colors.gray.600');
+		color: var(--ink-secondary);
 		line-height: 1.6;
 	}
 
@@ -718,7 +718,7 @@
 	}
 
 	#description .video-link {
-		color: theme('colors.blue.600');
+		color: var(--accent-blue-600);
 		cursor: pointer;
 		font-weight: normal;
 		text-decoration: none;

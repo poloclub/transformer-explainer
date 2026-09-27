@@ -4,13 +4,12 @@
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import { maskArray } from '~/utils/array';
+	import { themePalette } from '~/store/theme';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
 
-	const { theme } = resolveConfig(tailwindConfig);
+	$: palette = $themePalette;
 
 	const tokenGap = 6;
 
@@ -40,16 +39,19 @@
 		);
 
 	// color scale
-	const valueColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['green'][100], theme.colors['green'][400])(d);
+	let valueColorScale;
+	$: valueColorScale = (d, i) => {
+		return d3.interpolate(palette.color('green', 100), palette.color('green', 400))(d);
 	};
 
-	const outColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['purple'][100], theme.colors['purple'][400])(d);
+	let outColorScale;
+	$: outColorScale = (d, i) => {
+		return d3.interpolate(palette.color('purple', 100), palette.color('purple', 400))(d);
 	};
 
-	const softmaxColorScale = (d, i) => {
-		return d3.interpolate('white', theme.colors['purple'][700])(d);
+	let softmaxColorScale;
+	$: softmaxColorScale = (d, i) => {
+		return d3.interpolate(palette.cell, palette.color('purple', 700))(d);
 	};
 
 	// animation

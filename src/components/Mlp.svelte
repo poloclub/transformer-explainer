@@ -12,9 +12,9 @@
 
 	setContext('block-id', 'mlp');
 
-	const firstLayerlColor = 'bg-purple-200';
-	const secondLayerColor = 'bg-indigo-200';
-	const outputColor = 'bg-blue-200';
+	const firstLayerlColor = 'bg-purple-200 dark:bg-purple-800';
+	const secondLayerColor = 'bg-indigo-200 dark:bg-indigo-800';
+	const outputColor = 'bg-blue-200 dark:bg-blue-800';
 	const queryHeadVectorColor = 'bg-purple-400';
 
 	let isHovered = false;

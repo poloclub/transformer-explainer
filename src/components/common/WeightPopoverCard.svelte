@@ -37,16 +37,16 @@
 </script>
 
 <Card
-	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 ${className}`}
+	class={`weight-popover-card popover bg-white text-sm font-light text-gray-500 dark:bg-gray-800 dark:text-gray-400 ${className}`}
 	data-click="weight-popover"
 	on:click={(e) => {
 		e.stopPropagation();
 	}}
 >
 	<div
-		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
+		class="weight-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
 	>
-		<h3 class="font-semibold text-gray-900">{title}</h3>
+		<h3 class="font-semibold text-gray-900 dark:text-gray-50">{title}</h3>
 		<div class="controls">
 			{#if isAnimationActive}
 				<button
@@ -58,7 +58,7 @@
 						isAnimationActive = false;
 					}}
 					><svg
-						class="h-5 w-5 text-gray-500"
+						class="h-5 w-5 text-gray-500 dark:text-gray-400"
 						aria-hidden="true"
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -84,7 +84,7 @@
 					}}
 				>
 					<svg
-						class="h-5 w-5 text-gray-500"
+						class="h-5 w-5 text-gray-500 dark:text-gray-400"
 						aria-hidden="true"
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -109,7 +109,7 @@
 					e.stopPropagation();
 					weightPopover.set(null);
 					isOpen = false;
-				}}><CloseOutline class="h-5 w-5 text-gray-500" /></button
+				}}><CloseOutline class="h-5 w-5 text-gray-500 dark:text-gray-400" /></button
 			>
 		</div>
 	</div>
@@ -172,7 +172,7 @@
 			font-size: 0.8rem;
 			line-height: 1;
 			text-align: right;
-			color: theme('colors.gray.500');
+			color: var(--ink-muted);
 		}
 
 		:global(.matrix) {
@@ -182,7 +182,7 @@
 
 			:global(.title),
 			:global(.size) {
-				color: theme('colors.gray.900');
+				color: var(--ink-strong);
 				font-size: 0.8rem;
 				white-space: nowrap;
 				position: absolute;
@@ -200,7 +200,7 @@
 		:global(.operator) {
 			padding: 0 0.5rem;
 			font-size: 1.2rem;
-			color: black;
+			color: var(--text);
 			opacity: 0.8;
 		}
 	}

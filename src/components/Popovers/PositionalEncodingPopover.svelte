@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { tokens } from '~/store';
+	import { themePalette } from '~/store/theme';
 
 	import type { PopoverProps } from 'flowbite-svelte/Popover.svelte';
 
@@ -43,17 +44,19 @@
 	const hoveredRow = writable(null);
 	const hoveredCol = writable(null);
 
+	$: palette = $themePalette;
+
 	// Create a linear color scale
-	const colorScale = d3
+	let colorScale;
+	$: colorScale = d3
 		.scaleLinear()
 		.domain([-1, 0, 1])
-		.range(['rgb(248, 113, 113)', 'rgb(255, 255, 255)', 'rgb(96, 165, 250)'])
+		.range(['rgb(248, 113, 113)', palette.cell, 'rgb(96, 165, 250)'])
 		.interpolate(d3.interpolateRgb);
 
 	// Function to get the gradient color using D3
-	function getGradientColor(value) {
-		return colorScale(value);
-	}
+	let getGradientColor;
+	$: getGradientColor = (value) => colorScale(value);
 
 	posEncodings = computePositionalEncodings(numPositions, fullEmbeddingDim, visualEmbeddingDim);
 </script>
@@ -83,7 +86,7 @@
 							on:mouseleave={() => hoveredCol.set(null)}
 							class:highlight-token-box={token_idx === $hoveredCol}
 						>
-							<span class="text-ellipsis text-center text-gray-900">{token}</span>
+							<span class="text-ellipsis text-center text-gray-900 dark:text-gray-50">{token}</span>
 						</div>
 					{/each}
 				</div>
@@ -99,7 +102,9 @@
 							on:mouseleave={() => hoveredCol.set(null)}
 							class:highlight-token-box={token_idx === $hoveredCol}
 						>
-							<span class="text-ellipsis text-center text-gray-900">{token_idx}</span>
+							<span class="text-ellipsis text-center text-gray-900 dark:text-gray-50"
+								>{token_idx}</span
+							>
 						</div>
 					{/each}
 				</div>
@@ -182,7 +187,9 @@
 					</div>
 				</div>
 
-				<div class="formula-container mt-4 w-[400] flex-col justify-around gap-1 bg-gray-50 p-2">
+				<div
+					class="formula-container mt-4 w-[400] flex-col justify-around gap-1 bg-gray-50 p-2 dark:bg-gray-900"
+				>
 					<div class="even-pos flex h-10 flex-1 items-center justify-between gap-4 p-1">
 						<div class="flex items-center justify-center gap-1">
 							<span class="flex"></span>
@@ -217,13 +224,13 @@
 								class="formula-solution-box w-[80] items-center rounded-sm p-2"
 								style="background-color: {getGradientColor(posEncodings[$hoveredRow][$hoveredCol])};
 								border: 3px solid {getGradientColor(posEncodings[$hoveredRow][$hoveredCol])};
-								color: {Math.abs(posEncodings[$hoveredRow][$hoveredCol]) > 0.3 ? 'white' : 'black'};"
+								color: {Math.abs(posEncodings[$hoveredRow][$hoveredCol]) > 0.3 ? 'white' : 'var(--text)'};"
 							>
 								{posEncodings[$hoveredRow][$hoveredCol].toFixed(2)}
 							</div>
 						{:else}
 							<div
-								class="formula-solution-box items-center rounded-sm border-2 border-gray-300 p-2"
+								class="formula-solution-box items-center rounded-sm border-2 border-gray-300 p-2 dark:border-gray-600"
 							></div>
 						{/if}
 					</div>
@@ -238,7 +245,7 @@
 <style lang="scss">
 	.highlight {
 		cursor: pointer !important;
-		border: 2px solid theme('colors.gray.500') !important;
+		border: 2px solid var(--line-heavy) !important;
 		font-weight: bold;
 	}
 
@@ -250,7 +257,7 @@
 	}
 
 	.popover-container {
-		border: 1px solid black;
+		border: 1px solid var(--line-contrast);
 		max-height: 30rem;
 		max-width: 40rem;
 		display: flex;
@@ -262,7 +269,7 @@
 			justify-content: center;
 			text-align: center;
 			font-size: 1rem;
-			color: theme('colors.gray.500');
+			color: var(--ink-muted);
 		}
 
 		.content {
@@ -302,7 +309,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: theme('colors.gray.500');
+		color: var(--ink-muted);
 	}
 
 	.subcontent {
@@ -325,7 +332,7 @@
 		// width: 600px;
 		height: 80px;
 		border-radius: 4px;
-		border: 1px dashed theme('colors.gray.400');
+		border: 1px dashed var(--line-heavy);
 	}
 
 	.token-box {
@@ -337,8 +344,8 @@
 		border-radius: 4px;
 
 		&:hover {
-			background-color: theme('colors.gray.100');
-			border: 1px solid #e2e8f0;
+			background-color: var(--surface-muted);
+			border: 1px solid var(--line);
 		}
 	}
 
@@ -348,15 +355,15 @@
 		justify-content: center;
 		width: 1.5rem;
 		height: 1.5rem;
-		background-color: theme('colors.gray.100');
-		border: 1px solid #e2e8f0;
+		background-color: var(--surface-muted);
+		border: 1px solid var(--line);
 		border-radius: 4px;
 		margin: 0.25rem;
 		font-size: 0.9rem;
 
 		&:hover {
-			background-color: theme('colors.gray.100');
-			border: 1px solid #e2e8f0;
+			background-color: var(--surface-muted);
+			border: 1px solid var(--line);
 		}
 	}
 
@@ -367,23 +374,23 @@
 
 	.highlight-token-box {
 		cursor: pointer !important;
-		// border: 2px solid theme('colors.gray.500') !important;
+		// border: 2px solid var(--line-heavy) !important;
 		font-weight: bold;
-		box-shadow: 0 0 0 1.5px theme('colors.gray.500');
+		box-shadow: 0 0 0 1.5px var(--line-heavy);
 		transition: 0.1s;
 		// box-shadow: 0 0 0 1px black, 0 0 0 3px blue;
 	}
 
 	.barcode-row-highlight {
-		border: 0.2px solid theme('colors.gray.500');
+		border: 0.2px solid var(--line-heavy);
 		transform: scaleX(12);
 		transition: 0.1s;
 		cursor: pointer;
 	}
 
 	.barcode-bar:hover {
-		// border: 0.5px solid theme('colors.gray.100');
-		box-shadow: 0 0 0 1px theme('colors.gray.500');
+		// border: 0.5px solid var(--line-subtle);
+		box-shadow: 0 0 0 1px var(--line-heavy);
 		transform: scaleX(1.5);
 		transition: 0.1s;
 	}
@@ -410,9 +417,9 @@
 		transform: scaleX(5);
 		// padding-left: 0.5px solid white;
 		// padding-right: 0.5px solid white;
-		border-left: 0.1px solid theme('colors.gray.600');
-		border-right: 0.1px solid theme('colors.gray.600');
-		// border: 0.1px solid theme('colors.gray.500');
+		border-left: 0.1px solid var(--line-heavy);
+		border-right: 0.1px solid var(--line-heavy);
+		// border: 0.1px solid var(--line-heavy);
 		transition: 0.1s;
 	}
 
@@ -423,7 +430,7 @@
 		justify-content: space-between;
 		height: 100%;
 		font-size: 0.5rem;
-		color: theme('colors.gray.500');
+		color: var(--ink-muted);
 	}
 
 	.embed-dim-axis {
@@ -434,7 +441,7 @@
 		width: 400px;
 		justify-content: space-between;
 		font-size: 0.5rem;
-		color: theme('colors.gray.500');
+		color: var(--ink-muted);
 		transform: translateY(-20px); /* Adjust this value to move the axis above the matrix */
 	}
 
@@ -448,8 +455,8 @@
 	.gradient-legend {
 		width: 8px;
 		height: 100%;
-		background: linear-gradient(to top, rgb(96, 165, 250), white, rgb(248, 113, 113));
-		border: 1px solid theme('colors.gray.300');
+		background: linear-gradient(to top, rgb(96, 165, 250), var(--page), rgb(248, 113, 113));
+		border: 1px solid var(--line-strong);
 	}
 
 	.legend-labels {
@@ -458,7 +465,7 @@
 		justify-content: space-between;
 		height: 100%;
 		padding-left: 5px;
-		color: theme('colors.gray.500');
+		color: var(--ink-muted);
 	}
 
 	.legend-labels span {

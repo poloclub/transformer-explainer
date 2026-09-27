@@ -255,7 +255,7 @@
 							on:click={onClickLogits}
 							data-click="prob-expansion-logit-btn"
 						>
-							Logits <EyeOutline class="icon text-gray-400" size="sm" />
+							Logits <EyeOutline class="icon text-gray-400 dark:text-gray-500" size="sm" />
 						</div>
 					</div>
 					<div class="title-box scaled">
@@ -444,7 +444,7 @@
 				flex-shrink: 0;
 				display: flex;
 				flex-direction: column;
-				color: theme('colors.gray.400');
+				color: var(--ink-faint);
 				gap: var(--softmax-row-gap);
 
 				span.number {
@@ -466,16 +466,16 @@
 					height: var(--softmax-row-height);
 
 					&.zero {
-						color: theme('colors.gray.300');
+						color: var(--ink-ghost);
 					}
 
 					&.filtered {
-						background-color: theme('colors.purple.100');
-						color: theme('colors.gray.500');
+						background-color: var(--accent-purple-100);
+						color: var(--ink-muted);
 					}
 
 					&.highlight {
-						color: theme('colors.purple.600');
+						color: var(--accent-purple-600);
 						transition: background-color 0.2s;
 					}
 
@@ -502,7 +502,7 @@
 							font-weight: 600;
 							font-family: serif;
 							line-height: 1;
-							background-color: theme('colors.gray.50');
+							background-color: var(--surface-subtle);
 						}
 					}
 				}
@@ -514,9 +514,9 @@
 
 			.content-row {
 				.vector-box {
-					background-color: theme('colors.gray.50');
-					border-right: 1px solid theme('colors.gray.200');
-					border-left: 1px solid theme('colors.gray.200');
+					background-color: var(--surface-subtle);
+					border-right: 1px solid var(--line);
+					border-left: 1px solid var(--line);
 				}
 			}
 
@@ -562,16 +562,16 @@
 						display: flex;
 						align-items: end;
 						gap: 2px;
-						color: theme('colors.gray.400');
+						color: var(--ink-faint);
 
 						&:hover {
-							background-color: theme('colors.gray.50');
+							background-color: var(--surface-subtle);
 						}
 
 						&.btn {
-							color: theme('colors.gray.500');
+							color: var(--ink-muted);
 							height: max-content;
-							border: 1px solid theme('colors.gray.300');
+							border: 1px solid var(--line-strong);
 							border-radius: 0.3rem;
 							padding: 0.1rem 0.3rem;
 							cursor: pointer;
@@ -591,8 +591,8 @@
 				width: 100%;
 				height: 50vh;
 				z-index: $EXPANDED_DIM_INDEX;
-				background-color: white;
-				background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 70%);
+				background-color: var(--page);
+				background: linear-gradient(180deg, var(--page-transparent) 0%, var(--page) 70%);
 			}
 		}
 	}

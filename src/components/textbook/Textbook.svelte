@@ -79,7 +79,7 @@
 		}
 	}
 	:root {
-		--textbook-highlight-color: theme('colors.blue.600');
+		--textbook-highlight-color: var(--accent-blue-600);
 		--textbook-highlight-background: linear-gradient(
 			to top,
 			rgba(251, 255, 0, 0.5),
@@ -217,7 +217,7 @@
 		position: relative;
 		transition: all 0.2s ease-in-out;
 		cursor: pointer;
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 
 		&::after {
@@ -298,7 +298,7 @@
 		}
 	}
 	:global(.attention-result.textbook-highlight .matrix-label) {
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 
@@ -400,7 +400,7 @@
 		position: relative;
 		transition: all 0.2s ease-in-out;
 		cursor: pointer;
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 
 		&::after {
@@ -419,11 +419,11 @@
 	// page temperature
 	:global(.formula-step.scaled.textbook-highlight) {
 		background: var(--textbook-highlight-background) !important;
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 	}
 
 	:global(.title-box.scaled.textbook-highlight .title-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 	:global(.content-box.scaled.textbook-highlight) {
@@ -453,11 +453,11 @@
 	// page sampling
 	:global(.formula-step.sampling.textbook-highlight) {
 		background: var(--textbook-highlight-background) !important;
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 	}
 
 	:global(.title-box.sampling.textbook-highlight .title-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 	:global(.content-box.sampling.textbook-highlight) {
@@ -488,7 +488,7 @@
 		// pointer-events: none;
 	}
 	:global(.residual-start.textbook-highlight .residual-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 
@@ -506,7 +506,7 @@
 		opacity: 1 !important;
 	}
 	:global(.operation-col.textbook-highlight .guide-text) {
-		color: theme('colors.gray.600') !important;
+		color: var(--ink-secondary) !important;
 		background: var(--textbook-highlight-background) !important;
 	}
 
@@ -550,16 +550,16 @@
 
 	@keyframes textbook-button-blink {
 		0% {
-			border: 1px solid theme('colors.gray.300');
-			color: theme('colors.gray.600');
+			border: 1px solid var(--line-strong);
+			color: var(--ink-secondary);
 		}
 		50% {
 			border: 1px solid var(--predicted-color);
 			color: var(--predicted-color);
 		}
 		100% {
-			border: 1px solid theme('colors.gray.300');
-			color: theme('colors.gray.600');
+			border: 1px solid var(--line-strong);
+			color: var(--ink-secondary);
 		}
 	}
 	@keyframes scale-blink {

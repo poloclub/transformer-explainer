@@ -4,15 +4,14 @@
 	import { gsap } from '~/utils/gsap';
 	import Matrix from '~/components/common/Matrix.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../../tailwind.config';
 	import HelpPopover from '../common/HelpPopover.svelte';
+	import { themePalette } from '~/store/theme';
 	import WeightPopoverCard from '../common/WeightPopoverCard.svelte';
 	import Katex from '~/utils/Katex.svelte';
 
 	export let isOpen = true;
 
-	const { theme } = resolveConfig(tailwindConfig);
+	$: palette = $themePalette;
 
 	const tokenGap = 6;
 
@@ -51,14 +50,17 @@
 		);
 
 	// color scale
-	const embeddingColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['blue'][100], theme.colors['blue'][400])(d);
+	let embeddingColorScale;
+	$: embeddingColorScale = (d, i) => {
+		return d3.interpolate(palette.color('blue', 100), palette.color('blue', 400))(d);
 	};
-	const weightColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['gray'][100], theme.colors['gray'][400])(d);
+	let weightColorScale;
+	$: weightColorScale = (d, i) => {
+		return d3.interpolate(palette.color('gray', 100), palette.color('gray', 400))(d);
 	};
-	const logitColorScale = (d, i) => {
-		return d3.interpolate(theme.colors['blue'][100], theme.colors['gray'][400])(d);
+	let logitColorScale;
+	$: logitColorScale = (d, i) => {
+		return d3.interpolate(palette.color('blue', 100), palette.color('gray', 400))(d);
 	};
 
 	// animation

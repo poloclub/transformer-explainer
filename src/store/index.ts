@@ -1,11 +1,7 @@
 import { writable, derived, readable } from 'svelte/store';
 import * as ort from 'onnxruntime-web';
-import tailwindConfig from '../../tailwind.config';
-import resolveConfig from 'tailwindcss/resolveConfig';
 import { ex0 } from '~/constants/examples';
 import { textPages } from '~/utils/textbookPages';
-
-const { theme } = resolveConfig(tailwindConfig);
 
 export const attentionHeadIdxTemp = writable(0);
 export const attentionHeadIdx = writable(0);
@@ -100,8 +96,6 @@ export const headContentHeight = writable(0);
 export const headGap = { x: 5, y: 8, scale: 0 };
 
 export const isBoundingBoxActive = writable(false);
-
-export const predictedColor = theme.colors.purple[600];
 
 // Interactivity
 export const hoveredPath = writable();

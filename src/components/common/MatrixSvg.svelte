@@ -1,9 +1,6 @@
 <script lang="ts">
 	import * as d3 from 'd3';
-	import tailwindConfig from '../../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { themePalette, type PaletteHue } from '~/store/theme';
 
 	export let data: (number | null)[][];
 	export let cellHeight: number;
@@ -54,12 +51,17 @@
 			: rowLen * cellHeight + (rowLen - 1) * rowGap;
 
 	const colorKey = typeof colorScale === 'string' ? colorScale : 'blue';
-	const matrixColorScale =
+
+	let palette;
+	$: palette = $themePalette;
+
+	let matrixColorScale;
+	$: matrixColorScale =
 		typeof colorScale === 'function'
 			? colorScale
-			: d3.interpolate('white', theme.colors[colorKey][400]);
+			: d3.interpolate(palette.cell, palette.color(colorKey as PaletteHue, 400));
 
-	const drawMatrixSvg = () => {
+	const drawMatrixSvg = (matrixScale: (value: number, index: number) => string) => {
 		const svg = d3.select(svgEl);
 
 		if (!!onSvgOut) svg.on('mouseleave', onSvgOut);
@@ -92,7 +94,7 @@
 					.attr('width', cellWidth)
 					.attr('height', cellHeight)
 					.attr('fill', function (d) {
-						return matrixColorScale(d.cell, d.colIndex);
+						return matrixScale(d.cell, d.colIndex);
 					})
 					.on('mouseenter', onCellOver)
 					.on('mouseleave', onCellOut);
@@ -112,9 +114,9 @@
 					.attr('cx', 0)
 					.attr('cy', (d, i) => i * cellHeight + i * rowGap)
 					.attr('r', cellWidth / 2)
-					.attr('stroke', theme.colors.gray[500])
+					.attr('stroke', palette.color('gray', 500))
 					.attr('fill', function (d, i) {
-						return matrixColorScale(d.cell, i);
+						return matrixScale(d.cell, i);
 					})
 					.on('mouseenter', onCellOver)
 					.on('mouseleave', onCellOut);
@@ -156,8 +158,8 @@
 					.on('mouseenter', onCellOver)
 					.on('mouseleave', onCellOut)
 					.attr('fill', function (d, i) {
-						if (!Number.isFinite(d.cell)) return theme.colors.gray[200];
-						return matrixColorScale(d.cell, i);
+						if (!Number.isFinite(d.cell)) return palette.color('gray', 200);
+						return matrixScale(d.cell, i);
 					});
 			}
 			if (shape === 'circle') {
@@ -194,21 +196,21 @@
 					.attr(transpose ? 'cy' : 'cx', (d, i) => cellWidth / 2 + i * cellWidth + i * colGap)
 					.attr(transpose ? 'cx' : 'cy', 0)
 					.attr('r', cellWidth / 2)
-					.attr('stroke', (d) => (!Number.isFinite(d.cell) ? 'none' : theme.colors.gray[200]))
+					.attr('stroke', (d) => (!Number.isFinite(d.cell) ? 'none' : palette.color('gray', 200)))
 					.on('mouseenter', onCellOver)
 					.on('mouseleave', onCellOut)
 					.transition()
 					.duration(100)
 					.attr('fill', function (d, i) {
-						if (!Number.isFinite(d.cell)) return theme.colors.gray[200];
-						return matrixColorScale(d.cell, i);
+						if (!Number.isFinite(d.cell)) return palette.color('gray', 200);
+						return matrixScale(d.cell, i);
 					});
 			}
 		}
 	};
 
 	$: if (data && svgEl) {
-		drawMatrixSvg(data);
+		drawMatrixSvg(matrixColorScale);
 	}
 
 	// highlighting
@@ -290,7 +292,7 @@
 	</svg>
 	{#if tooltipVisible}
 		<div
-			class="matrix-tooltip divide-gray-200 border border-gray-200 bg-white text-gray-500 shadow-md"
+			class="matrix-tooltip divide-gray-200 border border-gray-200 bg-white text-gray-500 shadow-md dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
 			style="left: {tooltipX}px; top: {tooltipY}px;"
 		>
 			{#if typeof tooltipData === 'string'}

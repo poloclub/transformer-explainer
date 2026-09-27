@@ -255,7 +255,7 @@
 	>
 		<div class="card-header">
 			<div class="flex w-full items-center justify-between">
-				<h3 class="text-lg font-semibold text-gray-900">
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-50">
 					{textPages[$textbookCurrentPage].title}
 				</h3>
 				<Button color="light" size="xs" class="close-btn" on:click={handleClose}>✕</Button>
@@ -295,7 +295,7 @@
 			0 4px 8px rgba(0, 0, 0, 0.06);
 		border-radius: 0.6rem;
 		backdrop-filter: blur(10px);
-		background: rgba(255, 255, 255, 0.4);
+		background: color-mix(in srgb, var(--surface) 40%, transparent);
 		display: flex;
 		flex-direction: column;
 		user-select: none;
@@ -361,20 +361,20 @@
 	}
 
 	:global(.textbook-content span.red) {
-		color: theme('colors.red.500');
+		color: var(--accent-red-500);
 		font-weight: 500;
 	}
 	:global(.textbook-content span.blue) {
-		color: theme('colors.blue.500');
+		color: var(--accent-blue-500);
 		font-weight: 500;
 	}
 	:global(.textbook-content span.green) {
-		color: theme('colors.green.500');
+		color: var(--accent-green-500);
 		font-weight: 500;
 	}
 
 	:global(.textbook-content span.purple) {
-		color: theme('colors.purple.500');
+		color: var(--accent-purple-500);
 		font-weight: 500;
 	}
 
