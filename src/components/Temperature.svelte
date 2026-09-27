@@ -58,6 +58,6 @@
 		flex-shrink: 0;
 		font-size: 0.9rem;
 		line-height: 0;
-		color: theme('colors.gray.600');
+		color: var(--ink-secondary);
 	}
 </style>

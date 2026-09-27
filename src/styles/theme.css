@@ -1,0 +1,133 @@
+/**
+ * Theme tokens.
+ *
+ * Component styles in this project are written in SCSS, where Tailwind's `dark:`
+ * variant is not available, so colours are exposed as CSS custom properties
+ * instead. Utility classes in the markup use Tailwind's `dark:` variant directly.
+ * Both paths resolve to the same Tailwind ramp, so the two mechanisms agree.
+ *
+ * Every light value is the exact colour the component used before, so turning the
+ * tokens on is a no-op in light mode. Accent tokens are named after the shade they
+ * hold in light mode (`--accent-blue-600` is Tailwind's blue-600); in dark mode
+ * they drop to a shade of the same hue that stays legible on the dark background.
+ */
+:root {
+	color-scheme: light;
+
+	/* Backgrounds */
+	--page: #ffffff;
+	--page-transparent: rgba(255, 255, 255, 0);
+	--surface: #ffffff;
+	--surface-subtle: #f9fafb; /* gray-50 */
+	--surface-muted: #f3f4f6; /* gray-100 */
+	--surface-strong: #e5e7eb; /* gray-200 */
+
+	/* Default document colour */
+	--text: #000000;
+
+	/* Borders and rules */
+	--line-subtle: #f3f4f6; /* gray-100 */
+	--line: #e5e7eb; /* gray-200 */
+	--line-strong: #d1d5db; /* gray-300 */
+	--line-heavy: #9ca3af; /* gray-400 */
+	--line-contrast: #000000;
+
+	/* Text, from strongest to faintest */
+	--ink-strong: #111827; /* gray-900 */
+	--ink: #1f2937; /* gray-800 */
+	--ink-body: #374151; /* gray-700 */
+	--ink-secondary: #4b5563; /* gray-600 */
+	--ink-muted: #6b7280; /* gray-500 */
+	--ink-faint: #9ca3af; /* gray-400 */
+	--ink-ghost: #d1d5db; /* gray-300 */
+	--ink-ghost-2: #e5e7eb; /* gray-200 */
+
+	/* Data visualisation */
+	--cell: #ffffff; /* rest state of a data cell */
+	--track: #e5e7eb; /* gray-200 */
+	--track-fill: #d1d5db; /* gray-300 */
+
+	/* Accents. `flowbite/plugin` replaces the accent scales in the Tailwind
+	   config, so these are the flowbite values, not Tailwind's defaults. */
+	--accent-blue-50: #ebf5ff;
+	--accent-blue-100: #e1effe;
+	--accent-blue-200: #c3ddfd;
+	--accent-blue-500: #3f83f8;
+	--accent-blue-600: #1c64f2;
+	--accent-blue-700: #1a56db;
+	--accent-purple-100: #edebfe;
+	--accent-purple-500: #9061f9;
+	--accent-purple-600: #7e3af2;
+	--accent-purple-700: #6c2bd9;
+	--accent-red-100: #fde8e8;
+	--accent-red-500: #f05252;
+	--accent-red-600: #e02424;
+	--accent-red-700: #c81e1e;
+	--accent-green-500: #0e9f6e;
+	--accent-green-600: #057a55;
+}
+
+html.dark {
+	color-scheme: dark;
+
+	/* Backgrounds */
+	--page: #030712; /* gray-950 */
+	--page-transparent: rgba(3, 7, 18, 0);
+	--surface: #1f2937; /* gray-800 */
+	--surface-subtle: #111827; /* gray-900 */
+	--surface-muted: #374151; /* gray-700 */
+	--surface-strong: #4b5563; /* gray-600 */
+
+	/* Default document colour */
+	--text: #e5e7eb; /* gray-200 */
+
+	/* Borders and rules */
+	--line-subtle: #1f2937; /* gray-800 */
+	--line: #374151; /* gray-700 */
+	--line-strong: #4b5563; /* gray-600 */
+	--line-heavy: #6b7280; /* gray-500 */
+	--line-contrast: #e5e7eb; /* gray-200 */
+
+	/* Text, from strongest to faintest */
+	--ink-strong: #f9fafb; /* gray-50 */
+	--ink: #f3f4f6; /* gray-100 */
+	--ink-body: #e5e7eb; /* gray-200 */
+	--ink-secondary: #d1d5db; /* gray-300 */
+	--ink-muted: #9ca3af; /* gray-400 */
+	--ink-faint: #6b7280; /* gray-500 */
+	--ink-ghost: #4b5563; /* gray-600 */
+	--ink-ghost-2: #374151; /* gray-700 */
+
+	/* Data visualisation */
+	--cell: #111827; /* gray-900 */
+	--track: #374151; /* gray-700 */
+	--track-fill: #4b5563; /* gray-600 */
+
+	/* Accents: the pale tints become deep tints, and the saturated text colours
+	   step up to a lighter shade of the same hue. */
+	--accent-blue-50: #233876; /* blue-900 */
+	--accent-blue-100: #233876; /* blue-900 */
+	--accent-blue-200: #1e429f; /* blue-800 */
+	--accent-blue-500: #76a9fa; /* blue-400 */
+	--accent-blue-600: #76a9fa; /* blue-400 */
+	--accent-blue-700: #a4cafe; /* blue-300 */
+	--accent-purple-100: #4a1d96; /* purple-900 */
+	--accent-purple-500: #ac94fa; /* purple-400 */
+	--accent-purple-600: #ac94fa; /* purple-400 */
+	--accent-purple-700: #cabffd; /* purple-300 */
+	--accent-red-100: #771d1d; /* red-900 */
+	--accent-red-500: #f98080; /* red-400 */
+	--accent-red-600: #f98080; /* red-400 */
+	--accent-red-700: #f8b4b4; /* red-300 */
+	--accent-green-500: #31c48d; /* green-400 */
+	--accent-green-600: #31c48d; /* green-400 */
+}
+
+html,
+body {
+	background-color: var(--page);
+}
+
+body {
+	color: var(--text);
+}

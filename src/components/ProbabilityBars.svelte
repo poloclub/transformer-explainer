@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
-	import { modelData, rootRem, predictedToken, predictedColor, temperature } from '~/store';
-
-	import tailwindConfig from '../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	const { theme } = resolveConfig(tailwindConfig);
+	import { modelData, rootRem, predictedToken, temperature } from '~/store';
+	import { themePalette, predictedColor } from '~/store/theme';
 
 	export let rowHeight;
 	export let rowGap;
@@ -17,8 +14,7 @@
 
 	let percentPrecision = 2;
 
-	let normalColor = theme.colors.gray[300];
-	let hoverColor = theme.colors.purple[400];
+	$: palette = $themePalette;
 
 	export let drawBars = () => {
 		const data = $modelData?.probabilities;
@@ -112,7 +108,7 @@
 		drawBars();
 	});
 
-	$: if ($modelData && svgEl) {
+	$: if ($modelData && svgEl && palette) {
 		drawBars();
 	}
 
@@ -133,11 +129,11 @@
 		groups.each(function (d, i) {
 			let color;
 			if (i === hoveredIndex) {
-				color = hoverColor;
+				color = palette.color('purple', 400);
 			} else if ($predictedToken?.rank === i) {
-				color = predictedColor;
+				color = $predictedColor;
 			} else {
-				color = normalColor;
+				color = palette.color('gray', 300);
 			}
 
 			d3.select(this).select('rect').attr('fill', color);

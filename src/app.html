@@ -9,6 +9,20 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Transformer Explainer: LLM Transformer Model Visually Explained</title>
 
+		<!-- Apply the stored theme before the first paint so there is no flash of the wrong one. -->
+		<script>
+			(function () {
+				try {
+					var stored = localStorage.getItem('te-theme');
+					var dark =
+						stored === 'dark' ||
+						(stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+					document.documentElement.classList.toggle('dark', dark);
+					document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+				} catch (e) {}
+			})();
+		</script>
+
 		<!-- Primary Meta Tags -->
 		<meta name="title" content="Transformer Explainer: LLM Transformer Model Visually Explained" />
 		<meta

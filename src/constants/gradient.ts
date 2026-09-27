@@ -1,114 +1,118 @@
-import resolveConfig from 'tailwindcss/resolveConfig';
-import tailwindConfig from '../../tailwind.config';
-const { theme } = resolveConfig(tailwindConfig);
+import type { ThemePalette } from '~/store/theme';
 
-const defaultGradientBrightness = 200;
-export const gradientMap = {
-	'gray-blue': {
-		0: theme.colors.gray[defaultGradientBrightness],
-		100: theme.colors.blue[defaultGradientBrightness]
-	},
-	'transparent-blue': {
-		0: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0.5 },
-		100: theme.colors.blue[defaultGradientBrightness]
-	},
-	'gray-transparent-blue': {
-		0: theme.colors.gray[defaultGradientBrightness],
-		60: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0 },
-		100: { color: theme.colors.blue[defaultGradientBrightness], opacity: 1 }
-	},
-	'blue-blue-transparent': {
-		0: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0.5 },
-		60: { color: theme.colors.blue[defaultGradientBrightness], opacity: 1 },
-		100: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0 }
-	},
-	'indigo-blue-transparent': {
-		0: { color: theme.colors.indigo[defaultGradientBrightness], opacity: 0 },
-		40: { color: theme.colors.indigo[defaultGradientBrightness], opacity: 1 },
-		100: theme.colors.blue[defaultGradientBrightness]
-	},
-	'purple-indigo': {
-		0: theme.colors.purple[defaultGradientBrightness],
-		100: theme.colors.indigo[defaultGradientBrightness]
-	},
-	'indigo-blue': {
-		0: theme.colors.indigo[defaultGradientBrightness],
-		100: theme.colors.blue[defaultGradientBrightness]
-	},
-	'blue-white': { 0: theme.colors.blue[defaultGradientBrightness], 100: theme.colors.white },
-	'red-white': { 0: theme.colors.red[defaultGradientBrightness], 100: theme.colors.white },
-	'green-white': { 0: theme.colors.green[defaultGradientBrightness], 100: theme.colors.white },
-	'red-purple': {
-		90: theme.colors.red[300],
-		100: theme.colors.purple[300]
-	},
-	'blue-purple': {
-		0: theme.colors.blue[300],
-		100: theme.colors.purple[300]
-	},
-	'green-purple': {
-		0: theme.colors.green[defaultGradientBrightness],
-		100: theme.colors.purple[defaultGradientBrightness]
-	},
-	'blue-gray': {
-		0: theme.colors.blue[defaultGradientBrightness],
-		50: theme.colors.gray[defaultGradientBrightness]
-	},
-	'blue-white-blue': {
-		0: theme.colors.blue[defaultGradientBrightness],
-		40: theme.colors.white,
-		60: theme.colors.white,
-		100: theme.colors.blue[defaultGradientBrightness]
-	},
-	'gray-white-blue': {
-		0: theme.colors.gray[defaultGradientBrightness],
-		50: theme.colors.white,
-		60: theme.colors.white,
-		100: { color: theme.colors.blue[defaultGradientBrightness], opacity: 0.7 }
-	},
-	'transparent-purple': {
-		0: { color: theme.colors.purple[100], opacity: 0 },
-		// 70: { color: theme.colors.purple[100], opacity: 0.5 },
-		100: { color: theme.colors.purple[200], opacity: 1 }
-	},
-	'transparent-purple2': {
-		0: { color: theme.colors.purple[400], opacity: 0 },
-		100: { color: theme.colors.purple[200], opacity: 1 }
-	},
-	'blue-blue': {
-		0: theme.colors.blue[300],
-		100: theme.colors.blue[300]
-	},
-	'red-red': {
-		0: theme.colors.red[300],
-		100: theme.colors.red[300]
-	},
-	'green-green': {
-		0: theme.colors.green[300],
-		100: theme.colors.green[300]
-	},
-	'blue-blue2': {
-		0: theme.colors.blue[defaultGradientBrightness],
-		100: theme.colors.blue[defaultGradientBrightness]
-	},
-	'red-red2': {
-		0: theme.colors.red[defaultGradientBrightness],
-		100: theme.colors.red[defaultGradientBrightness]
-	},
-	'green-green2': {
-		0: theme.colors.green[defaultGradientBrightness],
-		100: theme.colors.green[defaultGradientBrightness]
-	},
-	'gray-gray': {
-		0: theme.colors.gray[defaultGradientBrightness],
-		100: theme.colors.gray[defaultGradientBrightness]
-	},
-	'purple-purple': {
-		0: theme.colors.purple[400],
-		100: theme.colors.purple[400]
-	},
-	blue: {
-		0: theme.colors.blue[defaultGradientBrightness],
-		100: theme.colors.blue[defaultGradientBrightness]
-	}
+/**
+ * Gradients used by the Sankey links. They are resolved against the active
+ * theme, so the pale end of a link matches the canvas it is drawn on.
+ */
+export const gradientMapFor = (palette: ThemePalette) => {
+	const { color, cell } = palette;
+
+	return {
+		'gray-blue': {
+			0: color('gray', 200),
+			100: color('blue', 200)
+		},
+		'transparent-blue': {
+			0: { color: color('blue', 200), opacity: 0.5 },
+			100: color('blue', 200)
+		},
+		'gray-transparent-blue': {
+			0: color('gray', 200),
+			60: { color: color('blue', 200), opacity: 0 },
+			100: { color: color('blue', 200), opacity: 1 }
+		},
+		'blue-blue-transparent': {
+			0: { color: color('blue', 200), opacity: 0.5 },
+			60: { color: color('blue', 200), opacity: 1 },
+			100: { color: color('blue', 200), opacity: 0 }
+		},
+		'indigo-blue-transparent': {
+			0: { color: color('indigo', 200), opacity: 0 },
+			40: { color: color('indigo', 200), opacity: 1 },
+			100: color('blue', 200)
+		},
+		'purple-indigo': {
+			0: color('purple', 200),
+			100: color('indigo', 200)
+		},
+		'indigo-blue': {
+			0: color('indigo', 200),
+			100: color('blue', 200)
+		},
+		'blue-white': { 0: color('blue', 200), 100: cell },
+		'red-white': { 0: color('red', 200), 100: cell },
+		'green-white': { 0: color('green', 200), 100: cell },
+		'red-purple': {
+			90: color('red', 300),
+			100: color('purple', 300)
+		},
+		'blue-purple': {
+			0: color('blue', 300),
+			100: color('purple', 300)
+		},
+		'green-purple': {
+			0: color('green', 200),
+			100: color('purple', 200)
+		},
+		'blue-gray': {
+			0: color('blue', 200),
+			50: color('gray', 200)
+		},
+		'blue-white-blue': {
+			0: color('blue', 200),
+			40: cell,
+			60: cell,
+			100: color('blue', 200)
+		},
+		'gray-white-blue': {
+			0: color('gray', 200),
+			50: cell,
+			60: cell,
+			100: { color: color('blue', 200), opacity: 0.7 }
+		},
+		'transparent-purple': {
+			0: { color: color('purple', 100), opacity: 0 },
+			100: { color: color('purple', 200), opacity: 1 }
+		},
+		'transparent-purple2': {
+			0: { color: color('purple', 400), opacity: 0 },
+			100: { color: color('purple', 200), opacity: 1 }
+		},
+		'blue-blue': {
+			0: color('blue', 300),
+			100: color('blue', 300)
+		},
+		'red-red': {
+			0: color('red', 300),
+			100: color('red', 300)
+		},
+		'green-green': {
+			0: color('green', 300),
+			100: color('green', 300)
+		},
+		'blue-blue2': {
+			0: color('blue', 200),
+			100: color('blue', 200)
+		},
+		'red-red2': {
+			0: color('red', 200),
+			100: color('red', 200)
+		},
+		'green-green2': {
+			0: color('green', 200),
+			100: color('green', 200)
+		},
+		'gray-gray': {
+			0: color('gray', 200),
+			100: color('gray', 200)
+		},
+		'purple-purple': {
+			0: color('purple', 400),
+			100: color('purple', 400)
+		},
+		blue: {
+			0: color('blue', 200),
+			100: color('blue', 200)
+		}
+	};
 };

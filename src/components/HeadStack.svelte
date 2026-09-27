@@ -300,7 +300,7 @@
 </script>
 
 <div class="multi-head flex w-full" data-click="attention-head">
-	<div class="head-title absolute bottom-2 right-3 text-right text-gray-400">
+	<div class="head-title absolute bottom-2 right-3 text-right text-gray-400 dark:text-gray-500">
 		<TextbookTooltip id="multi-head">
 			<span class="title-text"
 				>Head {$attentionHeadIdxTemp + 1} of {$modelMeta.attention_head_num}</span
@@ -355,13 +355,13 @@
 		button {
 			border-radius: 0.3rem;
 			padding: 0.1rem;
-			border: 1px solid theme('colors.gray.300');
-			color: theme('colors.gray.400');
+			border: 1px solid var(--line-strong);
+			color: var(--ink-faint);
 			box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 		}
 		button:disabled {
-			color: theme('colors.gray.200');
-			border: 1px solid theme('colors.gray.200');
+			color: var(--ink-ghost-2);
+			border: 1px solid var(--line);
 		}
 	}
 	.head-content {
@@ -376,8 +376,8 @@
 		z-index: 11;
 	}
 	.head-card {
-		background-color: white;
-		border: 1px solid #f9fafb;
+		background-color: var(--surface);
+		border: 1px solid var(--surface-subtle);
 		box-shadow:
 			0px 4px 6px -1px rgba(3, 7, 18, 0.15),
 			0px 2px 4px -2px rgba(3, 7, 18, 0.08);

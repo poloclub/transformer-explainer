@@ -92,14 +92,14 @@
 	{#if title || showSize}
 		<div class="flex flex-col items-center gap-0.5">
 			{#if title && titlePos === 'b'}
-				<div class="whitespace-nowrap leading-none text-gray-500">{title}</div>
+				<div class="whitespace-nowrap leading-none text-gray-500 dark:text-gray-400">{title}</div>
 			{/if}
 			{#if showSize}
 				{#if typeof showSize === 'string'}
-					<div class="whitespace-nowrap leading-none text-gray-500">
+					<div class="whitespace-nowrap leading-none text-gray-500 dark:text-gray-400">
 						{showSize}
 					</div>{:else}
-					<div class="whitespace-nowrap leading-none text-gray-500">
+					<div class="whitespace-nowrap leading-none text-gray-500 dark:text-gray-400">
 						({rowLen}, {dimension})
 					</div>
 				{/if}

@@ -223,7 +223,7 @@
 				.progress-bar {
 					width: 6rem;
 					height: 4px;
-					background: theme('colors.gray.200');
+					background: var(--track);
 					border-radius: 2px;
 					cursor: pointer;
 					transition: all 0.2s ease;
@@ -231,7 +231,7 @@
 					user-select: none;
 
 					&:hover {
-						background: theme('colors.gray.300');
+						background: var(--track-fill);
 					}
 
 					&:active {
@@ -256,9 +256,9 @@
 					.page-counter {
 						width: 3.4rem;
 						white-space: nowrap;
-						background: theme('colors.blue.50');
-						color: theme('colors.blue.600');
-						border: 1px solid theme('colors.blue.200');
+						background: var(--accent-blue-50);
+						color: var(--accent-blue-600);
+						border: 1px solid var(--accent-blue-200);
 						border-radius: 12px;
 						padding: 0.25rem 0.3rem;
 						font-size: 0.75rem;
@@ -267,8 +267,8 @@
 						transition: all 0.2s ease;
 
 						&:hover {
-							background: theme('colors.blue.100');
-							border-color: theme('colors.blue.200');
+							background: var(--accent-blue-100);
+							border-color: var(--accent-blue-200);
 						}
 					}
 
@@ -277,8 +277,8 @@
 						bottom: 100%;
 						left: 10%;
 						margin-bottom: 0.5rem;
-						background: rgba(255, 255, 255, 0.95);
-						border: 1px solid rgba(229, 231, 235, 0.3);
+						background: color-mix(in srgb, var(--surface) 95%, transparent);
+						border: 1px solid color-mix(in srgb, var(--line) 30%, transparent);
 						border-radius: 8px;
 						box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 						backdrop-filter: blur(10px);
@@ -295,17 +295,17 @@
 							border: none;
 							cursor: pointer;
 							font-size: 0.8rem;
-							color: #4b5563;
+							color: var(--ink-secondary);
 							transition: all 0.2s ease;
 
 							&:hover {
-								background: theme('colors.blue.50');
-								color: theme('colors.blue.600');
+								background: var(--accent-blue-50);
+								color: var(--accent-blue-600);
 							}
 
 							&.active {
-								background: theme('colors.blue.50');
-								color: theme('colors.blue.600');
+								background: var(--accent-blue-50);
+								color: var(--accent-blue-600);
 								font-weight: 600;
 							}
 
@@ -332,18 +332,18 @@
 					width: 1.8rem;
 					height: 1.8rem;
 					border-radius: 50%;
-					background: rgba(59, 130, 246, 0.08);
-					color: theme('colors.blue.500');
+					background: color-mix(in srgb, var(--accent-blue-500) 8%, transparent);
+					color: var(--accent-blue-500);
 					display: flex;
 					align-items: center;
 					justify-content: center;
 					transition: all 0.2s ease;
-					border: 1px solid rgba(59, 130, 246, 0.15);
+					border: 1px solid color-mix(in srgb, var(--accent-blue-500) 15%, transparent);
 
 					&:hover {
-						background: rgba(59, 130, 246, 0.12);
-						color: theme('colors.blue.600');
-						border-color: rgba(59, 130, 246, 0.25);
+						background: color-mix(in srgb, var(--accent-blue-500) 12%, transparent);
+						color: var(--accent-blue-600);
+						border-color: color-mix(in srgb, var(--accent-blue-500) 25%, transparent);
 					}
 
 					:global(svg) {

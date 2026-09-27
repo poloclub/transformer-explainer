@@ -24,11 +24,11 @@
 				: data[0];
 </script>
 
-<Card class={'softmax-popover popover bg-white text-sm'}>
+<Card class={'softmax-popover popover bg-white text-sm dark:bg-gray-800'}>
 	<div
-		class="softmax-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
+		class="softmax-popover-title rounded-t-md border-b border-gray-200 bg-gray-100 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
 	>
-		<h3 class="font-semibold text-gray-900">
+		<h3 class="font-semibold text-gray-900 dark:text-gray-50">
 			Probability of <span class="highlight">"{selected?.token}"</span> token being sampled
 		</h3>
 	</div>
@@ -244,7 +244,7 @@
 		gap: 1rem;
 
 		:global(.step-arrow) {
-			color: theme('colors.gray.400');
+			color: var(--ink-faint);
 		}
 
 		.norm-step {
@@ -276,7 +276,7 @@
 			.sub-title {
 				width: 100%;
 				font-size: 0.8rem;
-				color: theme('colors.gray.400');
+				color: var(--ink-faint);
 				position: absolute;
 				text-align: center;
 				bottom: -1.1rem;
@@ -298,7 +298,7 @@
 			gap: 0.1rem;
 			position: absolute;
 			font-size: 0.75rem;
-			color: theme('colors.gray.400');
+			color: var(--ink-faint);
 			line-height: 0;
 			left: 50%;
 			transform: translateX(-50%);
@@ -319,7 +319,7 @@
 			font-family: monospace;
 		}
 		.filtered {
-			background-color: theme('colors.purple.100');
+			background-color: var(--accent-purple-100);
 		}
 		.text {
 			font-size: 0.9rem;
@@ -337,7 +337,7 @@
 			.frac-line {
 				width: 100%;
 				height: 1px;
-				background-color: black;
+				background-color: var(--line-contrast);
 				margin: 0.1rem 0;
 			}
 			.frac-top {
@@ -380,7 +380,7 @@
 
 	.softmax-popover-title {
 		.highlight {
-			color: theme('colors.purple.700');
+			color: var(--accent-purple-700);
 			font-weight: 800;
 		}
 	}
@@ -395,7 +395,7 @@
 
 		.desc {
 			// font-style: italic;
-			color: theme('colors.gray.400');
+			color: var(--ink-faint);
 			font-weight: 300;
 		}
 	}

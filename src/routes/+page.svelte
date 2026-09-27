@@ -375,7 +375,7 @@
 		flex-direction: column;
 		justify-content: end;
 		grid-row: 1;
-		color: theme('colors.gray.400');
+		color: var(--ink-faint);
 		white-space: nowrap;
 		padding-bottom: 2rem;
 		overflow: visible;
@@ -384,7 +384,7 @@
 		cursor: default;
 
 		&:hover {
-			color: theme('colors.gray.600');
+			color: var(--ink-secondary);
 		}
 	}
 
@@ -417,7 +417,7 @@
 			transform: translateY(calc(-100% - 1rem));
 			text-align: center;
 			font-size: 0.8rem;
-			color: theme('colors.gray.400');
+			color: var(--ink-faint);
 			width: 100%;
 			z-index: $COLUMN_TITLE_INDEX;
 		}
@@ -461,7 +461,7 @@
 
 	:global(.label) {
 		font-size: 0.9rem;
-		color: theme('colors.gray.700');
+		color: var(--ink-body);
 		z-index: $VECTOR_INDEX;
 		display: inline;
 		max-width: 7rem;
@@ -495,7 +495,7 @@
 		padding: 0.5rem 0;
 		left: 0;
 		height: 100%;
-		border: 2px dashed theme('colors.gray.300');
+		border: 2px dashed var(--line-strong);
 		border-radius: 0.5rem;
 		transition: opacity 0.5s;
 		opacity: 0;
@@ -512,14 +512,14 @@
 
 	:global(.tooltip) {
 		z-index: $TOOLTIP_INDEX;
-		background-color: white !important;
-		color: theme('colors.gray.600') !important;
-		border: 1px solid theme('colors.gray.200') !important;
+		background-color: var(--surface) !important;
+		color: var(--ink-secondary) !important;
+		border: 1px solid var(--line) !important;
 		padding: 0.2rem 0.5rem !important;
 		font-size: 0.8rem !important;
 		white-space: nowrap;
 		font-weight: 300 !important;
-		border-color: theme('colors.gray.200') !important;
+		border-color: var(--line) !important;
 	}
 	.dim {
 		position: absolute;
@@ -528,7 +528,7 @@
 		width: 100%;
 		height: 100%;
 		z-index: $DIM_INDEX;
-		background-color: white;
+		background-color: var(--page);
 		opacity: 0.7;
 		user-select: none;
 
@@ -545,11 +545,11 @@
 
 		&.right {
 			right: 0;
-			background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 80%);
+			background: linear-gradient(90deg, var(--page-transparent) 0%, var(--page) 80%);
 		}
 		&.left {
 			left: 0;
-			background: linear-gradient(-90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 80%);
+			background: linear-gradient(-90deg, var(--page-transparent) 0%, var(--page) 80%);
 		}
 
 		&.embedding {

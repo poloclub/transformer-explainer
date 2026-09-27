@@ -208,10 +208,10 @@
 	.tooltip-box {
 		z-index: $POPOVER_INDEX;
 
-		background-color: white;
+		background-color: var(--surface);
 		position: fixed;
-		border: 1px solid theme('colors.gray.200');
-		color: theme('colors.gray.600');
+		border: 1px solid var(--line);
+		color: var(--ink-secondary);
 		padding: 0.2rem 0.4rem;
 		border-radius: 0.4rem;
 		pointer-events: none;

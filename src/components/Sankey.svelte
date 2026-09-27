@@ -11,9 +11,8 @@
 	} from '~/store';
 	import * as d3 from 'd3';
 	import { onMount, tick } from 'svelte';
-	import resolveConfig from 'tailwindcss/resolveConfig';
-	import tailwindConfig from '../../tailwind.config';
-	import { gradientMap } from '~/constants/gradient';
+	import { gradientMapFor } from '~/constants/gradient';
+	import { themePalette } from '~/store/theme';
 	import {
 		ATTENTION_HEAD_1,
 		ATTENTION_HEAD_BACK,
@@ -25,13 +24,13 @@
 	} from '~/constants/opacity';
 	import { textPages } from '~/utils/textbookPages';
 
-	const { theme } = resolveConfig(tailwindConfig);
-
 	let svgBackEl: HTMLOrSVGElement;
 	let svgEl: HTMLOrSVGElement;
 
 	let resizeObserver: ResizeObserver;
 	let screenWidth: number;
+
+	$: palette = $themePalette;
 
 	$: curveFactor = Math.floor(screenWidth / 1000) || 1;
 	$: defaultCurveOffset = 40 * (curveFactor - 1) + 80;
@@ -489,7 +488,10 @@
 
 	const createGradients = () => {
 		const svg = d3.select(svgEl);
+		svg.selectAll('defs').remove();
 		const defs = svg.append('defs');
+
+		const gradientMap = gradientMapFor(palette);
 
 		Object.keys(gradientMap).forEach((key) => {
 			const stops = gradientMap[key];
@@ -671,6 +673,11 @@
 		}
 	}
 
+	// Link gradients carry the canvas colour, so they follow the theme.
+	$: if (svgEl && palette) {
+		createGradients();
+	}
+
 	const drawResidualPath = () => {
 		const svg = d3.select(svgEl);
 
@@ -697,7 +704,6 @@
 			.attr('y1', (d) => d.y1)
 			.attr('x2', (d) => d.x2)
 			.attr('y2', (d) => d.y2)
-			.attr('stroke', theme.colors.gray[400])
 			.attr('stroke-width', 1)
 			.attr('stroke-dasharray', '8,4')
 			.style('opacity', 0);
@@ -719,3 +725,9 @@
 		style={`z-index:${$modelMeta.attention_head_num};`}
 	/>
 </div>
+
+<style lang="scss">
+	:global(line.residual-connector) {
+		stroke: var(--line-heavy);
+	}
+</style>

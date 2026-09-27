@@ -16,16 +16,13 @@
 	import VectorCanvas from './common/VectorCanvas.svelte';
 	import * as d3 from 'd3';
 	import HelpPopover from './common/HelpPopover.svelte';
-	import tailwindConfig from '../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
 	import { ga } from '~/utils/event';
 	import { Tooltip } from 'flowbite-svelte';
 	import { ZoomInOutline } from 'flowbite-svelte-icons';
 
 	import TextbookTooltip from './common/TextbookTooltip.svelte';
 	import { textPages } from '~/utils/textbookPages';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { themePalette } from '~/store/theme';
 
 	export let className: string | undefined = undefined;
 
@@ -150,7 +147,18 @@
 		isHovered = false;
 	}
 
-	const embeddingVectorColor = 'bg-gray-300';
+	let palette;
+	$: palette = $themePalette;
+
+	let positionColorScale;
+	$: positionColorScale = (d: number, i: number) => {
+		return d3
+			.scaleDiverging()
+			.domain([0, 0.5, 1])
+			.range([palette.color('red', 400), palette.cell, palette.color('blue', 400)])(d);
+	};
+
+	const embeddingVectorColor = 'bg-gray-300 dark:bg-gray-600';
 </script>
 
 <div
@@ -206,13 +214,15 @@
 					</div>
 					{#each $tokens as token, index}
 						<div class="token-id flex items-center">
-							<div class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400">
+							<div
+								class="vocab-index ellipsis flex items-center text-right text-xs text-gray-400 dark:text-gray-500"
+							>
 								<div class="flex flex-col items-center">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										viewBox="0 0 31 9"
 										fill="none"
-										class="w-10 text-gray-300"
+										class="w-10 text-gray-300 dark:text-gray-600"
 									>
 										<path
 											fill="currentColor"
@@ -255,15 +265,7 @@
 					{#each $tokens as token, index}
 						<div class="cell flex items-center">
 							<div class={`vector ${embeddingVectorColor}`}>
-								<VectorCanvas
-									active
-									colorScale={(d, i) => {
-										return d3
-											.scaleDiverging()
-											.domain([0, 0.5, 1])
-											.range([theme.colors['red'][400], 'white', theme.colors['blue'][400]])(d);
-									}}
-								/>
+								<VectorCanvas active colorScale={positionColorScale} />
 							</div>
 							<span class="index-val text-xs">
 								{#if index === 0}
@@ -345,7 +347,7 @@
 				}
 				.symbol {
 					font-size: 0.8rem;
-					color: theme('colors.gray.400');
+					color: var(--ink-faint);
 				}
 			}
 
@@ -360,7 +362,7 @@
 				line-height: 1.3;
 			}
 			.index-val .label {
-				color: theme('colors.gray.400');
+				color: var(--ink-faint);
 				line-height: 1;
 				font-size: 0.8rem;
 			}
@@ -368,7 +370,7 @@
 				width: 4rem;
 				text-align: left;
 				font-size: 0.7rem;
-				color: theme('colors.gray.600');
+				color: var(--ink-secondary);
 				font-family: monospace;
 			}
 

@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
-	import tailwindConfig from '../../../tailwind.config';
-	import resolveConfig from 'tailwindcss/resolveConfig';
 	import { vectorHeight } from '~/store';
-
-	const { theme } = resolveConfig(tailwindConfig);
+	import { themePalette, type PaletteHue } from '~/store/theme';
 
 	let visibleDimension = Math.floor($vectorHeight * 3.5) * 4;
 	export let active: boolean = false;
@@ -16,11 +13,15 @@
 
 	const lineHeight = 1;
 
+	$: palette = $themePalette;
 	$: colorKey = typeof colorScale === 'string' ? colorScale : 'gray';
 	$: color =
 		typeof colorScale === 'function'
 			? colorScale
-			: d3.interpolate(theme.colors[colorKey][100], theme.colors[colorKey][400]);
+			: d3.interpolate(
+					palette.color(colorKey as PaletteHue, 100),
+					palette.color(colorKey as PaletteHue, 400)
+				);
 
 	function drawCanvas() {
 		const ctx = canvas.getContext('2d');

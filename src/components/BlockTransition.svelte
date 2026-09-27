@@ -215,7 +215,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.3rem;
-		color: theme('colors.gray.400');
+		color: var(--ink-faint);
 		transition: opacity 0.2s;
 
 		&.hide {
@@ -232,21 +232,21 @@
 		button {
 			border-radius: 0.3rem;
 			padding: 0.1rem;
-			border: 1px solid theme('colors.gray.300');
-			color: theme('colors.gray.400');
+			border: 1px solid var(--line-strong);
+			color: var(--ink-faint);
 			box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 		}
 		button:disabled {
-			color: theme('colors.gray.200');
-			border: 1px solid theme('colors.gray.200');
+			color: var(--ink-ghost-2);
+			border: 1px solid var(--line);
 		}
 
 		&.active {
-			color: theme('colors.blue.600');
+			color: var(--accent-blue-600);
 
 			button {
 				border: 1px solid theme('colors.blue.500');
-				color: theme('colors.blue.600');
+				color: var(--accent-blue-600);
 			}
 			button:disabled {
 				border: 1px solid theme('colors.blue.300');
